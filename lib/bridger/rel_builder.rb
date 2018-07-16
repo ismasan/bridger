@@ -1,7 +1,15 @@
 require 'bridger/rel'
 module Bridger
   class RelBuilder
-    REL_DOMAIN = "btc".freeze
+    DOMAIN_SEP = ':'.freeze
+
+    def self.domain=(str)
+      @domain = str
+    end
+
+    def self.domain
+      @domain
+    end
 
     attr_reader :name, :verb, :path, :title
 
@@ -14,7 +22,7 @@ module Bridger
 
     def build(params = {})
       Rel.new(
-        name: [REL_DOMAIN, name].join(':'),
+        name: [self.class.domain, name].compact.join(DOMAIN_SEP),
         verb: verb,
         path: path,
         title: title,

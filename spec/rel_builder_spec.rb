@@ -15,6 +15,7 @@ RSpec.describe Bridger::RelBuilder do
 
   context "templated URI and params" do
     it "has templated URI, query fields and no params" do
+      described_class.domain = 'btc'
       subject = described_class.new(:foo, :get, "/shops/:shop_id/products/:id", [:foo, :bar])
 
       rel = subject.build
