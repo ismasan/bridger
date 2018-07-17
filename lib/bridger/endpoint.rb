@@ -1,3 +1,5 @@
+require "bridger/rel_builder"
+
 module Bridger
   class Endpoint
     MUTATING_VERBS = [:post, :put, :patch, :delete].freeze
