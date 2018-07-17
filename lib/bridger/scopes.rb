@@ -31,8 +31,10 @@ module Bridger
       @to_a ||= scopes.map &:to_s
     end
 
-    private
+    protected
     attr_reader :scopes
+
+    private
 
     class Scope
       SEP = '.'.freeze
