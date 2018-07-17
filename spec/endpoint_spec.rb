@@ -30,7 +30,7 @@ RSpec.describe Bridger::Endpoint do
     endpoint = described_class.new(
       name: 'create_product',
       verb: :post,
-      path: '/v1/products',
+      path: '/v1/shops/{shop_id}/products',
       title: 'Create products',
       scope: 'a.b.c',
       authorizer: authorizer,
@@ -49,5 +49,12 @@ RSpec.describe Bridger::Endpoint do
 
     data = endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)
     expect(data).to eq({out: 1})
+
+    # builds relation
+    rel = endpoint.build_rel(shop_id: 123, foo: 'b')
+    expect(rel).to be_a Bridger::Rel
+    expect(rel.path).to eq '/v1/shops/123/products'
+    expect(rel.title).to eq 'Create products'
+    expect(rel.verb).to eq :post
   end
 end
