@@ -31,7 +31,7 @@ module Bridger
       @to_a ||= scopes.map &:to_s
     end
 
-    protected
+    private
     attr_reader :scopes
 
     class Scope

@@ -1,5 +1,7 @@
 require "bundler/setup"
+require "byebug"
 require "bridger"
+require "bridger/token_generator"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
