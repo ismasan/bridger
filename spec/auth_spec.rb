@@ -48,4 +48,32 @@ RSpec.describe Bridger::Auth do
       }.to raise_error Bridger::Auth::InvalidAccessTokenError
     end
   end
+
+  describe "#authorize!" do
+    it "authorizes when scopes match" do
+      token = token_generator.generate(
+        uid: 123,
+        sids: [11],
+        aid: 12,
+        scopes: ["a.b.c"]
+      )
+
+      authorizer = Bridger::Authorizers::Tree.new
+      authorizer.at('a.b') do |s, auth, params|
+        !params || params[:foo] != "bar"
+      end
+
+      auth = described_class.parse("Bearer #{token}")
+
+      expect(auth.authorize!('a.b.c', authorizer)).to be true
+      expect(auth.authorize!('a.b.c.d', authorizer)).to be true
+      expect {
+        auth.authorize!('a.b', authorizer)
+      }.to raise_error Bridger::Auth::InsufficientScopesError
+
+      expect {
+        auth.authorize!('a.b.c', authorizer, foo: "bar")
+      }.to raise_error Bridger::Auth::ForbiddenAccessError
+    end
+  end
 end
