@@ -6,6 +6,7 @@ module Bridger
   class Auth
     AuthError = Class.new(StandardError)
     MissingAccessTokenError = Class.new(AuthError)
+    MissingPublicKeyError = Class.new(AuthError)
     InvalidAccessTokenError = Class.new(AuthError)
     ExpiredAccessTokenError = Class.new(AuthError)
     ForbiddenAccessError    = Class.new(AuthError)
@@ -44,6 +45,7 @@ module Bridger
 
     def self.parse(header)
       access_token = header.to_s.split(SPACE).last
+      raise MissingPublicKeyError, "you need to configure a public key" unless config.public_key
       raise MissingAccessTokenError, "missing access token" unless access_token
       new(
         claims: JWT.decode(access_token, config.public_key, true, algorithm: (config.algo || ALGO)).first,
