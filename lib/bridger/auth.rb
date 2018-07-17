@@ -1,4 +1,5 @@
 require "jwt"
+require "openssl"
 require "bridger/scopes"
 
 module Bridger
@@ -25,8 +26,12 @@ module Bridger
         @aliases ||= Scopes::Aliases.new({})
       end
 
-      def public_key_path=(path)
-        @public_key = OpenSSL::PKey::RSA.new(File.read(path))
+      def public_key=(key)
+        @public_key = if key.is_a?(String)
+          OpenSSL::PKey::RSA.new(File.read(key))
+        else
+          key
+        end
       end
 
       def algo=(a)

@@ -6,10 +6,13 @@ module Bridger
   class TokenGenerator
     ALGO = 'RS256'.freeze
 
-    def initialize(private_key_path)
-      @private_key = OpenSSL::PKey::RSA.new(
-        File.read(private_key_path)
-      )
+    def initialize(private_key, algo: ALGO)
+      @private_key = if private_key.is_a?(String)
+        OpenSSL::PKey::RSA.new(File.read(private_key))
+      else
+        private_key
+      end
+      @algo = algo
     end
 
     def generate(claims)
@@ -19,7 +22,7 @@ module Bridger
         jti: SecureRandom.hex(7)
       }.merge(claims)
 
-      JWT.encode(claims, @private_key, ALGO)
+      JWT.encode(claims, @private_key, @algo)
     end
   end
 end

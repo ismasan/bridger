@@ -13,7 +13,7 @@ RSpec.describe Bridger::Auth do
 
       # Use this RSA public key to
       # verify JWT access tokens
-      c.public_key_path = test_key_path('public_key.rsa.pub')
+      c.public_key = test_private_key.public_key
     end
   end
 
@@ -47,20 +47,5 @@ RSpec.describe Bridger::Auth do
         described_class.parse("Bearer #{token}")
       }.to raise_error Bridger::Auth::InvalidAccessTokenError
     end
-  end
-
-  def test_key_path(str)
-    File.join(
-      File.dirname(__FILE__),
-      "support",
-      "test_credentials",
-      str
-    )
-  end
-
-  def token_generator
-    @token_generator ||= Bridger::TokenGenerator.new(
-      test_key_path('private_key.rsa')
-    )
   end
 end
