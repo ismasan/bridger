@@ -30,14 +30,14 @@ module Bridger
       lookup[name]
     end
 
-    def endpoint(name, verb, path, title:, scope:, action:, serializer:)
+    def endpoint(name, verb, path, title:, scope: nil, action:, serializer:)
       e = Bridger::Endpoint.new(
         name: name,
         verb: verb,
         path: path,
         authorizer: authorizer,
         title: title,
-        scope: Bridger::Scopes::Scope.new(scope),
+        scope: scope ? Bridger::Scopes::Scope.new(scope) : nil,
         action: action,
         serializer: serializer
       )

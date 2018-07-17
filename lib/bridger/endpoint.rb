@@ -28,7 +28,7 @@ module Bridger
     end
 
     def run!(payload: {}, auth:, helper:)
-      auth.authorize! scope, authorizer, helper.params
+      auth.authorize!(scope, authorizer, helper.params) if authenticates?
 
       presenter = action.run!(payload: payload, auth: auth)
       raise "Missing serializer for #{name}" unless serializer
@@ -49,6 +49,10 @@ module Bridger
 
     def output_schema
       serializer.json_schema ? serializer.json_schema : {}
+    end
+
+    def authenticates?
+      !!scope
     end
 
     def authorized?(auth, params)
