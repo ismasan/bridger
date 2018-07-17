@@ -57,7 +57,7 @@ module Sinatra
       app.helpers Helpers
     end
 
-    def bridge(endpoints)
+    def bridge(endpoints, schemas: false)
       set :endpoints, endpoints
 
       endpoints.each do |endpoint|
@@ -73,6 +73,18 @@ module Sinatra
             json serialize(e, ::Bridger::DefaultSerializers::Unauthorized), 401
           rescue ::Bridger::ValidationErrors => e
             json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload), 422
+          end
+        end
+      end
+
+      if schemas
+        get '/schemas' do
+          json serialize(endpoints, ::Bridger::DefaultSerializers::Endpoints), 200
+        end
+
+        endpoints.each do |en|
+          get "/schemas/#{en.name}" do
+            json serialize(en, ::Bridger::DefaultSerializers::Endpoint), 200
           end
         end
       end

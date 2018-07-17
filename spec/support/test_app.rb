@@ -35,6 +35,21 @@ class ShopAction < Bridger::Action
   end
 end
 
+class ShopsAction < Bridger::Action
+  schema do
+    field(:q).type(:string)
+    field(:page).type(:integer)
+  end
+
+  private
+  def run!
+    [
+      ShopModel.new('acme.bootic.net', 'ACME'),
+      ShopModel.new('www.bootic.net', 'Bootic'),
+    ]
+  end
+end
+
 class RootSerializer < Bridger::Serializer
   schema do
     rel :shop, always: true
@@ -44,6 +59,7 @@ class RootSerializer < Bridger::Serializer
      type: "text/html",
      title: "API documentation"
     )
+    link("btc:schemas", href: url("/rels"))
 
     self_link
     property :app_name, item.app_name
@@ -56,6 +72,14 @@ class ShopSerializer < Bridger::Serializer
     self_link
     property :url, item.url
     property :name, item.name
+  end
+end
+
+class ShopsSerializer < Bridger::Serializer
+  schema do
+    rel :root
+    self_link
+    items item, ShopSerializer
   end
 end
 
@@ -77,9 +101,16 @@ Bridger::Endpoints.instance.build do
     action: ShopAction,
     serializer: ShopSerializer,
   )
+
+  endpoint(:shops, :get, "/shops",
+    title: "Shop details",
+    scope: "btc.account.shops.mine.list",
+    action: ShopsAction,
+    serializer: ShopsSerializer,
+  )
 end
 
 class TestApp < Sinatra::Base
   register Sinatra::Bridger
-  bridge Bridger::Endpoints.instance
+  bridge Bridger::Endpoints.instance, schemas: true
 end

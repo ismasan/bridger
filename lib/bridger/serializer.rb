@@ -7,6 +7,10 @@ module Bridger
     def type(*types)
       property :_class, *types
     end
+
+    def items(collection, serializer_class = nil, &block)
+      entities :items, collection, serializer_class, &block
+    end
   end
 
   class Serializer < Oat::Serializer

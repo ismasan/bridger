@@ -1,4 +1,5 @@
 require 'bridger/serializer'
+require 'bridger/json_schema_generator'
 
 module Bridger
   module DefaultSerializers
@@ -77,6 +78,47 @@ module Bridger
         type ['errors', 'invalid']
 
         entities :errors, ErrorSerializer.wrap(item.errors), ErrorSerializer
+      end
+    end
+
+    class Endpoints < ::Bridger::Serializer
+      schema do
+        type ["results", "endpoints"]
+
+        items item.all do |endpoint, s|
+          s.link :self, href: url("/schemas/#{endpoint.name}")
+
+          s.property :rel, endpoint.name
+          s.property :title, endpoint.title
+          s.property :method, endpoint.verb
+          s.property :scope, endpoint.scope.to_s
+
+          s.property :templated, endpoint.relation.templated?
+          s.property :href, url(endpoint.relation.path)
+        end
+      end
+    end
+
+    class Endpoint < ::Bridger::Serializer
+      schema do
+        type ["endpoint"]
+
+        link :self, href: url("/schemas/#{item.name}")
+
+        property :rel, item.name
+        property :title, item.title
+        property :method, item.verb
+        property :scope, item.scope.to_s
+
+        property :templated, item.relation.templated?
+        property :href, url(item.relation.path)
+
+        property :input_schema, json_schema_for(item.input_schema)
+      end
+
+      private
+      def json_schema_for(schema)
+        ::Bridger::JsonSchemaGenerator.new(schema).generate
       end
     end
   end

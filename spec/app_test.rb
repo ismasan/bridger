@@ -36,5 +36,8 @@ RSpec.describe 'Sinatra apps' do
 
     shop = shop.self
     expect(shop.url).to eq 'acme.bootic.net'
+
+    schemas = root.schemas
+    expect(schemas.map(&:rel).sort).to eq ['root', 'shop', 'shops']
   end
 end
