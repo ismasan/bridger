@@ -59,7 +59,7 @@ class RootSerializer < Bridger::Serializer
      type: "text/html",
      title: "API documentation"
     )
-    link("btc:schemas", href: url("/rels"))
+    link("btc:schemas", href: url("/schemas"))
 
     self_link
     property :app_name, item.app_name

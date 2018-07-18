@@ -39,8 +39,10 @@ module Bridger
     def rsa_key(key)
       if key.is_a?(String)
         OpenSSL::PKey::RSA.new(File.read(key))
-      else
+      elsif key.is_a?(OpenSSL::PKey::RSA)
         key
+      else
+        raise "key #{key} must be a path string or an OpenSSL::PKey::RSA"
       end
     end
   end

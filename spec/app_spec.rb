@@ -16,8 +16,9 @@ RSpec.describe 'Sinatra apps' do
         "admin"  => ["btc.me", "btc.account.shops.mine"],
         "public" => ["btc.me"]
       }
-
-      c.public_key = test_private_key.public_key
+      c.logger = Logger.new(STDOUT)
+      c.token_store = {}
+      # c.public_key = test_private_key.public_key
     end
   end
 

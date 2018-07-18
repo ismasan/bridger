@@ -13,13 +13,14 @@ RSpec.describe Bridger::Auth do
 
       # Use this RSA public key to
       # verify JWT access tokens
-      c.public_key = test_private_key.public_key
+      c.token_store = {}
+      # c.public_key = test_private_key.public_key
     end
   end
 
   describe ".parse" do
     it "parses token from header and extracts claims correctly" do
-      token = token_generator.generate(
+      token = Bridger::Auth.config.token_store.set(
         uid: 123,
         sids: [11],
         aid: 12,
@@ -35,7 +36,8 @@ RSpec.describe Bridger::Auth do
     end
 
     it "parses token from querystring if configured" do
-      token = token_generator.generate(
+      store = Bridger::Auth.config.token_store
+      token = store.set(
         uid: 123,
         sids: [11],
         aid: 12,
@@ -44,7 +46,7 @@ RSpec.describe Bridger::Auth do
       req = double('Request', params: {'token' => token})
       config = Bridger::Auth::Config.new
       config.parse_from :query, :token
-      config.public_key = test_private_key.public_key
+      config.token_store = store
 
       auth = described_class.parse(req, config)
       expect(auth.shop_ids).to eq [11]
@@ -70,24 +72,17 @@ RSpec.describe Bridger::Auth do
     end
 
     it "raises known exception if invalid token" do
-      token = token_generator.generate(
-        exp: Time.now.to_i - 10,
-        uid: 123,
-        sids: [11],
-        aid: 12,
-        scopes: ["admin"]
-      )
-      req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
+      req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer foobar"})
 
       expect {
         described_class.parse(req)
-      }.to raise_error Bridger::ExpiredAccessTokenError
+      }.to raise_error Bridger::InvalidAccessTokenError
     end
   end
 
   describe "#authorize!" do
     it "authorizes when scopes match" do
-      token = token_generator.generate(
+      token = Bridger::Auth.config.token_store.set(
         uid: 123,
         sids: [11],
         aid: 12,

@@ -1,7 +1,7 @@
 require 'logger'
 require 'securerandom'
 require "bridger/scopes"
-require "bridger/jwt_token_store"
+require "bridger/errors"
 
 module Bridger
   class Auth
@@ -12,7 +12,7 @@ module Bridger
 
       def set(claims)
         key = SecureRandom.hex
-        @hash[key] = claims
+        @hash[key] = claims.each_with_object({}){|(k,v), h| h[k.to_s] = v}
         key
       end
 
@@ -25,10 +25,10 @@ module Bridger
       attr_reader :aliases, :public_key, :algo, :token_store, :parse_values, :logger
 
       def initialize
-        @token_store = {}
         @parse_values = [:header, 'HTTP_AUTHORIZATION']
         @aliases = Scopes::Aliases.new({})
         @logger = Logger.new(IO::NULL)
+        self.token_store = {}
       end
 
       def aliases=(mapping = {})
@@ -39,8 +39,14 @@ module Bridger
         @logger = l
       end
 
-      def public_key=(key)
-        @token_store = JWTTokenStore.new(key)
+      def rsa_key=(key)
+        require 'bridger/jwt_token_store'
+        key, pkey = if key.respond_to?(:public_key)
+                      [key.public_key, key]
+                    else
+                      [key, nil]
+                    end
+        self.token_store = JWTTokenStore.new(key, pkey: pkey)
       end
 
       def token_store=(st)

@@ -1,5 +1,4 @@
 require 'openssl'
-require "bridger/token_generator"
 
 module Bridger
   module TestHelpers
@@ -11,13 +10,8 @@ module Bridger
       test_private_key.public_key
     end
 
-    def token_generator
-      @token_generator ||= Bridger::TokenGenerator.new(test_private_key)
-    end
-
     def authorize!(claims)
-      user_data = claims.delete(:user)
-      @access_token = token_generator.generate(claims)
+      @access_token = Bridger::Auth.config.token_store.set(claims)
     end
 
     require 'bootic_client'
