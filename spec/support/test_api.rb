@@ -110,7 +110,7 @@ Bridger::Endpoints.instance.build do
   )
 end
 
-class TestApp < Sinatra::Base
+class TestApi < Sinatra::Base
   register Sinatra::Bridger
   bridge Bridger::Endpoints.instance, schemas: true
 end

@@ -1,12 +1,12 @@
 require 'spec_helper'
 require 'bridger/test_helpers'
-require_relative './support/test_app'
+require_relative './support/test_api'
 
 RSpec.describe 'Sinatra apps' do
   include Bridger::TestHelpers
 
   def app
-    TestApp
+    TestApi
   end
 
   before :all do
