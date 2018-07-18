@@ -50,7 +50,10 @@ Serializers have helpers to add links between resources, based upon registered e
 ```ruby
 class UserSerializer < Bridger::Serializer
   schema do
+    # link to self (current URL)
+    self_link
     # link to another endpoint
+    # will only be included if current credentials have permissions to other endpoint
     rel :update_user, user_id: item.id
     property :id, item.id
     property :name, item.name
@@ -100,6 +103,8 @@ user_data = endpoint.run!(
 )
 ```
 
+But it's more useful to integrate them with your Rack framework of choice.
+
 ## Sinatra integration
 
 This gem includes Sinatra integration:
@@ -132,14 +137,15 @@ You can then use schema information to build client-side validation, auto-genera
 
 ## Testing
 
-Bridger attempts to make testing hypermedia APIs easier. It includes a [hypermedia-aware API client](https://github.com/bootic/bootic_client.rb) so you can follow links in your test as you would as a consumer of the API.
+Bridger attempts to make testing hypermedia APIs easier.
+It includes a [hypermedia-aware API client](https://github.com/bootic/bootic_client.rb) so you can follow links in your tests as you would as a consumer of the API.
 
 ```ruby
 # spec/api_spec.rb
 
 require 'spec_helper'
 require 'bridger/test_helpers'
-require_relative '../API'
+require_relative '../api'
 
 RSpec.describe App do
   include Bridger::TestHelpers
