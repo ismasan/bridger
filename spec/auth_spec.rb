@@ -81,7 +81,7 @@ RSpec.describe Bridger::Auth do
 
       expect {
         described_class.parse(req)
-      }.to raise_error Bridger::Auth::InvalidAccessTokenError
+      }.to raise_error Bridger::InvalidAccessTokenError
     end
   end
 
@@ -106,11 +106,11 @@ RSpec.describe Bridger::Auth do
       expect(auth.authorize!('a.b.c.d', authorizer)).to be true
       expect {
         auth.authorize!('a.b', authorizer)
-      }.to raise_error Bridger::Auth::InsufficientScopesError
+      }.to raise_error Bridger::InsufficientScopesError
 
       expect {
         auth.authorize!('a.b.c', authorizer, foo: "bar")
-      }.to raise_error Bridger::Auth::ForbiddenAccessError
+      }.to raise_error Bridger::ForbiddenAccessError
     end
   end
 end

@@ -65,11 +65,11 @@ module Sinatra
           begin
             auth! if endpoint.authenticates?
             json endpoint.run!(payload: build_payload, auth: auth, helper: links_helper)
-          rescue ::Bridger::Auth::MissingAccessTokenError => e
+          rescue ::Bridger::MissingAccessTokenError => e
             json serialize(e, ::Bridger::DefaultSerializers::AccessDenied), 403
-          rescue ::Bridger::Auth::ForbiddenAccessError => e
+          rescue ::Bridger::ForbiddenAccessError => e
             json serialize(e, ::Bridger::DefaultSerializers::AccessDenied), 403
-          rescue ::Bridger::Auth::AuthError => e
+          rescue ::Bridger::AuthError => e
             json serialize(e, ::Bridger::DefaultSerializers::Unauthorized), 401
           rescue ::Bridger::ValidationErrors => e
             json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload), 422
