@@ -31,8 +31,7 @@ module Bridger
       auth.authorize!(scope, authorizer, helper.params) if authenticates?
 
       presenter = action.run!(payload: payload, auth: auth)
-      raise "Missing serializer for #{name}" unless serializer
-      serializer.new(presenter, h: helper, auth: auth)
+      serializer ? serializer.new(presenter, h: helper, auth: auth) : nil
     end
 
     def build_rel(opts = {})

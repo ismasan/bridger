@@ -25,7 +25,11 @@ module Sinatra
     module Helpers
       def json(data, st = 200)
         content_type "application/json"
-        halt st, JSON.dump(data.to_hash)
+        if data
+          halt st, JSON.dump(data.to_hash)
+        else
+          halt 204, "{}"
+        end
       end
 
       def serialize(item, serializer)
