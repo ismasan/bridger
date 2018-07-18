@@ -116,6 +116,20 @@ end
 
 Now your Sinatra app esposes all registered endpoints, runs scope-based permissions, validates input parameters and includes links between resources.
 
+## Schemas
+
+`Bridger::Action` classes contain detailed information on your input schemas and validations.
+These can be exposed as JSON endpoints under `/schemas` in your API, with
+
+```ruby
+class API < Sinatra::Base
+  register Sinatra::Bridger
+  bridge  Bridger::Endpoints.instance, schemas: true
+end
+```
+
+You can then use schema information to build client-side validation, auto-generated documentation, etc.
+
 ## Testing
 
 Bridger attempts to make testing hypermedia APIs easier. It includes a [hypermedia-aware API client](https://github.com/bootic/bootic_client.rb) so you can follow links in your test as you would as a consumer of the API.
