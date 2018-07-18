@@ -16,8 +16,36 @@ module Bridger
       end
     end
 
-    class Config
+    class JWTTokenStore
+      ALGO = 'RS256'.freeze
+
+      def initialize(key, algo: ALGO)
+        @algo = algo
+        @public_key = if key.is_a?(String)
+          OpenSSL::PKey::RSA.new(File.read(key))
+        else
+          key
+        end
+      end
+
+      def [](token)
+        JWT.decode(token, public_key, true, algorithm: algo).first
+      rescue JWT::DecodeError => e
+        raise InvalidAccessTokenError.new(e.message)
+      rescue JWT::ExpiredSignature => e
+        raise ExpiredAccessTokenError.new(e.message)
+      end
+
+      private
       attr_reader :public_key, :algo
+    end
+
+    class Config
+      attr_reader :public_key, :algo, :token_store
+
+      def initialize
+        @token_store = {}
+      end
 
       def aliases=(mapping = {})
         @aliases = Scopes::Aliases.new(mapping)
@@ -28,33 +56,21 @@ module Bridger
       end
 
       def public_key=(key)
-        @public_key = if key.is_a?(String)
-          OpenSSL::PKey::RSA.new(File.read(key))
-        else
-          key
-        end
-      end
-
-      def algo=(a)
-        @algo = a
+        @token_store = JWTTokenStore.new(key)
       end
     end
 
     SPACE = /\s+/.freeze
-    ALGO = 'RS256'.freeze
 
     def self.parse(header)
       access_token = header.to_s.split(SPACE).last
-      raise MissingPublicKeyError, "you need to configure a public key" unless config.public_key
       raise MissingAccessTokenError, "missing access token" unless access_token
+      claims = config.token_store[access_token]
+      raise InvalidAccessTokenError, "unknown access token" unless claims
       new(
-        claims: JWT.decode(access_token, config.public_key, true, algorithm: (config.algo || ALGO)).first,
-        aliases: config.aliases
+        claims: claims,
+        aliases: config.aliases,
       )
-    rescue JWT::DecodeError => e
-      raise InvalidAccessTokenError.new(e.message)
-    rescue JWT::ExpiredSignature => e
-      raise ExpiredAccessTokenError.new(e.message)
     end
 
     def self.config(&block)
