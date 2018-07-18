@@ -135,6 +135,45 @@ end
 
 You can then use schema information to build client-side validation, auto-generated documentation, etc.
 
+## Scopes and authorization
+
+Scopes are permission trees.
+For example, the scope `all.users.create` represents the following structure:
+
+```
+all
+  users
+    create
+```
+
+A request's token scope is compared with a given endpoint's token to check access permissions, from left to right.
+
+* `all` has access to `all`
+* `all` has access to `all.users`
+* `all.users` has access to `all.users.create`
+* `all.accounts` does NOT have access to `all.users`
+* `all.accounts` does NOT have access to `all.users.create`
+
+Sometimes you'll want to authorize based on ownership. For example, I can only update a user whose ID is included in my credentials.
+For that you can define guard blocks that run at a specific branch of an endpoint's scope:
+
+```ruby
+Bridger::Endpoints.instance do
+  # run this block when hitting an endpoint with `all.users.update` scope
+  # and verify that targeted user is present in my access token info
+  authorize "all.users.update" do |scope, auth, params|
+    auth.claims['user_id'].to_i == params[:user_id].to_i
+  end
+
+  endpoint(:update_user, :put, '/users/:user_id',
+    title: "Update a user",
+    scope: 'all.user.update',
+    action: UpdateUser,
+    serializer: UserSerializer
+  )
+end
+```
+
 ## Testing
 
 Bridger attempts to make testing hypermedia APIs easier.
