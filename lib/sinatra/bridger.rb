@@ -33,7 +33,7 @@ module Sinatra
       end
 
       def auth!
-        @auth = ::Bridger::Auth.parse(request.env["HTTP_AUTHORIZATION"])
+        @auth = ::Bridger::Auth.parse(request)
       end
 
       def auth

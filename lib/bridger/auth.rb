@@ -41,10 +41,11 @@ module Bridger
     end
 
     class Config
-      attr_reader :public_key, :algo, :token_store
+      attr_reader :public_key, :algo, :token_store, :parse_values
 
       def initialize
         @token_store = {}
+        @parse_values = [:header, 'HTTP_AUTHORIZATION']
       end
 
       def aliases=(mapping = {})
@@ -58,15 +59,32 @@ module Bridger
       def public_key=(key)
         @token_store = JWTTokenStore.new(key)
       end
+
+      def token_store=(st)
+        @token_store = st
+      end
+
+      def parse_from(strategy, field_name)
+        @parse_values = [strategy, field_name]
+      end
     end
 
     SPACE = /\s+/.freeze
 
-    def self.parse(header)
-      access_token = header.to_s.split(SPACE).last
+    def self.parse(request, config = self.config)
+      access_token = case config.parse_values.first
+      when :header
+        request.env[config.parse_values.last].to_s.split(SPACE).last
+      when :query
+        request.params[config.parse_values.last.to_s]
+      else
+        nil
+      end
+
       raise MissingAccessTokenError, "missing access token" unless access_token
       claims = config.token_store[access_token]
       raise InvalidAccessTokenError, "unknown access token" unless claims
+
       new(
         claims: claims,
         aliases: config.aliases,

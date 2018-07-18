@@ -25,13 +25,48 @@ RSpec.describe Bridger::Auth do
         aid: 12,
         scopes: ["admin"]
       )
-
-      auth = described_class.parse("Bearer #{token}")
+      req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
+      auth = described_class.parse(req)
       expect(auth.shop_ids).to eq [11]
       expect(auth.app_id).to eq 12
       expect(auth.user_id).to eq 123
       expect(auth.has_user?).to be true
       expect(auth.scopes.to_a).to eq ['btc.me', 'btc.account.shops.mine']
+    end
+
+    it "parses token from querystring if configured" do
+      token = token_generator.generate(
+        uid: 123,
+        sids: [11],
+        aid: 12,
+        scopes: ["admin"]
+      )
+      req = double('Request', params: {'token' => token})
+      config = Bridger::Auth::Config.new
+      config.parse_from :query, :token
+      config.public_key = test_private_key.public_key
+
+      auth = described_class.parse(req, config)
+      expect(auth.shop_ids).to eq [11]
+      expect(auth.app_id).to eq 12
+    end
+
+    it "gets token claims from custom store, if configured" do
+      req = double('Request', params: {'token' => 'foo'})
+      config = Bridger::Auth::Config.new
+      config.parse_from :query, :token
+      config.token_store = {
+        'foo' => {
+          'uid' => 123,
+          'sids' => [11],
+          'aid' => 12,
+          'scopes' => ["admin"]
+        }
+      }
+
+      auth = described_class.parse(req, config)
+      expect(auth.shop_ids).to eq [11]
+      expect(auth.app_id).to eq 12
     end
 
     it "raises known exception if invalid token" do
@@ -42,9 +77,10 @@ RSpec.describe Bridger::Auth do
         aid: 12,
         scopes: ["admin"]
       )
+      req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
 
       expect {
-        described_class.parse("Bearer #{token}")
+        described_class.parse(req)
       }.to raise_error Bridger::Auth::InvalidAccessTokenError
     end
   end
@@ -57,13 +93,14 @@ RSpec.describe Bridger::Auth do
         aid: 12,
         scopes: ["a.b.c"]
       )
+      req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
 
       authorizer = Bridger::Authorizers::Tree.new
       authorizer.at('a.b') do |s, auth, params|
         !params || params[:foo] != "bar"
       end
 
-      auth = described_class.parse("Bearer #{token}")
+      auth = described_class.parse(req)
 
       expect(auth.authorize!('a.b.c', authorizer)).to be true
       expect(auth.authorize!('a.b.c.d', authorizer)).to be true
