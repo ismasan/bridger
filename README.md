@@ -60,6 +60,10 @@ class UserSerializer < Bridger::Serializer
     property :name, item.name
   end
 end
+
+# serialize user data.
+# request helper includes request info so serialized data can include fully-qualified links.
+user_data = UserSerializer.new(user, h: request_helper, auth: auth).to_hash
 ```
 
 ### Endpoints
