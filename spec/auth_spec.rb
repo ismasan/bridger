@@ -81,7 +81,7 @@ RSpec.describe Bridger::Auth do
 
       expect {
         described_class.parse(req)
-      }.to raise_error Bridger::InvalidAccessTokenError
+      }.to raise_error Bridger::ExpiredAccessTokenError
     end
   end
 

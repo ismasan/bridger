@@ -1,33 +1,24 @@
-require "jwt"
-require "openssl"
 require 'logger'
+require 'securerandom'
 require "bridger/scopes"
-require "bridger/errors"
+require "bridger/jwt_token_store"
 
 module Bridger
   class Auth
-    class JWTTokenStore
-      ALGO = 'RS256'.freeze
-
-      def initialize(key, algo: ALGO)
-        @algo = algo
-        @public_key = if key.is_a?(String)
-          OpenSSL::PKey::RSA.new(File.read(key))
-        else
-          key
-        end
+    class HashTokenStore
+      def initialize(hash)
+        @hash = hash
       end
 
-      def [](token)
-        JWT.decode(token, public_key, true, algorithm: algo).first
-      rescue JWT::DecodeError => e
-        raise InvalidAccessTokenError.new(e.message)
-      rescue JWT::ExpiredSignature => e
-        raise ExpiredAccessTokenError.new(e.message)
+      def set(claims)
+        key = SecureRandom.hex
+        @hash[key] = claims
+        key
       end
 
-      private
-      attr_reader :public_key, :algo
+      def get(key)
+        @hash[key]
+      end
     end
 
     class Config
@@ -53,6 +44,7 @@ module Bridger
       end
 
       def token_store=(st)
+        st = HashTokenStore.new(st) if st.is_a?(Hash)
         @token_store = st
       end
 
@@ -74,7 +66,7 @@ module Bridger
       end
 
       raise MissingAccessTokenError, "missing access token with #{config.parse_values.last} in #{config.parse_values.first}" unless access_token
-      claims = config.token_store[access_token]
+      claims = config.token_store.get(access_token)
       raise InvalidAccessTokenError, "unknown access token" unless claims
 
       new(
