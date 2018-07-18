@@ -69,7 +69,7 @@ user_data = UserSerializer.new(user, h: request_helper, auth: auth).to_hash
 ### Endpoints
 
 An endpoint combines auth, action and serializer into a callable object that fulfills an entire API request (albeit being framework agnostic).
-Endpoints incluse access scopes and give serializers information to include (or not) links to other endpoints, based on permissions.
+Endpoints include access scopes and pass information to serializers so they can generate (or not) links to other endpoints, based on permissions.
 
 ```ruby
 Bridger::Endpoints.instance do
@@ -104,7 +104,7 @@ user_data = endpoint.run!(
   # auth data is extracted from request
   auth: Bridger::Auth.parse(request),
   # helper is whatever subset of request info you want available in serializers
-  helper: some_helper_object
+  helper: request_helper
 )
 ```
 
@@ -120,11 +120,11 @@ require 'sinatra/base'
 
 class API < Sinatra::Base
   register Sinatra::Bridger
-  bridge  Bridger::Endpoints.instance
+  bridge Bridger::Endpoints.instance
 end
 ```
 
-Now your Sinatra app esposes all registered endpoints, runs scope-based permissions, validates input parameters and includes links between resources.
+Now your Sinatra app exposes all registered endpoints, runs scope-based permissions, validates input parameters and includes links between resources.
 
 ## Schemas
 
