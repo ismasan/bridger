@@ -207,7 +207,7 @@ RSpec.describe App do
     # is needed to verify 3rd party tokens (ex. a separate identity service)
     Bridger::Auth.config do |c|
       c.parse_from :header, 'HTTP_AUTHORIZATION'
-      c.public_key = test_private_key.public_key
+      c.token_store = {}
       c.logger = Logger.new(STDOUT)
     end
   end
