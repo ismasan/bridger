@@ -1,5 +1,6 @@
 require "jwt"
 require "openssl"
+require 'logger'
 require "bridger/scopes"
 
 module Bridger
@@ -41,19 +42,21 @@ module Bridger
     end
 
     class Config
-      attr_reader :public_key, :algo, :token_store, :parse_values
+      attr_reader :aliases, :public_key, :algo, :token_store, :parse_values, :logger
 
       def initialize
         @token_store = {}
         @parse_values = [:header, 'HTTP_AUTHORIZATION']
+        @aliases = Scopes::Aliases.new({})
+        @logger = Logger.new(IO::NULL)
       end
 
       def aliases=(mapping = {})
         @aliases = Scopes::Aliases.new(mapping)
       end
 
-      def aliases
-        @aliases ||= Scopes::Aliases.new({})
+      def logger=(l)
+        @logger = l
       end
 
       def public_key=(key)
@@ -81,7 +84,7 @@ module Bridger
         nil
       end
 
-      raise MissingAccessTokenError, "missing access token" unless access_token
+      raise MissingAccessTokenError, "missing access token with #{config.parse_values.last} in #{config.parse_values.first}" unless access_token
       claims = config.token_store[access_token]
       raise InvalidAccessTokenError, "unknown access token" unless claims
 
@@ -89,6 +92,9 @@ module Bridger
         claims: claims,
         aliases: config.aliases,
       )
+    rescue StandardError => e
+      config.logger.error "#{e.class.name}: #{e.message}"
+      raise
     end
 
     def self.config(&block)
