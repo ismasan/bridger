@@ -44,7 +44,8 @@ user = CreateUser.run!(payload: {name: "Joe"}, auth: auth)
 
 ### Serializer
 
-A serializer describes how a data object is converted into a JSON Hash. It uses [Oat](https://github.com/ismasan/oat)
+A serializer describes how a data object is converted into a JSON Hash. It uses [Oat](https://github.com/ismasan/oat).
+
 Serializers have helpers to add links between resources, based upon registered endpoints (see below).
 
 ```ruby
