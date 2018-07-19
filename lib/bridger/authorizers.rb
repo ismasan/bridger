@@ -35,7 +35,6 @@ module Bridger
         return false unless checks.all?{|ch| ch.call(scope, *args) }
 
         segments = parse_segments(scope)
-
         segment = segments.shift
         branch = branches[segment]
 
