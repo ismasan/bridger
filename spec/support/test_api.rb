@@ -6,7 +6,8 @@ USERS = {}
 # The models
 User = Struct.new(:id, :name, :age)
 
-# Actions are the thing that your API can do
+# Actions are the things that your API can do
+# they define parameter schemas that will be used to validate user input before they hit the model layer.
 # their `#run!` method returns a data object (ex. a model) then passed to the serializer
 class ShowRoot < Bridger::Action
   private
