@@ -61,6 +61,9 @@ module Sinatra
       app.helpers Helpers
       app.enable :dump_errors
       app.disable :raise_errors, :show_exceptions
+      app.not_found do
+        json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::NotFound), 404
+      end
       app.error do
         json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::ServerError), 500
       end

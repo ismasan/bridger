@@ -89,6 +89,12 @@ module Bridger
       end
     end
 
+    class NotFound < ServerError
+      schema do
+        type ['errors', 'notFoundError', item.class.name]
+      end
+    end
+
     class InvalidPayload < ::Bridger::Serializer
       schema do
         type ['errors', 'invalid']
