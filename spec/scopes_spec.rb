@@ -31,6 +31,14 @@ RSpec.describe Bridger::Scopes do
     end
   end
 
+  it "compares" do
+    expect(described_class.wrap(['api']) > described_class.wrap(['api.me'])).to be true
+    expect(described_class.wrap(['foo', 'api']) > described_class.wrap(['api.me'])).to be true
+    expect(described_class.wrap(['foo', 'api']) > described_class.wrap(['api', 'api.me'])).to be true
+    expect(described_class.wrap(['api.users']) > described_class.wrap(['api', 'api.me'])).to be false
+    expect(described_class.wrap(['api.users']) > described_class.wrap(['api', 'api.me', 'api.users.create'])).to be false
+  end
+
   describe "#resolve" do
     it "finds the shallowest matching scope, or nil" do
       scopes = described_class.new(["btc.me", "btc.account.shops.mine", "btc.account", "btc.shops.list"])

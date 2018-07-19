@@ -2,9 +2,22 @@ module Bridger
   class Scopes
     include Comparable
 
+    def self.wrap(sc)
+      case sc
+      when String, Scope
+        new([sc])
+      when Array
+        new(sc)
+      when Scopes
+        sc
+      else
+        raise "Can't compare #{sc.inspect} with #{self.name}"
+      end
+    end
+
     def initialize(scopes)
       @scopes = scopes.map{|sc|
-        Scope.new(sc)
+        sc.is_a?(Scope) ? sc : Scope.new(sc)
       }.sort{|a,b| b <=> a}
     end
 
@@ -13,13 +26,22 @@ module Bridger
       scopes.find{|s| s >= sc }
     end
 
+    def any?(&block)
+      scopes.any? &block
+    end
+
+    def all?(&block)
+      scopes.all? &block
+    end
+
     def can?(another)
-      self >= another
+      another = self.class.wrap(another)
+      !!scopes.find{|s1| another.any?{|s2| s1 >= s2}}
     end
 
     def <=>(another)
-      # find first scope that is higher than any scopes in another
-      hit = scopes.find{|s1| another.scopes.any?{|s2| s1 >= s2}}
+      another = self.class.wrap(another)
+      hit = scopes.find{|s1| another.all?{|s2| s1 >= s2}}
       hit ? 1 : -1
     end
 
