@@ -1,116 +1,167 @@
-require 'sinatra/base'
 require 'sinatra/bridger'
+require 'sinatra/base'
 
-# Bridger::Auth.config do |c|
-#   # Map scope aliases to what they actually mean
-#   c.aliases = {
-#     "god"    => ["btc"],
-#     "admin"  => ["btc.me", "btc.account.shops.mine"],
-#     "public" => ["btc.me"]
-#   }
+USERS = {}
+User = Struct.new(:id, :name, :age)
 
-#   # Use this RSA public key to
-#   # verify JWT access tokens
-#   # c.public_key = File.join(
-#   #   File.dirname(__FILE__),
-#   #   "test_credentials",
-#   #   "public_key.rsa.pub"
-#   # )
-# end
-
-RootModel = Struct.new(:app_name)
-ShopModel = Struct.new(:url, :name)
-
-class RootAction < Bridger::Action
-  private
-  def run!
-    RootModel.new("ACME")
-  end
+class TestSerializer < Bridger::Serializer
 end
 
-class ShopAction < Bridger::Action
-  private
-  def run!
-    ShopModel.new('acme.bootic.net', 'ACME')
-  end
-end
-
-class ShopsAction < Bridger::Action
+class RootSerializer < TestSerializer
   schema do
-    field(:q).type(:string)
-    field(:page).type(:integer)
-  end
+    self_link
+    rel :user
+    rel :users
+    rel :create_user
 
-  private
-  def run!
-    [
-      ShopModel.new('acme.bootic.net', 'ACME'),
-      ShopModel.new('www.bootic.net', 'Bootic'),
-    ]
-  end
-end
-
-class RootSerializer < Bridger::Serializer
-  schema do
-    rel :shop, always: true
+    link("btc:schemas", href: url("/schemas"))
 
     link("btc:docs",
      href: "https://developers.bootic.net",
      type: "text/html",
      title: "API documentation"
     )
-    link("btc:schemas", href: url("/schemas"))
 
     self_link
-    property :app_name, item.app_name
+    property :welcome, "Welcome to this API"
   end
 end
 
-class ShopSerializer < Bridger::Serializer
+class UserSerializer < TestSerializer
   schema do
+    rel :user, as: 'self', user_id: item.id
+    rel :delete_user, user_id: item.id
     rel :root
-    self_link
-    property :url, item.url
+
+    property :id, item.id
     property :name, item.name
+    property :age, item.age
   end
 end
 
-class ShopsSerializer < Bridger::Serializer
+class UsersSerializer < TestSerializer
   schema do
+    rel :user
     rel :root
-    self_link
-    items item, ShopSerializer
+
+    items item, UserSerializer
   end
+end
+
+class ShowRoot < Bridger::Action
+  private
+  def run!
+
+  end
+end
+
+class CreateUser < Bridger::Action
+  schema do
+    field(:name).type(:string).required
+    field(:age).type(:integer).required
+  end
+
+  private
+  def run!
+    id = SecureRandom.uuid
+    USERS[id] = User.new(
+      id,
+      params[:name],
+      params[:age]
+    )
+  end
+end
+
+class ShowUser < Bridger::Action
+  schema do
+    field(:user_id).type(:string).required
+  end
+
+  private
+  def run!
+    USERS.fetch(params[:user_id])
+  end
+end
+
+class DeleteUser < Bridger::Action
+  schema do
+    field(:user_id).type(:string).required
+  end
+
+  private
+  def run!
+    USERS.delete(params[:user_id])
+  end
+end
+
+class ListUsers < Bridger::Action
+  schema do
+    field(:q)
+  end
+
+  private
+  def run!
+    set = USERS.values.sort_by(&:name)
+    set
+  end
+end
+
+TOKEN_STORE = {
+  'me' => {
+    'scopes' => ['btc.me'],
+    'aid' => 1,
+    'sids' => [11]
+  },
+  'god' => {
+    'scopes' => ['btc'],
+    'aid' => 1,
+    'sids' => [11]
+  },
+}
+
+Bridger::Auth.config do |c|
+  c.parse_from :query, :access_token
+  c.token_store = TOKEN_STORE
 end
 
 Bridger::Endpoints.instance.build do
-  authorize "btc.account.shops.mine" do |scope, auth, params|
-    auth.shop_ids.include? params[:shop_id].to_i
-  end
-
   endpoint(:root, :get, "/?",
     title: "API root",
-    scope: "btc.me",
-    action: RootAction,
+    scope: "api.me",
+    action: ShowRoot,
     serializer: RootSerializer,
   )
 
-  endpoint(:shop, :get, "/shops/:shop_id",
-    title: "Shop details",
-    scope: "btc.account.shops.mine.list",
-    action: ShopAction,
-    serializer: ShopSerializer,
+  endpoint(:users, :get, "/users",
+    title: "List users",
+    scope: "api.users.list",
+    action: ListUsers,
+    serializer: UsersSerializer,
   )
 
-  endpoint(:shops, :get, "/shops",
-    title: "Shop details",
-    scope: "btc.account.shops.mine.list",
-    action: ShopsAction,
-    serializer: ShopsSerializer,
+  endpoint(:user, :get, "/users/:user_id",
+    title: "User details",
+    scope: "api.users.list",
+    action: ShowUser,
+    serializer: UserSerializer,
+  )
+
+  endpoint(:create_user, :post, "/users",
+    title: "Create a new user",
+    scope: "api.users.create",
+    action: CreateUser,
+    serializer: UserSerializer,
+  )
+
+  endpoint(:delete_user, :delete, "/users/:user_id",
+    title: "Delete user",
+    scope: "api.users.delete",
+    action: DeleteUser,
+    serializer: nil,
   )
 end
 
-class TestApi < Sinatra::Base
+class TestAPI < Sinatra::Base
   register Sinatra::Bridger
   bridge Bridger::Endpoints.instance, schemas: true
 end

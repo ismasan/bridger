@@ -3,31 +3,26 @@ require "bridger/auth"
 
 RSpec.describe Bridger::Auth do
   before :all do
-    Bridger::Auth.config do |c|
-      # Map scope aliases to what they actually mean
-      c.aliases = {
-        "god"    => ["btc"],
-        "admin"  => ["btc.me", "btc.account.shops.mine"],
-        "public" => ["btc.me"]
-      }
-
-      # Use this RSA public key to
-      # verify JWT access tokens
-      c.token_store = {}
-      # c.public_key = test_private_key.public_key
-    end
+    @config = Bridger::Auth::Config.new
+    @config.aliases = {
+      "god"    => ["btc"],
+      "admin"  => ["btc.me", "btc.account.shops.mine"],
+      "public" => ["btc.me"]
+    }
+    @config.token_store = {}
+    @token_store = @config.token_store
   end
 
   describe ".parse" do
     it "parses token from header and extracts claims correctly" do
-      token = Bridger::Auth.config.token_store.set(
+      token = @token_store.set(
         uid: 123,
         sids: [11],
         aid: 12,
         scopes: ["admin"]
       )
       req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
-      auth = described_class.parse(req)
+      auth = described_class.parse(req, @config)
       expect(auth.shop_ids).to eq [11]
       expect(auth.app_id).to eq 12
       expect(auth.user_id).to eq 123
@@ -36,8 +31,7 @@ RSpec.describe Bridger::Auth do
     end
 
     it "parses token from querystring if configured" do
-      store = Bridger::Auth.config.token_store
-      token = store.set(
+      token = @token_store.set(
         uid: 123,
         sids: [11],
         aid: 12,
@@ -46,7 +40,7 @@ RSpec.describe Bridger::Auth do
       req = double('Request', params: {'token' => token})
       config = Bridger::Auth::Config.new
       config.parse_from :query, :token
-      config.token_store = store
+      config.token_store = @token_store
 
       auth = described_class.parse(req, config)
       expect(auth.shop_ids).to eq [11]
@@ -75,14 +69,14 @@ RSpec.describe Bridger::Auth do
       req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer foobar"})
 
       expect {
-        described_class.parse(req)
+        described_class.parse(req, @config)
       }.to raise_error Bridger::InvalidAccessTokenError
     end
   end
 
   describe "#authorize!" do
     it "authorizes when scopes match" do
-      token = Bridger::Auth.config.token_store.set(
+      token = @token_store.set(
         uid: 123,
         sids: [11],
         aid: 12,
@@ -95,7 +89,7 @@ RSpec.describe Bridger::Auth do
         !params || params[:foo] != "bar"
       end
 
-      auth = described_class.parse(req)
+      auth = described_class.parse(req, @config)
 
       expect(auth.authorize!('a.b.c', authorizer)).to be true
       expect(auth.authorize!('a.b.c.d', authorizer)).to be true

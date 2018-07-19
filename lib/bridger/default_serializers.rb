@@ -112,7 +112,7 @@ module Bridger
 
           s.property :rel, endpoint.name
           s.property :title, endpoint.title
-          s.property :method, endpoint.verb
+          s.property :verb, endpoint.verb
           s.property :scope, endpoint.scope.to_s
 
           s.property :templated, endpoint.relation.templated?
@@ -129,7 +129,7 @@ module Bridger
 
         property :rel, item.name
         property :title, item.title
-        property :method, item.verb
+        property :verb, item.verb
         property :scope, item.scope.to_s
 
         property :templated, item.relation.templated?
