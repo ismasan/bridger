@@ -21,7 +21,7 @@ RSpec.describe Bridger::Endpoint do
     expect(endpoint.path).to eq '/v1/products'
     expect(endpoint.verb).to eq :post
     expect(endpoint.name).to eq "create_product"
-    expect(endpoint.scope).to eq 'a.b.c'
+    expect(endpoint.scope.to_s).to eq 'a.b.c'
     expect(endpoint.action).to eq action
     expect(endpoint.serializer).to eq serializer
   end
@@ -43,7 +43,7 @@ RSpec.describe Bridger::Endpoint do
     helper = double('Helper', params: params)
     presenter = double('Presenter')
 
-    expect(auth).to receive(:authorize!).with('a.b.c', authorizer, params).and_return true
+    expect(auth).to receive(:authorize!).with(endpoint.scope, authorizer, params).and_return true
     expect(action).to receive(:run!).with(payload: {p1: 1}, auth: auth).and_return presenter
     expect(serializer).to receive(:new).with(presenter, h: helper, auth: auth).and_return({out: 1})
 
@@ -56,5 +56,23 @@ RSpec.describe Bridger::Endpoint do
     expect(rel.path).to eq '/v1/shops/123/products'
     expect(rel.title).to eq 'Create products'
     expect(rel.verb).to eq :post
+  end
+
+  it "#authorized?" do
+    endpoint = described_class.new(
+      name: 'create_product',
+      verb: :post,
+      path: '/v1/shops/{shop_id}/products',
+      title: 'Create products',
+      scope: 'a.b.c',
+      authorizer: authorizer,
+      action: action,
+      serializer: serializer
+    )
+
+    auth = double('Auth')
+    expect(auth).to receive(:authorized?).with(endpoint.scope).and_return true
+    expect(authorizer).to receive(:authorized?).with(endpoint.scope.to_a, auth, {}).and_return true
+    expect(endpoint.authorized?(auth, {})).to be true
   end
 end

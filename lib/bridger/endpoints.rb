@@ -1,4 +1,3 @@
-require "bridger/scopes"
 require "bridger/authorizers"
 
 module Bridger
@@ -37,7 +36,7 @@ module Bridger
         path: path,
         authorizer: authorizer,
         title: title,
-        scope: scope ? Bridger::Scopes::Scope.new(scope) : nil,
+        scope: scope,
         action: action,
         serializer: serializer
       )

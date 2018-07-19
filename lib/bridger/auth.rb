@@ -109,6 +109,10 @@ module Bridger
       user_id.to_i != 0
     end
 
+    def authorized?(scope)
+      scopes.can? scope
+    end
+
     def authorize!(required_scope, authorizer, *args)
       sp = scopes.resolve(required_scope)
       if !sp

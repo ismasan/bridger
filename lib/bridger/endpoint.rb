@@ -1,4 +1,5 @@
 require "bridger/rel_builder"
+require "bridger/scopes"
 
 module Bridger
   class Endpoint
@@ -11,7 +12,7 @@ module Bridger
       @verb = verb.to_sym
       @path = path
       @title = title
-      @scope = scope
+      @scope = scope ? Bridger::Scopes::Scope.new(scope) : nil
       @authorizer = authorizer
       @action = action
       @serializer = serializer
@@ -55,7 +56,7 @@ module Bridger
     end
 
     def authorized?(auth, params)
-      authorizer.authorized?(scope.to_a, auth, params)
+      auth.authorized?(scope) && authorizer.authorized?(scope.to_a, auth, params)
     end
 
     private
