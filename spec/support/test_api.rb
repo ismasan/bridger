@@ -1,53 +1,13 @@
 require 'sinatra/bridger'
 require 'sinatra/base'
 
+# A simple users repository. You would use some ORM or database layer (ActiveRecord, Sequel, etc)
 USERS = {}
+# The models
 User = Struct.new(:id, :name, :age)
 
-class TestSerializer < Bridger::Serializer
-end
-
-class RootSerializer < TestSerializer
-  schema do
-    self_link
-    rel :user
-    rel :users
-    rel :create_user
-
-    link("btc:schemas", href: url("/schemas"))
-
-    link("btc:docs",
-     href: "https://developers.bootic.net",
-     type: "text/html",
-     title: "API documentation"
-    )
-
-    self_link
-    property :welcome, "Welcome to this API"
-  end
-end
-
-class UserSerializer < TestSerializer
-  schema do
-    rel :user, as: 'self', user_id: item.id
-    rel :delete_user, user_id: item.id
-    rel :root
-
-    property :id, item.id
-    property :name, item.name
-    property :age, item.age
-  end
-end
-
-class UsersSerializer < TestSerializer
-  schema do
-    rel :user
-    rel :root
-
-    items item, UserSerializer
-  end
-end
-
+# Actions are the thing that your API can do
+# their `#run!` method returns a data object (ex. a model) then passed to the serializer
 class ShowRoot < Bridger::Action
   private
   def run!
@@ -106,6 +66,50 @@ class ListUsers < Bridger::Action
   end
 end
 
+# Serializers turn the result of actions into JSON structures
+class RootSerializer < Bridger::Serializer
+  schema do
+    self_link
+    rel :user
+    rel :users
+    rel :create_user
+
+    link("btc:schemas", href: url("/schemas"))
+
+    link("btc:docs",
+     href: "https://developers.bootic.net",
+     type: "text/html",
+     title: "API documentation"
+    )
+
+    self_link
+    property :welcome, "Welcome to this API"
+  end
+end
+
+class UserSerializer < Bridger::Serializer
+  schema do
+    rel :user, as: 'self', user_id: item.id
+    rel :delete_user, user_id: item.id
+    rel :root
+
+    property :id, item.id
+    property :name, item.name
+    property :age, item.age
+  end
+end
+
+class UsersSerializer < Bridger::Serializer
+  schema do
+    rel :user
+    rel :root
+
+    items item, UserSerializer
+  end
+end
+
+# Initialize an in-memory access token store with a few test tokens
+# so we can try it out in the browser, ex `/?access_token=me`
 TOKEN_STORE = {
   'me' => {
     'scopes' => ['btc.me'],
@@ -119,11 +123,14 @@ TOKEN_STORE = {
   },
 }
 
+# configure this app to take access tokens from querystring
+# note that we change this in specs to use the Authorization header
 Bridger::Auth.config do |c|
   c.parse_from :query, :access_token
   c.token_store = TOKEN_STORE
 end
 
+# Your API's endpoints. Each combines an action, serializer, some metadata and a permissions scope.
 Bridger::Endpoints.instance.build do
   endpoint(:root, :get, "/?",
     title: "API root",
@@ -161,7 +168,11 @@ Bridger::Endpoints.instance.build do
   )
 end
 
+# Let's use Sinatra as the Rack vessel for our endpoints
+# it will also exposes endpoint metadata publicly at /schemas
+#
 class TestAPI < Sinatra::Base
   register Sinatra::Bridger
   bridge Bridger::Endpoints.instance, schemas: true
 end
+
