@@ -1,6 +1,7 @@
 require "jwt"
 require "openssl"
 require 'securerandom'
+require 'pathname'
 require "bridger/errors"
 
 module Bridger
@@ -37,12 +38,15 @@ module Bridger
     attr_reader :public_key, :private_key, :algo
 
     def rsa_key(key)
-      if key.is_a?(String)
-        OpenSSL::PKey::RSA.new(File.read(key))
-      elsif key.is_a?(OpenSSL::PKey::RSA)
+      case key
+      when Pathname
+        OpenSSL::PKey::RSA.new(key.read)
+      when String
+        OpenSSL::PKey::RSA.new(key)
+      when OpenSSL::PKey::RSA
         key
       else
-        raise "key #{key} must be a path string or an OpenSSL::PKey::RSA"
+        raise "key #{key} must be a Pathname, string or an OpenSSL::PKey::RSA"
       end
     end
   end
