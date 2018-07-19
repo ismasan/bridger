@@ -26,7 +26,7 @@ module Sinatra
       def json(data, st = 200)
         content_type "application/json"
         if data
-          halt st, JSON.dump(data.to_hash)
+          halt st, ::JSON.generate(data.to_hash)
         else
           halt 204, "{}"
         end
