@@ -1,5 +1,6 @@
 require "bridger/rel_builder"
 require "bridger/scopes"
+require "bridger/action"
 
 module Bridger
   class Endpoint
@@ -14,7 +15,7 @@ module Bridger
       @title = title
       @scope = scope ? Bridger::Scopes::Scope.new(scope) : nil
       @authorizer = authorizer
-      @action = action
+      @action = action || Bridger::Action
       @serializer = serializer
     end
 
