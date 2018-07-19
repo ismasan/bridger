@@ -73,6 +73,22 @@ module Bridger
       end
     end
 
+    class ServerError < ::Bridger::Serializer
+      schema do
+        type ['errors', 'serverError', item.class.name]
+
+        properties do |props|
+          props.message item.message
+        end
+
+        entities(
+          :errors,
+          [{field: '$', messages:[item.message]}],
+          ErrorSerializer
+        )
+      end
+    end
+
     class InvalidPayload < ::Bridger::Serializer
       schema do
         type ['errors', 'invalid']

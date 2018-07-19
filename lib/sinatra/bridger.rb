@@ -4,7 +4,7 @@ require 'bridger/default_serializers'
 
 module Sinatra
   module Bridger
-    class LinksHelper
+    class RequestHelper
       attr_reader :endpoints, :params
 
       def initialize(auth, endpoints, app)
@@ -33,7 +33,7 @@ module Sinatra
       end
 
       def serialize(item, serializer)
-        serializer.new(item, h: links_helper)
+        serializer.new(item, h: request_helper)
       end
 
       def auth!
@@ -52,13 +52,18 @@ module Sinatra
         end
       end
 
-      def links_helper
-        @links_helper ||= LinksHelper.new(auth, settings.endpoints, self)
+      def request_helper
+        @request_helper ||= RequestHelper.new(auth, settings.endpoints, self)
       end
     end
 
     def self.registered(app)
       app.helpers Helpers
+      app.enable :dump_errors
+      app.disable :raise_errors, :show_exceptions
+      app.error do
+        json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::ServerError), 500
+      end
     end
 
     def bridge(endpoints, schemas: false)
@@ -68,7 +73,7 @@ module Sinatra
         public_send(endpoint.verb, endpoint.path) do
           begin
             auth! if endpoint.authenticates?
-            json endpoint.run!(payload: build_payload, auth: auth, helper: links_helper)
+            json endpoint.run!(payload: build_payload, auth: auth, helper: request_helper)
           rescue ::Bridger::MissingAccessTokenError => e
             json serialize(e, ::Bridger::DefaultSerializers::AccessDenied), 403
           rescue ::Bridger::ForbiddenAccessError => e
