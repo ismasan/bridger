@@ -12,7 +12,7 @@ module Bridger
     def initialize(key, pkey: nil, algo: ALGO)
       @algo = algo
       @public_key = rsa_key(key)
-      @private_key = rsa_key(pkey)
+      @private_key = pkey ? rsa_key(pkey) : nil
     end
 
     def set(claims)
