@@ -15,6 +15,8 @@ module Bridger
     end
 
     def set(claims)
+      raise ArgumentError, "you need to provide a private RSA key in order to generate JWT tokens" unless private_key
+
       now = Time.now.utc.to_i
       claims = {
         exp: now + WINDOW,
@@ -44,7 +46,7 @@ module Bridger
       elsif key.is_a?(OpenSSL::PKey::RSA)
         key
       else
-        raise "key #{key} must respond to #read, be a string or an OpenSSL::PKey::RSA"
+        raise ArgumentError, "key #{key} must respond to #read, be a string or an OpenSSL::PKey::RSA"
       end
     end
   end
