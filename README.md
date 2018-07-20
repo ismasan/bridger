@@ -18,6 +18,17 @@ endpoint(:create_user, :post, '/users',
 These endpoints encapsulate rich information on each thing your API can do, regardless of the Rack/routing framework you use.
 This information can be used to generate input schemas, documentation, and hypermedia links between different endpoints. The latter allows you to model not just individual HTTP requests, but workflows through your API. Some context [here](https://robots.thoughtbot.com/writing-a-hypermedia-api-client-in-ruby).
 
+Bridger _does not_ tell you where to put your files, how to name your clases or what database library to use (you can use whatever you want). Rather, it aims to be a high-level description of your APIs inputs and outputs, and how they relate to eachother.
+
+On the testing side, it allows you to write high-level, feature-style tests, such as:
+
+```ruby
+it "creates a user" do
+  user = root.create_user(name: "Joe Bloggs")
+  expect(user.name).to eq "Joe Bloggs"
+end
+```
+
 ## Concepts
 
 ### Auth
@@ -263,6 +274,13 @@ end
 ```
 
 Making a direct call to an unauthorized endpoint will respond with a `403 Forbidden` JSON error response.
+
+## To DO
+
+* API console (`bridger console`) so you can interact with your API in an IRB session.
+* Help setting up logging in Sinatra apps? (always annoying)
+* Generic Rack request helper, not Sinatra dependent?
+* New version of Oat with schema reflection, so we can auto-document output schemas too
 
 ## Installation
 
