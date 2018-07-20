@@ -337,9 +337,11 @@ Bridger::Auth.config do |c|
 end
 ```
 
+### Generating tokens
+
 Note that all token stores can be used to generate tokens, too (useful in development, tests, or to build your own identity service).
 
-```
+```ruby
 store = c.token_store = Bridger::JWTTokenStore.new("mys3cr3t", algo: 'HS256')
 token = store.set(
   user_id: 1,
