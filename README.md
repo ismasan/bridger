@@ -271,6 +271,7 @@ Making a direct call to an unauthorized endpoint will respond with a `403 Forbid
 * API console (`bridger console`) so you can interact with your API in an IRB session.
 * Help setting up logging in Sinatra apps? (always annoying)
 * Generic Rack request helper, not Sinatra dependent?
+* New version of Oat with schema reflection, so we can auto-document output schemas too
 
 ## Installation
 
