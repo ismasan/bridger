@@ -27,6 +27,21 @@ RSpec.describe Bridger::JWTTokenStore do
       expect(claims['exp']).not_to be_nil
     end
 
+    it "accepts string keys" do
+      store = described_class.new(test_private_key.public_key.to_s, pkey: test_private_key.to_s)
+      token = store.set(uid: 111)
+      claims = store.get(token)
+      expect(claims['uid']).to eq 111
+    end
+
+    it "accepts #read able keys" do
+      public_key = StringIO.new(test_private_key.public_key.to_s)
+      store = described_class.new(public_key, pkey: test_private_key)
+      token = store.set(uid: 111)
+      claims = store.get(token)
+      expect(claims['uid']).to eq 111
+    end
+
     it "raises if invalid JWT" do
       expect{
         store.get('foobar')
