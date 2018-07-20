@@ -234,7 +234,7 @@ end
 
 ... So you can test an API by _using it_. High level feature-tests for your API!
 
-You can check permission errors:
+Hypermedia links will be not be present if your current scope doesn't have permissions over the target endpoint:
 
 ```ruby
 it "does not let incorrect scope create user" do
@@ -242,12 +242,11 @@ it "does not let incorrect scope create user" do
     uid: 123,
     scopes: ["all.me"] # create_user requires 'all.users.create' scope
   )
-  # HTTP errors are raised by BooticClient gem
-  expect{
-    user = root.create_user(name: "Joe")
-  }.to raise_error BooticClient::AccessForbiddenError
+  expect(root.can?(:create_user)).to be false
 end
 ```
+
+Making a direct call to an unauthorized endpoint will respond with a `403 Forbidden` JSON error response.
 
 ## Installation
 
