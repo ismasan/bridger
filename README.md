@@ -287,6 +287,32 @@ Bridger::Auth.config do |c|
 end
 ```
 
+You can also provide a custom token store.
+
+```ruby
+class DatabaseAccessToken < ActiveRecord::Base
+  validates :access_token, presence: true
+  serialize :claims
+
+  def self.set(claims)
+    token = create!(
+      access_token: SecureRandom.hex,
+      claims: claims
+    )
+    token.access_token
+  end
+
+  def self.get(access_token)
+    token = find_by(access_token: access_token)
+    token.present? ? token.claims : nil
+  end
+end
+
+Bridger::Auth.config do |c|
+  c.token_store = DatabaseAccessToken
+end
+```
+
 ### JWT (JSON Web Tokens)
 
 JWT tokens are JSON objects that contain all permission information right there in the token, encoded and signed cryptographically so they can't be tampered with.
