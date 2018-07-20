@@ -266,6 +266,12 @@ end
 
 Making a direct call to an unauthorized endpoint will respond with a `403 Forbidden` JSON error response.
 
+## To DO
+
+* API console (`bridger console`) so you can interact with your API in an IRB session.
+* Help setting up logging in Sinatra apps? (always annoying)
+* Generic Rack request helper, not Sinatra dependent?
+
 ## Installation
 
 Add this line to your application's Gemfile:
