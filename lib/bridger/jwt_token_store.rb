@@ -5,17 +5,22 @@ require "bridger/errors"
 
 module Bridger
   class JWTTokenStore
-    ALGO = 'RS256'.freeze
+    RSA_ALGOS = ['RS256', 'RS384', 'RS512'].freeze
     WINDOW = 10 # seconds
 
-    def initialize(key, pkey: nil, algo: ALGO)
+    def initialize(key, pkey: nil, algo: RSA_ALGOS.first)
       @algo = algo
-      @public_key = rsa_key(key)
-      @private_key = pkey ? rsa_key(pkey) : nil
+      if RSA_ALGOS.include?(algo)
+        @public_key = rsa_key(key)
+        @private_key = pkey ? rsa_key(pkey) : nil
+      else
+        @public_key = @private_key = read_key(key)
+        raise ArgumentError, "key must respond to #read or be a String, was #{key.inspect}" unless @public_key
+      end
     end
 
     def set(claims)
-      raise ArgumentError, "you need to provide a private RSA key in order to generate JWT tokens" unless private_key
+      raise ArgumentError, "you need to provide a valid #{algo} key in order to generate JWT tokens" unless private_key
 
       now = Time.now.utc.to_i
       claims = {
@@ -38,11 +43,19 @@ module Bridger
     private
     attr_reader :public_key, :private_key, :algo
 
-    def rsa_key(key)
-      if key.respond_to?(:read) # Pathname, File, open-uri, etc
-        OpenSSL::PKey::RSA.new(key.read)
+    def read_key(key)
+      if key.respond_to?(:read)
+        key.read
       elsif key.is_a?(String)
-        OpenSSL::PKey::RSA.new(key)
+        key
+      else
+        nil
+      end
+    end
+
+    def rsa_key(key)
+      if txt = read_key(key)
+        OpenSSL::PKey::RSA.new(txt)
       elsif key.is_a?(OpenSSL::PKey::RSA)
         key
       else

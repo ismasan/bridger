@@ -42,6 +42,31 @@ RSpec.describe Bridger::JWTTokenStore do
       expect(claims['uid']).to eq 111
     end
 
+    it "accepts RS512 keys" do
+      store = described_class.new(
+        test_private_key.public_key,
+        pkey: test_private_key,
+        algo: 'RS512'
+      )
+      token = store.set(uid: 111)
+      claims = store.get(token)
+      expect(claims['uid']).to eq 111
+    end
+
+    it "accepts HMAC key HS256" do
+      store = described_class.new("somesecret", algo: 'HS256')
+      token = store.set(uid: 111)
+      claims = store.get(token)
+      expect(claims['uid']).to eq 111
+    end
+
+    it "accepts HMAC key HS512" do
+      store = described_class.new("somesecret", algo: 'HS512')
+      token = store.set(uid: 111)
+      claims = store.get(token)
+      expect(claims['uid']).to eq 111
+    end
+
     it "raises if invalid JWT" do
       expect{
         store.get('foobar')
