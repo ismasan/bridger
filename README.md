@@ -327,7 +327,7 @@ end
 
 The example above uses a string secret to verify token signatures created with the same secret.
 
-You can use one of the supported RSA (asymetric) algorithms, where the tokens are signed with a private key by a third party (ie. an identity service). Your app then only needs a matching _public_ key to verify them.
+You can use one of the supported RSA (asymmetric) algorithms, where the tokens are signed with a private key by a third party (ie. an identity service). Your app then only needs a matching _public_ key to verify them.
 
 ```ruby
 require 'bridger/jwt_token_store'
