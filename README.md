@@ -139,6 +139,32 @@ user_data = endpoint.run!(
 
 But it's more useful to integrate them with your Rack framework of choice.
 
+Serializers can then include links to other endpoints.
+
+```ruby
+# some_serializer.rb
+schema do
+  rel :create_user
+end
+```
+
+With the default adapter, the example above results in the following JSON entity
+
+```json
+{
+  "_links": {
+    "create_user": {
+      "href": "https://myapi.com/users",
+      "method": "post",
+      "title": "Create a new user",
+      "templated": false
+    }
+  }
+}
+```
+
+The `rel` helper will only add links if your current scope has permissions over the target endpoint.
+
 ## Sinatra integration
 
 This gem includes Sinatra integration:
