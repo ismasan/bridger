@@ -202,13 +202,13 @@ RSpec.describe App do
 
   before :all do
     # configure Bridger::Auth to take access token from Authorization header
-    # using JWT token strategy, signed with provided test RSA secret
-    # in production you can configure these with different secrets
-    # a private key is needed to sign tokens, but only a public one
-    # is needed to verify 3rd party tokens (ex. a separate identity service)
+    # using an in-memory hash for token storage
+    # in production you can configure a JWT token store with a public RSA key to verify token validity
     Bridger::Auth.config do |c|
       c.parse_from :header, 'HTTP_AUTHORIZATION'
       c.token_store = {}
+      # alternative JWT token store
+      # c.token_store = Bridger::JWTTokenStore.new(ENV.fetch("RSA_PUBLIC_KEY"))
       c.logger = Logger.new(STDOUT)
     end
   end
