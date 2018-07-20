@@ -20,6 +20,15 @@ This information can be used to generate input schemas, documentation, and hyper
 
 Bridger _does not_ tell you where to put your files, how to name your clases or what database library to use (you can use whatever you want). Rather, it aims to be a high-level description of your APIs inputs and outputs, and how they relate to eachother.
 
+On the testing side, it allows you to write high-level, feature-style tests, such as:
+
+```ruby
+it "creates a user" do
+  user = root.create_user(name: "Joe Bloggs")
+  expect(user.name).to eq "Joe Bloggs"
+end
+```
+
 ## Concepts
 
 ### Auth
