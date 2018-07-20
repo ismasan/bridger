@@ -49,6 +49,8 @@ auth.claims['uid'] # 111
 
 `Bridger::Auth` can be configured to extract token from request headers or query string, and to use JWT tokens, a custom token store, a Hash, etc.
 
+See more about token stores below.
+
 ### Action
 
 An action defines payload parameters, runs them through a method and returns a data object. It uses [Parametric](https://github.com/ismasan/parametric).
@@ -275,12 +277,73 @@ end
 
 Making a direct call to an unauthorized endpoint will respond with a `403 Forbidden` JSON error response.
 
+## Auth token stores
+
+At the simplest, you can use an in-memory hash to store valid access tokens and their claims. This is useful in tests and quick prototypes.
+
+```ruby
+Bridger::Auth.config do |c|
+  c.token_store = {}
+end
+```
+
+### JWT (JSON Web Tokens)
+
+JWT tokens are JSON objects that contain all permission information right there in the token, encoded and signed cryptographically so they can't be tampered with.
+The JWT token store uses the [Ruby JWT library](https://github.com/jwt/ruby-jwt) to decode and verify tokens.
+
+```ruby
+require 'bridger/jwt_token_store'
+Bridger::Auth.config do |c|
+  c.token_store = Bridger::JWTTokenStore.new("mys3cr3t", algo: 'HS256')
+end
+```
+
+The example above uses a string secret to verify token signatures created with the same secret.
+
+You can use one of the supported RSA (asymetric) algorithms, where the tokens are signed with a private key by a third party (ie. an identity service). Your app then only needs a matching _public_ key to verify them.
+
+```ruby
+require 'bridger/jwt_token_store'
+Bridger::Auth.config do |c|
+  # public key can be a string, a Pathname or IO instance, or an OpenSSL::PKey::RSA instance.
+  c.token_store = Bridger::JWTTokenStore.new(File.new("/path/to/public_key.rsa"), algo: 'RS512')
+end
+```
+
+Note that all token stores can be used to generate tokens, too (useful in development, tests, or to build your own identity service).
+
+```
+store = c.token_store = Bridger::JWTTokenStore.new("mys3cr3t", algo: 'HS256')
+token = store.set(
+  user_id: 1,
+  scopes: ["admin"]
+)
+
+claims = store.get(token)
+```
+
+RSA tokens are signed with a separate private key, which you'll have to pass on initialization.
+
+```ruby
+store = c.token_store = Bridger::JWTTokenStore.new(
+  File.new("/path/to/public_key.rsa"),
+  pkey: File.new("/path/to/private_key.rsa"),
+  algo: 'RS512'
+)
+token = store.set(
+  user_id: 1,
+  scopes: ["admin"]
+)
+```
+
 ## To DO
 
 * API console (`bridger console`) so you can interact with your API in an IRB session.
 * Help setting up logging in Sinatra apps? (always annoying)
 * Generic Rack request helper, not Sinatra dependent?
 * New version of Oat with schema reflection, so we can auto-document output schemas too
+* Helpers to build API-powered frontends.
 
 ## Installation
 
