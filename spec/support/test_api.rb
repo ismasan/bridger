@@ -9,12 +9,6 @@ User = Struct.new(:id, :name, :age)
 # Actions are the things that your API can do
 # they define parameter schemas that will be used to validate user input before they hit the model layer.
 # their `#run!` method returns a data object (ex. a model) then passed to the serializer
-class ShowRoot < Bridger::Action
-  private
-  def run!
-
-  end
-end
 
 class CreateUser < Bridger::Action
   schema do
@@ -135,7 +129,6 @@ Bridger::Endpoints.instance.build do
   endpoint(:root, :get, "/?",
     title: "API root",
     scope: "api.me",
-    action: ShowRoot,
     serializer: RootSerializer,
   )
 
