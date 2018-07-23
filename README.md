@@ -29,6 +29,8 @@ it "creates a user" do
 end
 ```
 
+The example above is testing a regular REST request that maps to a `create_user` name.
+
 ## Concepts
 
 ### Auth
