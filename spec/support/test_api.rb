@@ -62,8 +62,7 @@ class ListUsers < Bridger::Action
 
   private
   def run!
-    set = USERS.values.sort_by(&:name)
-    set
+    USERS.values.sort_by(&:name)
   end
 end
 
