@@ -5,10 +5,10 @@ require 'bridger/default_serializers'
 module Sinatra
   module Bridger
     class RequestHelper
-      attr_reader :endpoints, :params
+      attr_reader :rel_name, :params, :endpoints
 
-      def initialize(auth, endpoints, app)
-        @auth, @endpoints, @app = auth, endpoints, app
+      def initialize(auth, endpoints, app, rel_name: nil)
+        @auth, @rel_name, @endpoints, @app = auth, rel_name, endpoints, app
         @request = app.request
         @params = app.params
       end
@@ -32,8 +32,8 @@ module Sinatra
         end
       end
 
-      def serialize(item, serializer)
-        serializer.new(item, h: request_helper)
+      def serialize(item, serializer, helper: request_helper)
+        serializer.new(item, h: helper)
       end
 
       def auth!
@@ -53,7 +53,7 @@ module Sinatra
       end
 
       def request_helper
-        @request_helper ||= RequestHelper.new(auth, settings.endpoints, self)
+        RequestHelper.new(auth, settings.endpoints, self)
       end
     end
 
@@ -74,17 +74,18 @@ module Sinatra
 
       endpoints.each do |endpoint|
         public_send(endpoint.verb, endpoint.path) do
+          helper = RequestHelper.new(auth, settings.endpoints, self, rel_name: endpoint.name)
           begin
             auth! if endpoint.authenticates?
-            json endpoint.run!(payload: build_payload, auth: auth, helper: request_helper)
+            json endpoint.run!(payload: build_payload, auth: auth, helper: helper)
           rescue ::Bridger::MissingAccessTokenError => e
-            json serialize(e, ::Bridger::DefaultSerializers::AccessDenied), 403
+            json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
           rescue ::Bridger::ForbiddenAccessError => e
-            json serialize(e, ::Bridger::DefaultSerializers::AccessDenied), 403
+            json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
           rescue ::Bridger::AuthError => e
-            json serialize(e, ::Bridger::DefaultSerializers::Unauthorized), 401
+            json serialize(e, ::Bridger::DefaultSerializers::Unauthorized, helper: helper), 401
           rescue ::Bridger::ValidationErrors => e
-            json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload), 422
+            json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload, helper: helper), 422
           end
         end
       end

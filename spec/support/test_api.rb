@@ -5,6 +5,7 @@ require 'sinatra/base'
 USERS = {}
 # The models
 User = Struct.new(:id, :name, :age)
+Thing = Struct.new(:name)
 
 # Actions are the things that your API can do
 # they define parameter schemas that will be used to validate user input before they hit the model layer.
@@ -35,6 +36,21 @@ class ShowUser < Bridger::Action
   private
   def run!
     USERS.fetch(params[:user_id])
+  end
+end
+
+class ListUserThings < Bridger::Action
+  schema do
+    field(:user_id).type(:string).required
+    field(:page).type(:integer).default(1)
+  end
+
+  private
+  def run!
+    [
+      Thing.new("a"),
+      Thing.new("b"),
+    ]
   end
 end
 
@@ -85,11 +101,23 @@ class UserSerializer < Bridger::Serializer
   schema do
     rel :user, as: 'self', user_id: item.id
     rel :delete_user, user_id: item.id
+    rel :user_things, user_id: item.id
     rel :root
 
     property :id, item.id
     property :name, item.name
     property :age, item.age
+  end
+end
+
+class UserThingsSerializer < Bridger::Serializer
+  schema do
+    rel :root
+    current_rel as: :next, page: 2
+
+    items item do |thing, s|
+      s.property :name, thing.name
+    end
   end
 end
 
@@ -146,6 +174,13 @@ Bridger::Endpoints.instance.build do
     serializer: UserSerializer,
   )
 
+  endpoint(:user_things, :get, "/users/:user_id/things",
+    title: "User things",
+    scope: "api.users.list",
+    action: ListUserThings,
+    serializer: UserThingsSerializer,
+  )
+
   endpoint(:create_user, :post, "/users",
     title: "Create a new user",
     scope: "api.users.create",
@@ -161,11 +196,30 @@ Bridger::Endpoints.instance.build do
   )
 end
 
+require 'logger'
+::Logger.class_eval do
+  public :puts
+
+  def flush
+
+  end
+end
+
+LOGGER = Logger.new(STDOUT)
+
 # Let's use Sinatra as the Rack vessel for our endpoints
 # it will also exposes endpoint metadata publicly at /schemas
 #
 class TestAPI < Sinatra::Base
   register Sinatra::Bridger
   bridge Bridger::Endpoints.instance, schemas: true
+
+  configure do
+    use ::Rack::CommonLogger, LOGGER
+  end
+
+  before do
+    env["rack.errors"] = LOGGER
+  end
 end
 

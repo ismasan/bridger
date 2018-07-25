@@ -57,6 +57,24 @@ RSpec.describe 'Test Sinatra API' do
     expect(root.users.map(&:name)).to eq []
   end
 
+  it "lists user things with links with added parameters" do
+    authorize!(
+      uid: 123,
+      sids: [11],
+      aid: 11,
+      scopes: ["api.me", "api.users"]
+    )
+
+    user = root.create_user(
+      name: 'Ismael',
+      age: 40
+    )
+
+    things = user.user_things
+    link = things.rels[:next]
+    expect(link.href).to match /page=2/
+  end
+
   it "responds with 404 if endpoint not found" do
     authorize!(
       uid: 123,
@@ -90,7 +108,7 @@ RSpec.describe 'Test Sinatra API' do
       scopes: ["api.me"]
     )
     schemas = root.schemas
-    expect(schemas.map(&:rel).sort).to eq ['create_user', 'delete_user', 'root', 'user', 'users']
+    expect(schemas.map(&:rel).sort).to eq ['create_user', 'delete_user', 'root', 'user', 'user_things', 'users']
     schemas.first.tap do |sc|
       expect(sc.rel).to eq 'root'
       expect(sc.title).to eq 'API root'

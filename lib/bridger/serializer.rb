@@ -44,6 +44,10 @@ module Bridger
       link :self, href: h.current_url
     end
 
+    def current_rel(params = {})
+      rel h.rel_name, h.params.merge(params)
+    end
+
     def url(path)
       h.url path
     end
