@@ -8,7 +8,7 @@ module Bridger
 
     attr_reader :name, :verb, :path, :title, :scope, :action, :serializer
 
-    def initialize(name:, verb:, path:, title:, scope:, action:, serializer:, authorizer:)
+    def initialize(name:, verb:, path:, title:, scope:, action:, serializer: nil, authorizer:)
       @name = name
       @verb = verb.to_sym
       @path = path
