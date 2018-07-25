@@ -23,10 +23,7 @@ RSpec.describe Bridger::Auth do
       )
       req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
       auth = described_class.parse(req, @config)
-      expect(auth.shop_ids).to eq [11]
-      expect(auth.app_id).to eq 12
-      expect(auth.user_id).to eq 123
-      expect(auth.has_user?).to be true
+      expect(auth.claims['sids']).to eq [11]
       expect(auth.scopes.to_a).to eq ['btc.me', 'btc.account.shops.mine']
       expect(auth.access_token).to eq token
     end
@@ -44,8 +41,7 @@ RSpec.describe Bridger::Auth do
       config.token_store = @token_store
 
       auth = described_class.parse(req, config)
-      expect(auth.shop_ids).to eq [11]
-      expect(auth.app_id).to eq 12
+      expect(auth.claims['uid']).to eq 123
     end
 
     it "gets token claims from custom store, if configured" do
@@ -62,8 +58,8 @@ RSpec.describe Bridger::Auth do
       }
 
       auth = described_class.parse(req, config)
-      expect(auth.shop_ids).to eq [11]
-      expect(auth.app_id).to eq 12
+      expect(auth.claims['sids']).to eq [11]
+      expect(auth.claims['aid']).to eq 12
     end
 
     it "raises known exception if invalid token" do

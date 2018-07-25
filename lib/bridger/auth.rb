@@ -95,20 +95,12 @@ module Bridger
       @config
     end
 
-    attr_reader :access_token, :claims, :shop_ids, :app_id, :user_id, :account_id, :scopes
+    attr_reader :access_token, :claims, :scopes
 
     def initialize(access_token: nil, claims: {}, aliases: self.config.aliases)
       @access_token = access_token
       @claims = claims
-      @shop_ids = @claims["sids"] || []
-      @app_id = @claims["aid"]
-      @user_id = @claims["uid"]
-      @account_id = @claims["aid"]
       @scopes = Scopes.new(aliases.map(@claims["scopes"]))
-    end
-
-    def has_user?
-      user_id.to_i != 0
     end
 
     def authorized?(scope)
