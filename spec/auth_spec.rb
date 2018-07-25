@@ -28,6 +28,7 @@ RSpec.describe Bridger::Auth do
       expect(auth.user_id).to eq 123
       expect(auth.has_user?).to be true
       expect(auth.scopes.to_a).to eq ['btc.me', 'btc.account.shops.mine']
+      expect(auth.access_token).to eq token
     end
 
     it "parses token from querystring if configured" do

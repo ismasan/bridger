@@ -76,6 +76,7 @@ module Bridger
       raise InvalidAccessTokenError, "unknown access token" unless claims
 
       new(
+        access_token: access_token,
         claims: claims,
         aliases: config.aliases,
       )
@@ -94,9 +95,10 @@ module Bridger
       @config
     end
 
-    attr_reader :claims, :shop_ids, :app_id, :user_id, :account_id, :scopes
+    attr_reader :access_token, :claims, :shop_ids, :app_id, :user_id, :account_id, :scopes
 
-    def initialize(claims: {}, aliases: self.config.aliases)
+    def initialize(access_token: nil, claims: {}, aliases: self.config.aliases)
+      @access_token = access_token
       @claims = claims
       @shop_ids = @claims["sids"] || []
       @app_id = @claims["aid"]
