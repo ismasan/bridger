@@ -14,7 +14,9 @@ module Bridger
     attr_reader :name, :verb, :path, :title
 
     def initialize(name, verb, path, query_field_names = [], title = nil)
-      @name, @verb, @path, @query_field_names = name, verb, path, query_field_names
+      @name, @verb, @path, = name, verb, path
+      path_tokens = extract_path_tokens(path)
+      @query_field_names = (query_field_names - path_tokens)
       @path = add_query(@path, @query_field_names) if @verb == :get && @query_field_names.any?
       @title = title
       templatize
@@ -34,6 +36,7 @@ module Bridger
     attr_reader :path, :query_field_names
 
     EXP = /:\w+/.freeze
+    PATH_TOKEN_EXP = /:(\w+)/.freeze
 
     def templatize
       @path = @path.gsub(EXP) do |m|
@@ -52,6 +55,9 @@ module Bridger
 
       [p, q].join
     end
-  end
 
+    def extract_path_tokens(path)
+      path.to_s.scan(PATH_TOKEN_EXP).map(&:first).map(&:to_sym)
+    end
+  end
 end

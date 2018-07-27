@@ -1,9 +1,17 @@
 require "spec_helper"
 require "bridger/endpoint"
+require "bridger/action"
 
 RSpec.describe Bridger::Endpoint do
   let(:authorizer) { double('Authorizer') }
-  let(:action) { double('Action') }
+  let(:action) do
+    Class.new(Bridger::Action) do
+      schema do
+        field(:product_id).type(:string).present
+        field(:q).type(:string)
+      end
+    end
+  end
   let(:serializer) { double('Serializer') }
 
   it "has readers" do
@@ -30,7 +38,7 @@ RSpec.describe Bridger::Endpoint do
     endpoint = described_class.new(
       name: 'create_product',
       verb: :post,
-      path: '/v1/shops/{shop_id}/products',
+      path: '/v1/shops/:shop_id/products',
       title: 'Create products',
       scope: 'a.b.c',
       authorizer: authorizer,
@@ -49,20 +57,33 @@ RSpec.describe Bridger::Endpoint do
 
     data = endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)
     expect(data).to eq({out: 1})
+  end
+
+  it "builds relation" do
+    endpoint = described_class.new(
+      name: 'products',
+      verb: :get,
+      path: '/v1/products/:product_id',
+      title: 'list products',
+      scope: 'a.b.c',
+      authorizer: authorizer,
+      action: action,
+      serializer: serializer
+    )
 
     # builds relation
-    rel = endpoint.build_rel(shop_id: 123, foo: 'b')
+    rel = endpoint.build_rel(product_id: 123, foo: 'b')
     expect(rel).to be_a Bridger::Rel
-    expect(rel.path).to eq '/v1/shops/123/products'
-    expect(rel.title).to eq 'Create products'
-    expect(rel.verb).to eq :post
+    expect(rel.path).to eq '/v1/products/123{?q}'
+    expect(rel.title).to eq 'list products'
+    expect(rel.verb).to eq :get
   end
 
   it "#authorized?" do
     endpoint = described_class.new(
       name: 'create_product',
       verb: :post,
-      path: '/v1/shops/{shop_id}/products',
+      path: '/v1/shops/:shop_id/products',
       title: 'Create products',
       scope: 'a.b.c',
       authorizer: authorizer,
