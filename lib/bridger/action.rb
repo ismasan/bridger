@@ -17,36 +17,60 @@ module Bridger
       new(*args).call
     end
 
-    def initialize(payload: {}, auth: nil)
-      @payload = payload
+    def self.payload(*args, &block)
+      self.schema *args, &block
+    end
+
+    def self.query(*args, &block)
+      self.schema *(args.unshift(:query)), &block
+    end
+
+    def initialize(query: {}, payload: {}, auth: nil)
+      @_query = query
+      @_payload = payload
       @auth = auth
     end
 
+    def payload
+      @payload ||= map(payload_validator.output)
+    end
+
+    def query
+      @query ||= map(query_validator.output)
+    end
+
     def params
-      @params ||= map(validator.output)
+      @params ||= query.merge(payload)
     end
 
     def call
-      if !validator.valid?
-        raise ValidationErrors.new(validator.errors)
+      if !payload_validator.valid?
+        raise ValidationErrors.new(payload_validator.errors)
+      end
+      if !query_validator.valid?
+        raise ValidationErrors.new(query_validator.errors)
       end
 
       run!
     end
 
     private
-    attr_reader :payload, :auth
+    attr_reader :_query, :_payload, :auth
 
     def run!
 
     end
 
-    def validator
-      @validator ||= schema.resolve(payload)
+    def payload_validator
+      @payload_validator ||= self.class.payload.resolve(_payload)
+    end
+
+    def query_validator
+      @query_validator ||= self.class.query.resolve(_query)
     end
 
     def schema
-      self.class.schema
+      self.class.payload
     end
 
     def map(hash)

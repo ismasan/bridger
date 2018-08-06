@@ -29,10 +29,10 @@ module Bridger
       )
     end
 
-    def run!(payload: {}, auth:, helper:)
+    def run!(query: {}, payload: {}, auth:, helper:)
       auth.authorize!(scope, authorizer, helper.params) if authenticates?
 
-      presenter = action.run!(payload: payload, auth: auth)
+      presenter = action.run!(query: query, payload: payload, auth: auth)
       serializer ? serializer.new(presenter, h: helper, auth: auth) : nil
     end
 
@@ -65,7 +65,7 @@ module Bridger
     attr_reader :authorizer
 
     def query_keys
-      mutating? ? [] : action.schema.structure.keys
+      mutating? ? [] : action.query.structure.keys
     end
 
     def mutating?

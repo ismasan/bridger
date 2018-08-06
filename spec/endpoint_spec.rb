@@ -6,7 +6,7 @@ RSpec.describe Bridger::Endpoint do
   let(:authorizer) { double('Authorizer') }
   let(:action) do
     Class.new(Bridger::Action) do
-      schema do
+      query do
         field(:product_id).type(:string).present
         field(:q).type(:string)
       end
@@ -52,7 +52,7 @@ RSpec.describe Bridger::Endpoint do
     presenter = double('Presenter')
 
     expect(auth).to receive(:authorize!).with(endpoint.scope, authorizer, params).and_return true
-    expect(action).to receive(:run!).with(payload: {p1: 1}, auth: auth).and_return presenter
+    expect(action).to receive(:run!).with(query: {}, payload: {p1: 1}, auth: auth).and_return presenter
     expect(serializer).to receive(:new).with(presenter, h: helper, auth: auth).and_return({out: 1})
 
     data = endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)

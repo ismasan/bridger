@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "jwt"
   spec.add_dependency "sinatra"
   spec.add_dependency "oat"
-  spec.add_dependency "parametric"
+  # spec.add_dependency "parametric"
   spec.add_dependency "bootic_client", "~> 0.0.20"
   spec.add_dependency "rack-test"
 

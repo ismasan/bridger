@@ -59,18 +59,43 @@ An action defines payload parameters, runs them through a method and returns a d
 
 ```ruby
 class CreateUser < Bridger::Action
-  schema do
+  payload do
     field(:name).type(:string).required
   end
 
   def run!
     # schema validations run before this
-    SomeDatabaseObject.create!(params)
+    SomeDatabaseObject.create!(payload)
   end
 end
 
 user = CreateUser.run!(payload: {name: "Joe"}, auth: auth)
 # will raise validation errors if parameters don't comply with schema
+```
+
+Optionally, actions can also define a _query schema_, ie. parameters passed separately and used to locate existing records.
+
+```ruby
+class UpdateUser < Bridger::Action
+  query do
+    field(:user_id).type(:integer).present
+  end
+
+  payload do
+    field(:name).type(:string).required
+  end
+
+  def run!
+    # use query params to locate existing user
+    user = SomeDatabaseObject.find(query[:user_id])
+
+    # now update user with payload parameters
+    user.update!(payload)
+  end
+end
+
+user = CreateUser.run!(payload: {name: "Joe"}, auth: auth)
+user = UpdateUser.run!(query: {user_id: user.id}, payload: {name: "Joan"}, auth: auth)
 ```
 
 ### Serializer

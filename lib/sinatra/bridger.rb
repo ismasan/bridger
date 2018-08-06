@@ -46,9 +46,9 @@ module Sinatra
 
       def build_payload
         if request.post? || request.put?
-          params.merge(JSON.parse(request.body.read, symbolize_names: true))
+          JSON.parse(request.body.read, symbolize_names: true)
         else
-          params
+          {}
         end
       end
 
@@ -77,7 +77,7 @@ module Sinatra
           helper = RequestHelper.new(auth, settings.endpoints, self, rel_name: endpoint.name)
           begin
             auth! if endpoint.authenticates?
-            json endpoint.run!(payload: build_payload, auth: auth, helper: helper)
+            json endpoint.run!(query: params, payload: build_payload, auth: auth, helper: helper)
           rescue ::Bridger::MissingAccessTokenError => e
             json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
           rescue ::Bridger::ForbiddenAccessError => e
