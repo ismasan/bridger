@@ -135,7 +135,8 @@ module Bridger
         property :templated, item.relation.templated?
         property :href, url(item.relation.path)
 
-        property :input_schema, json_schema_for(item.input_schema)
+        property :query_schema, json_schema_for(item.query_schema)
+        property :payload_schema, json_schema_for(item.payload_schema)
       end
 
       private

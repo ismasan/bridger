@@ -116,7 +116,11 @@ RSpec.describe 'Test Sinatra API' do
       expect(sc.scope).to eq 'api.me'
       expect(sc.templated).to be false
       expect(sc.href).to eq 'http://example.org/?'
-      expect(sc.can?(:self)).to be true
+    end
+    schemas.items.last.self.tap do |sc|
+      expect(sc.query_schema.type).to eq 'object'
+      expect(sc.query_schema.properties['user_id']['type']).to eq 'string'
+      expect(sc.has?(:payload_schema)).to be true
     end
   end
 end

@@ -44,8 +44,12 @@ module Bridger
       @relation ||= build_rel
     end
 
-    def input_schema
-      action.schema
+    def query_schema
+      action.query
+    end
+
+    def payload_schema
+      action.payload
     end
 
     def output_schema

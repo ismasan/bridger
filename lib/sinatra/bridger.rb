@@ -91,12 +91,12 @@ module Sinatra
       end
 
       if schemas
-        get '/schemas' do
+        get '/schemas/?' do
           json serialize(endpoints, ::Bridger::DefaultSerializers::Endpoints), 200
         end
 
         endpoints.each do |en|
-          get "/schemas/#{en.name}" do
+          get "/schemas/#{en.name}/?" do
             json serialize(en, ::Bridger::DefaultSerializers::Endpoint), 200
           end
         end
