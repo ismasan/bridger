@@ -11,10 +11,7 @@ module Bridger
     end
 
     def generate
-      output = BASE.dup
-      output["type"] = "object"
-      output["properties"] = process(schema.structure)
-      output
+      BASE.merge(process(schema.structure))
     end
 
     private
@@ -22,15 +19,17 @@ module Bridger
     attr_reader :schema
 
     def process(structure)
-      structure.each_with_object({}) do |(k,v), memo|
+      props = {}
+      required = []
+      structure.each do |(k,v)|
         unless v[:type]
           raise MissingType.new("Missing type field for property '#{k}'")
         end
 
-        base = { "type" => v[:type].to_s }
+        base = { 'type' => v[:type].to_s }
 
-        memo[k.to_s] = if v[:structure]
-          base.merge("properties" => process(v[:structure]))
+        props[k.to_s] = if v[:structure]
+          base.merge(process(v[:structure]))
         else
           base.tap do |properties|
             properties["enum"] = v[:options] if v[:options]
@@ -41,9 +40,15 @@ module Bridger
         end
 
         if v[:required]
-          (memo["required"] ||= []) << k.to_s
+          required << k.to_s
         end
       end
+
+      {
+        'type' => 'object',
+        'properties' => props,
+        'required' => required
+      }
     end
   end
 end
