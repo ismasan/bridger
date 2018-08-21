@@ -67,7 +67,7 @@ end
 
 class ListUsers < Bridger::Action
   query do
-    field(:q)
+    field(:q).type(:string)
   end
 
   private
@@ -76,10 +76,17 @@ class ListUsers < Bridger::Action
   end
 end
 
+class ShowStatus < Bridger::Action
+  def run!
+    true
+  end
+end
+
 # Serializers turn the result of actions into JSON structures
 class RootSerializer < Bridger::Serializer
   schema do
     self_link
+    rel :status
     rel :user
     rel :users
     rel :create_user
@@ -127,6 +134,12 @@ class UsersSerializer < Bridger::Serializer
     rel :root
 
     items item, UserSerializer
+  end
+end
+
+class StatusSerializer < Bridger::Serializer
+  schema do
+    property :ok, true
   end
 end
 
@@ -193,6 +206,13 @@ Bridger::Endpoints.instance.build do
     scope: "api.users.delete",
     action: DeleteUser,
     serializer: nil,
+  )
+
+  endpoint(:status, :get, "/status",
+    title: "service status",
+    action: ShowStatus,
+    serializer: StatusSerializer,
+    scope: nil,
   )
 end
 

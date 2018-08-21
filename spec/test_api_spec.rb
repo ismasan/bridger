@@ -100,6 +100,14 @@ RSpec.describe 'Test Sinatra API' do
     expect(root.can?(:create_user)).to be false
   end
 
+  it "exposes public endpoints too" do
+    rel = BooticClient::Relation.new({
+      'href' => 'http://example.org/status'
+    }, client)
+    status = rel.run
+    expect(status.ok).to be true
+  end
+
   it "exposes schemas" do
     authorize!(
       uid: 123,
@@ -108,7 +116,7 @@ RSpec.describe 'Test Sinatra API' do
       scopes: ["api.me"]
     )
     schemas = root.schemas
-    expect(schemas.map(&:rel).sort).to eq ['create_user', 'delete_user', 'root', 'user', 'user_things', 'users']
+    expect(schemas.map(&:rel).sort).to eq ['create_user', 'delete_user', 'root', 'status', 'user', 'user_things', 'users']
     schemas.first.tap do |sc|
       expect(sc.rel).to eq 'root'
       expect(sc.title).to eq 'API root'
@@ -117,9 +125,10 @@ RSpec.describe 'Test Sinatra API' do
       expect(sc.templated).to be false
       expect(sc.href).to eq 'http://example.org/?'
     end
-    schemas.items.last.self.tap do |sc|
+    item = schemas.items.find{|i| i.rel == 'users' }
+    item.self.tap do |sc|
       expect(sc.query_schema.type).to eq 'object'
-      expect(sc.query_schema.properties['user_id']['type']).to eq 'string'
+      expect(sc.query_schema.properties['q']['type']).to eq 'string'
       expect(sc.has?(:payload_schema)).to be true
     end
   end

@@ -11,7 +11,7 @@ module Bridger
       when Scopes
         sc
       else
-        raise "Can't compare #{sc.inspect} with #{self.name}"
+        raise ArgumentError, "Can't compare #{sc.inspect} with #{self.name}"
       end
     end
 

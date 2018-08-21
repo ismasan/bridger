@@ -104,6 +104,7 @@ module Bridger
     end
 
     def authorized?(scope)
+      return true if scope.nil?
       scopes.can? scope
     end
 

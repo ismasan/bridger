@@ -23,7 +23,7 @@ module Bridger
         ClientConfig.new(
           "http://example.org"
         ),
-        access_token: @access_token,
+        access_token: @access_token.to_s,
         faraday_adapter: [:rack, app]
       )
     end
