@@ -20,7 +20,7 @@ This information can be used to generate input schemas, documentation, and hyper
 
 Bridger _does not_ tell you where to put your files, how to name your clases or what database library to use. The model and persistence layer are up to you.
 
-On the testing side, it allows you to write high-level, feature-style tests, such as:
+On the testing side, it allows you to write high-level, feature-style tests for your REST API, such as:
 
 ```ruby
 it "creates a user" do
