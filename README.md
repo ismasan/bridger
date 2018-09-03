@@ -4,7 +4,7 @@ Utilities to build Hypermedia APIs in Ruby in any Rack framework (Sinatra helper
 
 ## TL;DR
 
-Bridger allows you to define API endpoints like so:
+Define API endpoints like so:
 
 ```ruby
 endpoint(:create_user, :post, '/users',
