@@ -18,7 +18,7 @@ endpoint(:create_user, :post, '/users',
 These endpoints encapsulate rich information about each thing your API can do, regardless of the Rack/routing framework you use.
 This information can be used to generate input schemas, documentation, and hypermedia links between different endpoints. The latter allows you to model not just individual HTTP requests, but workflows through your API. Some context [here](https://robots.thoughtbot.com/writing-a-hypermedia-api-client-in-ruby).
 
-Bridger _does not_ tell you where to put your files, how to name your clases or what database library to use. The model and persistence layer are up to you.
+Bridger _does not_ tell you where to put your files, how to name your clases or what database library to use (if at all). The model and persistence layer are up to you.
 
 On the testing side, it allows you to write high-level, feature-style tests for your REST API, such as:
 
