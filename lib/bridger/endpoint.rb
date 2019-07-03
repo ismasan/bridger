@@ -32,7 +32,7 @@ module Bridger
     def run!(query: {}, payload: {}, auth:, helper:)
       auth.authorize!(scope, authorizer, helper.params) if authenticates?
 
-      presenter = action.run!(query: query, payload: payload, auth: auth)
+      presenter = action.call(query: query, payload: payload, auth: auth)
       serializer ? serializer.new(presenter, h: helper, auth: auth) : nil
     end
 

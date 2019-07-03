@@ -7,7 +7,7 @@ RSpec.describe Bridger::Endpoints do
       @result = result
     end
 
-    def run!(query: {}, payload: {}, auth:)
+    def call(query: {}, payload: {}, auth:)
       @result
     end
   end

@@ -52,7 +52,7 @@ RSpec.describe Bridger::Endpoint do
     presenter = double('Presenter')
 
     expect(auth).to receive(:authorize!).with(endpoint.scope, authorizer, params).and_return true
-    expect(action).to receive(:run!).with(query: {}, payload: {p1: 1}, auth: auth).and_return presenter
+    expect(action).to receive(:call).with(query: {}, payload: {p1: 1}, auth: auth).and_return presenter
     expect(serializer).to receive(:new).with(presenter, h: helper, auth: auth).and_return({out: 1})
 
     data = endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)

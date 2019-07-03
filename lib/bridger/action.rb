@@ -13,8 +13,8 @@ module Bridger
   class Action
     include Parametric::DSL
 
-    def self.run!(*args)
-      new(*args).call
+    def self.call(*args)
+      new(*args).run!
     end
 
     def self.payload(*args, &block)
@@ -43,7 +43,7 @@ module Bridger
       @params ||= query.merge(payload)
     end
 
-    def call
+    def run!
       if !payload_validator.valid?
         raise ValidationErrors.new(payload_validator.errors)
       end
@@ -51,13 +51,13 @@ module Bridger
         raise ValidationErrors.new(query_validator.errors)
       end
 
-      run!
+      run
     end
 
     private
     attr_reader :_query, :_payload, :auth
 
-    def run!
+    def run
 
     end
 

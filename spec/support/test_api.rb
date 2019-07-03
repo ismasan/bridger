@@ -18,7 +18,7 @@ class CreateUser < Bridger::Action
   end
 
   private
-  def run!
+  def run
     id = SecureRandom.uuid
     USERS[id] = User.new(
       id,
@@ -34,7 +34,7 @@ class ShowUser < Bridger::Action
   end
 
   private
-  def run!
+  def run
     USERS.fetch(params[:user_id])
   end
 end
@@ -46,7 +46,7 @@ class ListUserThings < Bridger::Action
   end
 
   private
-  def run!
+  def run
     [
       Thing.new("a"),
       Thing.new("b"),
@@ -60,7 +60,7 @@ class DeleteUser < Bridger::Action
   end
 
   private
-  def run!
+  def run
     USERS.delete(params[:user_id])
   end
 end
@@ -71,13 +71,13 @@ class ListUsers < Bridger::Action
   end
 
   private
-  def run!
+  def run
     USERS.values.sort_by(&:name)
   end
 end
 
 class ShowStatus < Bridger::Action
-  def run!
+  def run
     true
   end
 end

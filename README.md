@@ -63,13 +63,13 @@ class CreateUser < Bridger::Action
     field(:name).type(:string).required
   end
 
-  def run!
+  def run
     # schema validations run before this
     SomeDatabaseObject.create!(payload)
   end
 end
 
-user = CreateUser.run!(payload: {name: "Joe"}, auth: auth)
+user = CreateUser.call(payload: {name: "Joe"}, auth: auth)
 # will raise validation errors if parameters don't comply with schema
 ```
 
@@ -85,7 +85,7 @@ class UpdateUser < Bridger::Action
     field(:name).type(:string).required
   end
 
-  def run!
+  def run
     # use query params to locate existing user
     user = SomeDatabaseObject.find(query[:user_id])
 
@@ -94,8 +94,8 @@ class UpdateUser < Bridger::Action
   end
 end
 
-user = CreateUser.run!(payload: {name: "Joe"}, auth: auth)
-user = UpdateUser.run!(query: {user_id: user.id}, payload: {name: "Joan"}, auth: auth)
+user = CreateUser.call(payload: {name: "Joe"}, auth: auth)
+user = UpdateUser.call(query: {user_id: user.id}, payload: {name: "Joan"}, auth: auth)
 ```
 
 ### Serializer
