@@ -67,15 +67,25 @@ module Sinatra
       end
     end
 
-    def bridge(endpoints, schemas: nil, logger: nil)
+    def bridge(
+      endpoints,
+      schemas: nil,
+      logger: nil,
+      not_found_serializer: ::Bridger::DefaultSerializers::NotFound,
+      server_error_serializer: ::Bridger::DefaultSerializers::ServerError
+    )
       helpers Helpers
       enable :dump_errors
       disable :raise_errors, :show_exceptions
-      not_found do
-        json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::NotFound), 404
+      if not_found_serializer
+        not_found do
+          json serialize(env['sinatra.error'], not_found_serializer), 404
+        end
       end
-      error do
-        json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::ServerError), 500
+      if server_error_serializer
+        error do
+          json serialize(env['sinatra.error'], server_error_serializer), 500
+        end
       end
 
       set :endpoints, endpoints
