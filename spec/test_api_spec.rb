@@ -128,7 +128,7 @@ RSpec.describe 'Test Sinatra API' do
     item = schemas.items.find{|i| i.rel == 'users' }
     item.self.tap do |sc|
       expect(sc.query_schema.type).to eq 'object'
-      expect(sc.query_schema.properties['q']['type']).to eq 'string'
+      expect(sc.query_schema.to_hash['properties']['q']['type']).to eq 'string'
       expect(sc.has?(:payload_schema)).to be true
     end
   end
