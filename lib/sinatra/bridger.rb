@@ -4,6 +4,16 @@ require 'bridger/default_serializers'
 
 module Sinatra
   module Bridger
+    class FlushableLogger < SimpleDelegator
+      def puts(*args)
+        __getobj__.send(:puts, *args)
+      end
+
+      def flush
+
+      end
+    end
+
     class RequestHelper
       attr_reader :rel_name, :params, :endpoints
 
@@ -57,20 +67,30 @@ module Sinatra
       end
     end
 
-    def self.registered(app)
-      app.helpers Helpers
-      app.enable :dump_errors
-      app.disable :raise_errors, :show_exceptions
-      app.not_found do
+    def bridge(endpoints, schemas: false, logger: nil)
+      helpers Helpers
+      enable :dump_errors
+      disable :raise_errors, :show_exceptions
+      not_found do
         json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::NotFound), 404
       end
-      app.error do
+      error do
         json serialize(env['sinatra.error'], ::Bridger::DefaultSerializers::ServerError), 500
       end
-    end
 
-    def bridge(endpoints, schemas: false)
       set :endpoints, endpoints
+
+      if logger
+        logger = FlushableLogger.new(logger)
+
+        configure do
+          use ::Rack::CommonLogger, logger
+        end
+
+        before do
+          env['rack.errors'] = logger
+        end
+      end
 
       endpoints.each do |endpoint|
         public_send(endpoint.verb, endpoint.path) do

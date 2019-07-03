@@ -217,13 +217,6 @@ Bridger::Endpoints.instance.build do
 end
 
 require 'logger'
-::Logger.class_eval do
-  public :puts
-
-  def flush
-
-  end
-end
 
 LOGGER = Logger.new(STDOUT)
 
@@ -231,15 +224,7 @@ LOGGER = Logger.new(STDOUT)
 # it will also exposes endpoint metadata publicly at /schemas
 #
 class TestAPI < Sinatra::Base
-  register Sinatra::Bridger
-  bridge Bridger::Endpoints.instance, schemas: true
-
-  configure do
-    use ::Rack::CommonLogger, LOGGER
-  end
-
-  before do
-    env["rack.errors"] = LOGGER
-  end
+  extend Sinatra::Bridger
+  bridge Bridger::Endpoints.instance, schemas: true, logger: LOGGER
 end
 

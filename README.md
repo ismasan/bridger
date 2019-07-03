@@ -201,14 +201,15 @@ require 'sinatra/bridger'
 require 'sinatra/base'
 
 class API < Sinatra::Base
-  register Sinatra::Bridger
-  bridge Bridger::Endpoints.instance
+  extend Sinatra::Bridger
+  bridge Bridger::Endpoints.instance, logger: Logger.new(STDOUT)
 end
 ```
 
 Now your Sinatra app exposes all registered endpoints, runs scope-based permissions, validates input parameters and includes links between resources.
 
 See a full example in the bundled [test API](https://github.com/ismasan/bridger/blob/master/spec/support/test_api.rb), and check out how [it's tested](https://github.com/ismasan/bridger/blob/master/spec/test_api_spec.rb).
+
 ## Schemas
 
 `Bridger::Action` classes contain detailed information on your input schemas and validations.
@@ -216,7 +217,7 @@ These can be exposed as JSON endpoints under `/schemas` in your API, with
 
 ```ruby
 class API < Sinatra::Base
-  register Sinatra::Bridger
+  extend Sinatra::Bridger
   bridge  Bridger::Endpoints.instance, schemas: true
 end
 ```
