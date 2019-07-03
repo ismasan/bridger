@@ -225,6 +225,6 @@ LOGGER = Logger.new(STDOUT)
 #
 class TestAPI < Sinatra::Base
   extend Sinatra::Bridger
-  bridge Bridger::Endpoints.instance, schemas: true, logger: LOGGER
+  bridge Bridger::Endpoints.instance, schemas: '/schemas', logger: LOGGER
 end
 

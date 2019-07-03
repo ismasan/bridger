@@ -67,7 +67,7 @@ module Sinatra
       end
     end
 
-    def bridge(endpoints, schemas: false, logger: nil)
+    def bridge(endpoints, schemas: nil, logger: nil)
       helpers Helpers
       enable :dump_errors
       disable :raise_errors, :show_exceptions
@@ -111,12 +111,14 @@ module Sinatra
       end
 
       if schemas
-        get '/schemas/?' do
+        schemas = '/schemas' if schemas.is_a?(TrueClass)
+
+        get "#{schemas}/?" do
           json serialize(endpoints, ::Bridger::DefaultSerializers::Endpoints), 200
         end
 
         endpoints.each do |en|
-          get "/schemas/#{en.name}/?" do
+          get "#{schemas}/#{en.name}/?" do
             json serialize(en, ::Bridger::DefaultSerializers::Endpoint), 200
           end
         end

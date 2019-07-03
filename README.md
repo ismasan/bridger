@@ -213,12 +213,12 @@ See a full example in the bundled [test API](https://github.com/ismasan/bridger/
 ## Schemas
 
 `Bridger::Action` classes contain detailed information on your input schemas and validations.
-These can be exposed as JSON endpoints under `/schemas` in your API, with
+These can be exposed as JSON endpoints under a custom path in your API, with
 
 ```ruby
 class API < Sinatra::Base
   extend Sinatra::Bridger
-  bridge  Bridger::Endpoints.instance, schemas: true
+  bridge  Bridger::Endpoints.instance, schemas: '/schemas'
 end
 ```
 
