@@ -61,6 +61,7 @@ module Bridger
     end
 
     def authorized?(auth, params)
+      return true unless authenticates?
       auth.authorized?(scope) && authorizer.authorized?(scope.to_a, auth, params)
     end
 

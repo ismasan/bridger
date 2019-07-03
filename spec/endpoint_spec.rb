@@ -79,21 +79,39 @@ RSpec.describe Bridger::Endpoint do
     expect(rel.verb).to eq :get
   end
 
-  it "#authorized?" do
-    endpoint = described_class.new(
-      name: 'create_product',
-      verb: :post,
-      path: '/v1/shops/:shop_id/products',
-      title: 'Create products',
-      scope: 'a.b.c',
-      authorizer: authorizer,
-      action: action,
-      serializer: serializer
-    )
+  describe '#authorized?' do
+    it "delegates to auth and authorizer" do
+      endpoint = described_class.new(
+        name: 'create_product',
+        verb: :post,
+        path: '/v1/shops/:shop_id/products',
+        title: 'Create products',
+        scope: 'a.b.c',
+        authorizer: authorizer,
+        action: action,
+        serializer: serializer
+      )
 
-    auth = double('Auth')
-    expect(auth).to receive(:authorized?).with(endpoint.scope).and_return true
-    expect(authorizer).to receive(:authorized?).with(endpoint.scope.to_a, auth, {}).and_return true
-    expect(endpoint.authorized?(auth, {})).to be true
+      auth = double('Auth')
+      expect(auth).to receive(:authorized?).with(endpoint.scope).and_return true
+      expect(authorizer).to receive(:authorized?).with(endpoint.scope.to_a, auth, {}).and_return true
+      expect(endpoint.authorized?(auth, {})).to be true
+    end
+
+    it 'returns true if no scope/authorization scheme setup' do
+      endpoint = described_class.new(
+        name: 'create_product',
+        verb: :post,
+        path: '/v1/shops/:shop_id/products',
+        title: 'Create products',
+        scope: nil,
+        authorizer: authorizer,
+        action: action,
+        serializer: serializer
+      )
+
+      auth = double('Auth')
+      expect(endpoint.authorized?(auth, {})).to be true
+    end
   end
 end
