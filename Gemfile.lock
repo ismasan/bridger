@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     bridger (0.1.1)
-      bootic_client (~> 0.0.26)
+      bootic_client (~> 0.0.27)
       jwt (~> 1.5)
       oat
       parametric (~> 0.2)
@@ -13,7 +13,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    bootic_client (0.0.26)
+    bootic_client (0.0.27)
       faraday (~> 0.15)
       faraday-http-cache (~> 2)
       net-http-persistent (~> 2.9)
