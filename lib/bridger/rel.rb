@@ -6,7 +6,7 @@ module Bridger
     attr_reader :name, :verb, :path, :title, :params
 
     def initialize(name:, verb:, path:, title: nil, params: {})
-      @name, @verb, @path, @title, @params = name, verb, path, title, string_keys(params)
+      @name, @verb, @path, @title, @params = name, verb, path.clone, title, string_keys(params)
       build
     end
 
