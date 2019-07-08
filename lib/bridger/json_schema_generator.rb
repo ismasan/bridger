@@ -34,7 +34,7 @@ module Bridger
           base.tap do |properties|
             properties["enum"] = v[:options] if v[:options]
             properties["description"] = v[:description] if v[:description]
-            properties["default"] = v[:default] if v[:default]
+            properties["default"] = v[:default] if v[:default] && !v[:default].respond_to?(:call)
             properties["example"] = v[:example] if v[:example]
           end
         end
