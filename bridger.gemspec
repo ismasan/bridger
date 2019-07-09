@@ -32,13 +32,13 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
   spec.add_dependency "jwt", '~> 1.5'
-  spec.add_dependency "sinatra", '~> 2'
   spec.add_dependency "oat"
   spec.add_dependency "parametric", "~> 0.2.8"
   spec.add_dependency "bootic_client", "~> 0.0.27"
   spec.add_dependency "rack", '>= 2.0.6'
   spec.add_dependency "rack-test"
 
+  spec.add_development_dependency "sinatra", '~> 2'
   spec.add_development_dependency "bundler", "~> 1.16"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"

@@ -8,7 +8,6 @@ PATH
       parametric (~> 0.2.8)
       rack (>= 2.0.6)
       rack-test
-      sinatra (~> 2)
 
 GEM
   remote: https://rubygems.org/
@@ -75,6 +74,7 @@ DEPENDENCIES
   byebug
   rake (~> 10.0)
   rspec (~> 3.0)
+  sinatra (~> 2)
 
 BUNDLED WITH
    1.17.2
