@@ -114,7 +114,7 @@ module Sinatra
             json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
           rescue ::Bridger::AuthError => e
             json serialize(e, ::Bridger::DefaultSerializers::Unauthorized, helper: helper), 401
-          rescue ::Bridger::ValidationErrors => e
+          rescue ::Bridger::ValidationErrors, Parametric::InvalidStructError => e
             json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload, helper: helper), 422
           end
         end
