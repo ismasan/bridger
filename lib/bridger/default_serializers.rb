@@ -141,7 +141,7 @@ module Bridger
 
       private
       def json_schema_for(schema)
-        ::Bridger::JsonSchemaGenerator.new(schema).generate
+        ::Bridger::JsonSchemaGenerator.generate(schema)
       end
     end
   end
