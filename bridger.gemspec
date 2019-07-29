@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.bindir        = "exe"
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
-  spec.add_dependency "jwt", '~> 1.5'
+  spec.add_dependency "jwt", '~> 2'
   spec.add_dependency "oat"
   spec.add_dependency "parametric", "~> 0.2.8"
   spec.add_dependency "bootic_client", "~> 0.0.27"

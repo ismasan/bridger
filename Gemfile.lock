@@ -3,7 +3,7 @@ PATH
   specs:
     bridger (0.1.1)
       bootic_client (~> 0.0.27)
-      jwt (~> 1.5)
+      jwt (~> 2)
       oat
       parametric (~> 0.2.8)
       rack (>= 2.0.6)
@@ -24,7 +24,7 @@ GEM
       multipart-post (>= 1.2, < 3)
     faraday-http-cache (2.0.0)
       faraday (~> 0.8)
-    jwt (1.5.6)
+    jwt (2.2.1)
     multi_json (1.13.1)
     multi_xml (0.6.0)
     multipart-post (2.1.1)
