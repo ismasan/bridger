@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.add_dependency "jwt", '~> 2'
   spec.add_dependency "oat"
-  spec.add_dependency "parametric", "~> 0.2.8"
+  spec.add_dependency "parametric", "~> 0.2.9"
   spec.add_dependency "bootic_client", "~> 0.0.27"
   spec.add_dependency "rack", '>= 2.0.6'
   spec.add_dependency "rack-test"
