@@ -108,7 +108,7 @@ Serializers have helpers to add links between resources, based upon registered e
 class UserSerializer < Bridger::Serializer
   schema do
     # link to self (current URL)
-    self_link
+    rel :user, id: item.id, as: :self
     # link to another endpoint
     # will only be included if current credentials have permissions to other endpoint
     rel :update_user, user_id: item.id

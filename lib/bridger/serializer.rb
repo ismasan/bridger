@@ -40,6 +40,12 @@ module Bridger
       link name, args
     end
 
+    def rel_directory
+      h.endpoints.each do |endpoint|
+        rel endpoint.name
+      end
+    end
+
     def self_link
       link :self, href: h.current_url
     end
