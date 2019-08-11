@@ -99,7 +99,6 @@ class RootSerializer < Bridger::Serializer
      title: "API documentation"
     )
 
-    self_link
     property :welcome, "Welcome to this API"
   end
 end
