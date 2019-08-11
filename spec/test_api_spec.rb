@@ -17,6 +17,22 @@ RSpec.describe 'Test Sinatra API' do
     end
   end
 
+  context 'with full scope' do
+    it 'lists all links in root' do
+      authorize!(
+        uid: 123,
+        sids: [11],
+        aid: 11,
+        scopes: ["api"]
+      )
+
+      expect_link(root, :status)
+      expect_link(root, :user)
+      expect_link(root, :users)
+      expect_link(root, :create_user)
+    end
+  end
+
   it "navigates to root" do
     authorize!(
       uid: 123,
@@ -25,6 +41,18 @@ RSpec.describe 'Test Sinatra API' do
       scopes: ["api.me"]
     )
     expect(root.welcome).to eq 'Welcome to this API'
+  end
+
+  it 'only shows allowed links' do
+    authorize!(
+      uid: 123,
+      sids: [11],
+      aid: 11,
+      scopes: ["api.me"]
+    )
+
+    expect(root.rels.key?(:user)).to be false
+    expect(root.rels.key?(:create_user)).to be false
   end
 
   it "creates and deletes user" do
@@ -131,5 +159,12 @@ RSpec.describe 'Test Sinatra API' do
       expect(sc.query_schema.to_hash['properties']['q']['type']).to eq 'string'
       expect(sc.has?(:payload_schema)).to be true
     end
+  end
+
+  private
+
+  def expect_link(entity, rel_name)
+    rel = entity.rels[rel_name]
+    expect(rel).to be_a BooticClient::Relation
   end
 end
