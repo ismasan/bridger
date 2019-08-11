@@ -85,11 +85,7 @@ end
 # Serializers turn the result of actions into JSON structures
 class RootSerializer < Bridger::Serializer
   schema do
-    self_link
-    rel :status
-    rel :user
-    rel :users
-    rel :create_user
+    rel_directory
 
     link("btc:schemas", href: url("/schemas"))
 
