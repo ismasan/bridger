@@ -59,7 +59,7 @@ An action defines payload parameters, runs them through a method and returns a d
 
 ```ruby
 class CreateUser < Bridger::Action
-  payload do
+  payload_schema do
     field(:name).type(:string).required
   end
 
@@ -77,11 +77,11 @@ Optionally, actions can also define a _query schema_, ie. parameters passed sepa
 
 ```ruby
 class UpdateUser < Bridger::Action
-  query do
+  query_schema do
     field(:user_id).type(:integer).present
   end
 
-  payload do
+  payload_schema do
     field(:name).type(:string).required
   end
 

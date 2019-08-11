@@ -45,11 +45,11 @@ module Bridger
     end
 
     def query_schema
-      action.query
+      action.query_schema
     end
 
     def payload_schema
-      action.payload
+      action.payload_schema
     end
 
     def output_schema
@@ -70,7 +70,7 @@ module Bridger
     attr_reader :authorizer
 
     def query_keys
-      mutating? ? [] : action.query.structure.keys
+      mutating? ? [] : action.query_schema.structure.keys
     end
 
     def mutating?

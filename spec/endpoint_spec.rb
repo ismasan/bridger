@@ -6,7 +6,7 @@ RSpec.describe Bridger::Endpoint do
   let(:authorizer) { double('Authorizer') }
   let(:action) do
     Class.new(Bridger::Action) do
-      query do
+      query_schema do
         field(:product_id).type(:string).present
         field(:q).type(:string)
       end
