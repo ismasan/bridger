@@ -12,7 +12,7 @@ Thing = Struct.new(:name)
 # their `#run!` method returns a data object (ex. a model) then passed to the serializer
 
 class CreateUser < Bridger::Action
-  payload do
+  payload_schema do
     field(:name).type(:string).required
     field(:age).type(:integer).required
   end
@@ -29,7 +29,7 @@ class CreateUser < Bridger::Action
 end
 
 class ShowUser < Bridger::Action
-  query do
+  query_schema do
     field(:user_id).type(:string).required
   end
 
@@ -40,7 +40,7 @@ class ShowUser < Bridger::Action
 end
 
 class ListUserThings < Bridger::Action
-  query do
+  query_schema do
     field(:user_id).type(:string).required
     field(:page).type(:integer).default(1)
   end
@@ -55,7 +55,7 @@ class ListUserThings < Bridger::Action
 end
 
 class DeleteUser < Bridger::Action
-  query do
+  query_schema do
     field(:user_id).type(:string).required
   end
 
@@ -66,7 +66,7 @@ class DeleteUser < Bridger::Action
 end
 
 class ListUsers < Bridger::Action
-  query do
+  query_schema do
     field(:q).type(:string)
   end
 

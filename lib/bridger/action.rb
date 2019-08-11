@@ -17,11 +17,11 @@ module Bridger
       new(*args).run!
     end
 
-    def self.payload(*args, &block)
+    def self.payload_schema(*args, &block)
       self.schema *args, &block
     end
 
-    def self.query(*args, &block)
+    def self.query_schema(*args, &block)
       self.schema *(args.unshift(:query)), &block
     end
 
@@ -62,15 +62,15 @@ module Bridger
     end
 
     def payload_validator
-      @payload_validator ||= self.class.payload.resolve(_payload)
+      @payload_validator ||= self.class.payload_schema.resolve(_payload)
     end
 
     def query_validator
-      @query_validator ||= self.class.query.resolve(_query)
+      @query_validator ||= self.class.query_schema.resolve(_query)
     end
 
     def schema
-      self.class.payload
+      self.class.payload_schema
     end
 
     def map(hash)
