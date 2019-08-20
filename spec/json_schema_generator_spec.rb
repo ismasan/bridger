@@ -4,11 +4,11 @@ require 'bridger/json_schema_generator'
 RSpec.describe Bridger::JsonSchemaGenerator do
   let(:s1) do
     Parametric::Schema.new do
-      field(:name).type(:string).present
+      field(:name).type(:string).meta(title: 'Some title').present
       field(:age).type(:integer).required.default(41)
       field(:options).type(:string).options(['A', 'B'])
       field(:friends).type(:array).schema do
-        field(:name).type(:string).present
+        field(:name).type(:string).meta(title: 'Some other title', description: 'Some description').present
       end
       field(:company).type(:object).schema do
         field(:name).type(:string).present
@@ -22,6 +22,7 @@ RSpec.describe Bridger::JsonSchemaGenerator do
     expect(result['type']).to eq 'object'
     result['properties'].tap do |props|
       expect(props['name']['type']).to eq 'string'
+      expect(props['name']['title']).to eq 'Some title'
       expect(props['age']['type']).to eq 'integer'
       expect(props['age']['default']).to eq 41
       expect(props['options']['type']).to eq 'string'
@@ -33,6 +34,10 @@ RSpec.describe Bridger::JsonSchemaGenerator do
       expect(props['company']['required']).to eq ['name']
 
       expect(props['friends']['type']).to eq 'array'
+      props.dig('friends', 'items', 'properties', 'name').tap do |name|
+        expect(name['title']).to eq 'Some other title'
+        expect(name['description']).to eq 'Some description'
+      end
     end
     expect(result['required']).to eq ['name', 'age']
   end

@@ -32,6 +32,7 @@ module Bridger
         base = {'type' => attrs[:type].to_s}
 
         base['enum'] = attrs[:options] if attrs[:options]
+        base['title'] = attrs[:title] if attrs[:title]
         base['description'] = attrs[:description] if attrs[:description]
         base['default'] = attrs[:default] if attrs[:default] && !attrs[:default].respond_to?(:call)
         base['example'] = attrs[:example] if attrs[:example]
