@@ -161,7 +161,7 @@ Bridger::Auth.config do |c|
 end
 
 # Your API's endpoints. Each combines an action, serializer, some metadata and a permissions scope.
-Bridger::Endpoints.instance.build do
+Bridger::Service.instance.build do
   endpoint(:root, :get, "/?",
     title: "API root",
     scope: "api.me",
@@ -220,6 +220,6 @@ LOGGER = Logger.new(STDOUT)
 #
 class TestAPI < Sinatra::Base
   extend Sinatra::Bridger
-  bridge Bridger::Endpoints.instance, schemas: '/schemas', logger: LOGGER
+  bridge Bridger::Service.instance, schemas: '/schemas', logger: LOGGER
 end
 

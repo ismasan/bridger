@@ -16,10 +16,10 @@ module Sinatra
     end
 
     class RequestHelper
-      attr_reader :rel_name, :params, :endpoints
+      attr_reader :rel_name, :params, :service
 
-      def initialize(auth, endpoints, app, rel_name: nil)
-        @auth, @rel_name, @endpoints, @app = auth, rel_name, endpoints, app
+      def initialize(auth, service, app, rel_name: nil)
+        @auth, @rel_name, @service, @app = auth, rel_name, service, app
         @request = app.request
         @params = app.params
       end
@@ -64,12 +64,12 @@ module Sinatra
       end
 
       def request_helper
-        RequestHelper.new(auth, settings.endpoints, self)
+        RequestHelper.new(auth, settings.service, self)
       end
     end
 
     def bridge(
-      endpoints,
+      service,
       schemas: nil,
       logger: nil,
       not_found_serializer: ::Bridger::DefaultSerializers::NotFound,
@@ -89,7 +89,7 @@ module Sinatra
         end
       end
 
-      set :endpoints, endpoints
+      set :service, service
 
       if logger
         logger = FlushableLogger.new(logger)
@@ -103,9 +103,9 @@ module Sinatra
         end
       end
 
-      endpoints.each do |endpoint|
+      service.each do |endpoint|
         public_send(endpoint.verb, endpoint.path) do
-          helper = RequestHelper.new(auth, settings.endpoints, self, rel_name: endpoint.name)
+          helper = RequestHelper.new(auth, settings.service, self, rel_name: endpoint.name)
           begin
             auth! if endpoint.authenticates?
             json endpoint.run!(query: params, payload: build_payload, auth: auth, helper: helper)
@@ -125,10 +125,10 @@ module Sinatra
         schemas = '/schemas' if schemas.is_a?(TrueClass)
 
         get "#{schemas}/?" do
-          json serialize(endpoints, ::Bridger::DefaultSerializers::Endpoints), 200
+          json serialize(service, ::Bridger::DefaultSerializers::Endpoints), 200
         end
 
-        endpoints.each do |en|
+        service.each do |en|
           get "#{schemas}/#{en.name}/?" do
             json serialize(en, ::Bridger::DefaultSerializers::Endpoint), 200
           end

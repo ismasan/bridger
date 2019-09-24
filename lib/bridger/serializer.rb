@@ -20,7 +20,7 @@ module Bridger
       as = opts.delete(:as)
       always = opts.delete(:always)
 
-      endpoint = h.endpoints[name]
+      endpoint = h.service[name]
       raise "no endpoint defined for name ':#{name}'" unless endpoint
 
       return unless always || endpoint.authorized?(auth, opts)
@@ -41,7 +41,7 @@ module Bridger
     end
 
     def rel_directory
-      h.endpoints.each do |endpoint|
+      h.service.each do |endpoint|
         rel endpoint.name
       end
     end

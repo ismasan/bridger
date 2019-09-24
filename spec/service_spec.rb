@@ -1,7 +1,7 @@
 require "spec_helper"
-require "bridger/endpoints"
+require "bridger/service"
 
-RSpec.describe Bridger::Endpoints do
+RSpec.describe Bridger::Service do
   Action = Class.new do
     def initialize(result)
       @result = result
