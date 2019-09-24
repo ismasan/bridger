@@ -1,7 +1,7 @@
 require "bridger/authorizers"
 
 module Bridger
-  class Endpoints
+  class Service
     def self.instance
       @instance ||= new
     end

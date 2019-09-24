@@ -122,13 +122,13 @@ end
 user_data = UserSerializer.new(user, h: request_helper, auth: auth).to_hash
 ```
 
-### Endpoints
+### Service endpoints
 
-An endpoint combines auth, action and serializer into a callable object that fulfills an entire API request (albeit being framework agnostic).
+A service is a collection of _endpoints_. An endpoint combines auth, action and serializer into a callable object that fulfills an entire API request (albeit being framework agnostic).
 Endpoints include access scopes and pass information to serializers so they can generate (or not) links to other endpoints, based on permissions.
 
 ```ruby
-Bridger::Endpoints.instance do
+Bridger::Service.instance do
   endpoint(:root, :get, '/?',
     title: "API root",
     scope: 'all.me',
@@ -153,7 +153,7 @@ end
 Endpoints can be invoked on their own.
 
 ```ruby
-endpoint = Bridger::Endpoints.instance[:create_user]
+endpoint = Bridger::Service.instance[:create_user]
 user_data = endpoint.run!(
   # payload is user-provided data to be passed to action
   payload: {name: "Joe"},
@@ -202,7 +202,7 @@ require 'sinatra/base'
 
 class API < Sinatra::Base
   extend Sinatra::Bridger
-  bridge Bridger::Endpoints.instance, logger: Logger.new(STDOUT)
+  bridge Bridger::Service.instance, logger: Logger.new(STDOUT)
 end
 ```
 
@@ -218,7 +218,7 @@ These can be exposed as JSON endpoints under a custom path in your API, with
 ```ruby
 class API < Sinatra::Base
   extend Sinatra::Bridger
-  bridge  Bridger::Endpoints.instance, schemas: '/schemas'
+  bridge  Bridger::Service.instance, schemas: '/schemas'
 end
 ```
 
@@ -247,7 +247,7 @@ Sometimes you'll want to authorize based on ownership. For example, I can only u
 For that you can define guard blocks that run at a specific branch of an endpoint's scope:
 
 ```ruby
-Bridger::Endpoints.instance do
+Bridger::Service.instance do
   # run this block when hitting an endpoint with `all.users.update` scope
   # and verify that targeted user is present in my access token info
   authorize "all.users.update" do |scope, auth, params|
