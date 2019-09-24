@@ -1,5 +1,7 @@
 module Bridger
   class JsonSchemaGenerator
+    KNOWN_ATTR_FIELDS = %i[type title description default example options required structure].freeze
+
     BASE = {
       '$schema' => 'http://json-schema.org/draft-04/schema#',
       'type' => 'object'
@@ -45,6 +47,9 @@ module Bridger
             base.merge!(process(attrs[:structure]))
           end
         end
+
+        meta_data = attrs.each.with_object({}) { |(k, v), ret| ret[k.to_s] = v unless KNOWN_ATTR_FIELDS.include?(k) }
+        base.merge!(meta_data)
 
         node['properties'][k.to_s] = base
         node['required'] = reqs if reqs.any?
