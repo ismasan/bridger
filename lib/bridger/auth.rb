@@ -119,4 +119,14 @@ module Bridger
       true
     end
   end
+
+  class NoopAuth
+    def authorized?(_scope)
+      true
+    end
+
+    def authorize!(*_args)
+      true
+    end
+  end
 end
