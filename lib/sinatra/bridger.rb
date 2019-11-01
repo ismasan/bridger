@@ -52,7 +52,7 @@ module Sinatra
       end
 
       def auth
-        @auth ||= ::Bridger::NoopAuth.new
+        @auth ||= ::Bridger::NoopAuth
       end
 
       def build_payload

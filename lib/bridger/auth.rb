@@ -121,11 +121,11 @@ module Bridger
   end
 
   class NoopAuth
-    def authorized?(_scope)
+    def self.authorized?(_scope)
       true
     end
 
-    def authorize!(*_args)
+    def self.authorize!(*_args)
       true
     end
   end
