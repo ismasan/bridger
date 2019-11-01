@@ -11,7 +11,11 @@ module Bridger
     end
 
     def authorize!(claims)
-      @access_token = Bridger::Auth.config.token_store.set(claims)
+      set_access_token Bridger::Auth.config.token_store.set(claims)
+    end
+
+    def set_access_token(token)
+      @access_token = token
     end
 
     require 'bootic_client'
