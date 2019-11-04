@@ -97,5 +97,4 @@ RSpec.describe Bridger::Scopes do
   def first_one_wins(exp1, exp2)
     scope(exp1).can?(scope(exp2))
   end
-
 end

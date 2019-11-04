@@ -243,6 +243,13 @@ A request's token scope is compared with a given endpoint's token to check acces
 * `all.accounts` does NOT have access to `all.users`
 * `all.accounts` does NOT have access to `all.users.create`
 
+_Wildcard_ scopes are possible using the special character `*` as one or more segments in a scope.
+For example:
+
+* `all.*.create` has access to `all.accounts.create` or `all.photos.create`
+* `all.*.create` has access to `all.accounts.*`
+* `all.*.create.*` does not have access to `all.accounts.create` (because it's more specific).
+
 Sometimes you'll want to authorize based on ownership. For example, I can only update a user whose ID is included in my credentials.
 For that you can define guard blocks that run at a specific branch of an endpoint's scope:
 
