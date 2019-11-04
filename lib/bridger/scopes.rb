@@ -60,6 +60,8 @@ module Bridger
 
     class Scope
       SEP = '.'.freeze
+      WILDCARD = '*'.freeze
+
       include Comparable
 
       def initialize(sc)
@@ -79,17 +81,37 @@ module Bridger
       end
 
       def <=>(another_scope)
-        diff = segments - another_scope.segments
+        return -1 if segments.size > another_scope.segments.size
+
+        other_segments = homologate_other_segments_for_comparison(another_scope)
+
+        diff = segments - other_segments
         if diff.size == 0
           1
         else
+          diff = diff.uniq
+          if diff.size == 1 && diff.first == WILDCARD
+            1
+          else
           -1
+          end
         end
       end
 
       protected
 
       attr_reader :segments
+
+      private
+
+      def homologate_other_segments_for_comparison(another_scope)
+        other_segments = another_scope.segments[0...segments.size].map.with_index do |s, idx|
+          s == WILDCARD ? segments[idx] : s
+        end
+        other_segments += another_scope.segments[segments.size..-1] if another_scope.segments.size > segments.size
+
+        other_segments
+      end
     end
 
     class Aliases

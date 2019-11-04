@@ -3,7 +3,7 @@ require 'bridger/scopes'
 
 RSpec.describe Bridger::Scopes do
   describe Bridger::Scopes::Scope do
-    it do
+    it 'compares scopes' do
       more_specific_scope =  described_class.new("btc.account.shops.mine.update")
       less_specific_scope =  described_class.new("btc.account.shops.mine")
       different_scope =  described_class.new("btc.foo.shops.mine")
@@ -16,6 +16,18 @@ RSpec.describe Bridger::Scopes do
       expect(less_specific_scope.can?(different_scope)).to be false
       expect(different_scope.can?(less_specific_scope)).to be false
       expect(different_scope.can?(more_specific_scope)).to be false
+    end
+
+    it 'allows wildcards' do
+      expect(first_one_wins('a.*.c', 'a.b.c')).to be true
+      expect(first_one_wins('a.*.c', 'a.b.z')).to be false
+      expect(first_one_wins('a.*.c', 'a.z.c.e')).to be true
+      expect(first_one_wins('a.*.c', 'a.z.*')).to be true
+      expect(first_one_wins('a.*.c', 'a.z.*.x')).to be true
+      expect(first_one_wins('a.*.c.*', 'a.z.c')).to be false
+      expect(first_one_wins('a.*.c.*', 'a.b.c.d')).to be true
+      expect(first_one_wins('a.*.c.*', 'a.b.c.*')).to be true
+      expect(first_one_wins('a.*.c.*', 'a.*.c.*')).to be true
     end
   end
 
@@ -74,5 +86,15 @@ RSpec.describe Bridger::Scopes do
       user_scopes = described_class.new(["aa.aa", "bb.bb"])
       expect(user_scopes.to_a).to eq ["aa.aa", "bb.bb"]
     end
+  end
+
+  private
+
+  def scope(exp)
+    described_class.new(exp)
+  end
+
+  def first_one_wins(exp1, exp2)
+    scope(exp1).can?(scope(exp2))
   end
 end
