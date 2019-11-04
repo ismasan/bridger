@@ -4,9 +4,9 @@ require 'bridger/scopes'
 RSpec.describe Bridger::Scopes do
   describe Bridger::Scopes::Scope do
     it 'compares scopes' do
-      more_specific_scope =  described_class.new("btc.account.shops.mine.update")
-      less_specific_scope =  described_class.new("btc.account.shops.mine")
-      different_scope =  described_class.new("btc.foo.shops.mine")
+      more_specific_scope =  scope("btc.account.shops.mine.update")
+      less_specific_scope =  scope("btc.account.shops.mine")
+      different_scope =  scope("btc.foo.shops.mine")
 
       expect(more_specific_scope.can?(less_specific_scope)).to be false
       expect(less_specific_scope.can?(more_specific_scope)).to be true
@@ -16,6 +16,7 @@ RSpec.describe Bridger::Scopes do
       expect(less_specific_scope.can?(different_scope)).to be false
       expect(different_scope.can?(less_specific_scope)).to be false
       expect(different_scope.can?(more_specific_scope)).to be false
+      expect(first_one_wins('all.root', 'all.mobiles.root')).to be false
     end
 
     it 'allows wildcards' do

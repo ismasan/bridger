@@ -81,21 +81,13 @@ module Bridger
       end
 
       def <=>(another_scope)
-        return -1 if segments.size > another_scope.segments.size
+        a, b = segments, another_scope.segments
+        return -1 if a.size > b.size
 
-        other_segments = homologate_other_segments_for_comparison(another_scope)
-
-        diff = segments - other_segments
-        if diff.size == 0
-          1
-        else
-          diff = diff.uniq
-          if diff.size == 1 && diff.first == WILDCARD
-            1
-          else
-          -1
-          end
-        end
+        a = equalize(a, b)
+        b = equalize(b, a)
+        diff = a - b
+        diff.size == 0 ? 1 : -1
       end
 
       protected
@@ -104,13 +96,9 @@ module Bridger
 
       private
 
-      def homologate_other_segments_for_comparison(another_scope)
-        other_segments = another_scope.segments[0...segments.size].map.with_index do |s, idx|
-          s == WILDCARD ? segments[idx] : s
-        end
-        other_segments += another_scope.segments[segments.size..-1] if another_scope.segments.size > segments.size
-
-        other_segments
+      def equalize(a, b)
+        shortest = [a.size, b.size].min
+        0.upto(shortest - 1).map { |i| a[i] == WILDCARD ? b[i] : a[i] }
       end
     end
 
