@@ -128,7 +128,7 @@ A service is a collection of _endpoints_. An endpoint combines auth, action and 
 Endpoints include access scopes and pass information to serializers so they can generate (or not) links to other endpoints, based on permissions.
 
 ```ruby
-Bridger::Service.instance do
+Bridger::Service.instance.build do
   endpoint(:root, :get, '/?',
     title: "API root",
     scope: 'all.me',
