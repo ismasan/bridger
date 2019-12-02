@@ -1,4 +1,5 @@
-require "bridger/version"
+require 'multi_json'
+require 'bridger/version'
 
 module Bridger
   # Your code goes here...

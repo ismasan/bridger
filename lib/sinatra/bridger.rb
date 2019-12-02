@@ -1,4 +1,3 @@
-require 'json'
 require 'bridger'
 require 'bridger/default_serializers'
 require 'parametric/struct'
@@ -37,7 +36,7 @@ module Sinatra
       def json(data, st = 200)
         content_type "application/json"
         if data
-          halt st, ::JSON.generate(data.to_hash)
+          halt st, MultiJson.dump(data.to_hash)
         else
           halt 204, "{}"
         end
@@ -57,7 +56,7 @@ module Sinatra
 
       def build_payload
         if request.post? || request.put?
-          JSON.parse(request.body.read, symbolize_names: true)
+          MultiJson.load(request.body.read, symbolize_keys: true)
         else
           {}
         end
