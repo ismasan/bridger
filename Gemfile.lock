@@ -39,7 +39,7 @@ GEM
       multi_xml (~> 0.5)
       rack (>= 1.2, < 3)
     parametric (0.2.10)
-    rack (2.0.7)
+    rack (2.0.8)
     rack-protection (2.0.5)
       rack
     rack-test (1.1.0)
