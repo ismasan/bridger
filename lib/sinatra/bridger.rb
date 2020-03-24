@@ -76,7 +76,7 @@ module Sinatra
     )
       helpers Helpers
       enable :dump_errors
-      disable :raise_errors, :show_exceptions
+      disable :raise_errors, :show_exceptions, :x_cascade
       if not_found_serializer
         not_found do
           json serialize(env['sinatra.error'], not_found_serializer), 404

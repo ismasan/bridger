@@ -1,9 +1,11 @@
 require 'spec_helper'
+require 'rack/test'
 require 'bridger/test_helpers'
 require_relative './support/test_api'
 
 RSpec.describe 'Test Sinatra API' do
   include Bridger::TestHelpers
+  include Rack::Test::Methods
 
   def app
     TestAPI
@@ -14,6 +16,20 @@ RSpec.describe 'Test Sinatra API' do
       c.parse_from :header, 'HTTP_AUTHORIZATION'
       c.token_store = {}
       c.logger = Logger.new(STDOUT)
+    end
+  end
+
+  context '404s' do
+    it 'does not add X-Cascade header' do
+      authorize!(
+        uid: 123,
+        sids: [11],
+        aid: 11,
+        scopes: ["api"]
+      )
+
+      resp = get('/foo/bar')
+      expect(resp.headers['X-Cascade']).not_to eq('pass')
     end
   end
 
