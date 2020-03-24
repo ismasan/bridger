@@ -1,6 +1,5 @@
 require 'bridger'
 require 'bridger/default_serializers'
-require 'parametric/struct'
 
 module Sinatra
   module Bridger
