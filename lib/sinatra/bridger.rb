@@ -1,6 +1,6 @@
 require 'bridger'
 require 'bridger/default_serializers'
-require 'parametric/struct'
+require 'bridger/rack'
 
 module Sinatra
   module Bridger
@@ -14,56 +14,14 @@ module Sinatra
       end
     end
 
-    class RequestHelper
-      attr_reader :rel_name, :params, :service
-
-      def initialize(auth, service, app, rel_name: nil)
-        @auth, @rel_name, @service, @app = auth, rel_name, service, app
-        @request = app.request
-        @params = app.params
+    class SinatraRequestWithParams < SimpleDelegator
+      def initialize(request, params)
+        super request
+        @params = request.params.merge(params)
       end
 
-      def url(path)
-        @app.url(path)
-      end
-
-      def current_url
-        @request.url
-      end
-    end
-
-    module Helpers
-      def json(data, st = 200)
-        content_type "application/json"
-        if data
-          halt st, MultiJson.dump(data.to_hash)
-        else
-          halt 204, "{}"
-        end
-      end
-
-      def serialize(item, serializer, helper: request_helper)
-        serializer.new(item, h: helper)
-      end
-
-      def auth!
-        @auth = ::Bridger::Auth.parse(request)
-      end
-
-      def auth
-        @auth ||= ::Bridger::NoopAuth
-      end
-
-      def build_payload
-        if request.post? || request.put?
-          MultiJson.load(request.body.read, symbolize_keys: true)
-        else
-          {}
-        end
-      end
-
-      def request_helper
-        RequestHelper.new(auth, settings.service, self)
+      def params
+        @params
       end
     end
 
@@ -74,17 +32,16 @@ module Sinatra
       not_found_serializer: ::Bridger::DefaultSerializers::NotFound,
       server_error_serializer: ::Bridger::DefaultSerializers::ServerError
     )
-      helpers Helpers
       enable :dump_errors
       disable :raise_errors, :show_exceptions, :x_cascade
       if not_found_serializer
         not_found do
-          json serialize(env['sinatra.error'], not_found_serializer), 404
+          ::Bridger::Rack::ErrorEndpoint.new(settings.service, env['sinatra.error'], not_found_serializer, 404).call(request.env)
         end
       end
       if server_error_serializer
         error do
-          json serialize(env['sinatra.error'], server_error_serializer), 500
+          ::Bridger::Rack::ErrorEndpoint.new(settings.service, env['sinatra.error'], server_error_serializer, 500).call(request.env)
         end
       end
 
@@ -104,19 +61,7 @@ module Sinatra
 
       service.each do |endpoint|
         public_send(endpoint.verb, endpoint.path) do
-          helper = RequestHelper.new(auth, settings.service, self, rel_name: endpoint.name)
-          begin
-            auth! if endpoint.authenticates?
-            json endpoint.run!(query: params, payload: build_payload, auth: auth, helper: helper)
-          rescue ::Bridger::MissingAccessTokenError => e
-            json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
-          rescue ::Bridger::ForbiddenAccessError => e
-            json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
-          rescue ::Bridger::AuthError => e
-            json serialize(e, ::Bridger::DefaultSerializers::Unauthorized, helper: helper), 401
-          rescue ::Bridger::ValidationErrors, Parametric::InvalidStructError => e
-            json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload, helper: helper), 422
-          end
+          ::Bridger::Rack::Endpoint.new(settings.service, endpoint).call(SinatraRequestWithParams.new(request, params))
         end
       end
 
@@ -124,12 +69,12 @@ module Sinatra
         schemas = '/schemas' if schemas.is_a?(TrueClass)
 
         get "#{schemas}/?" do
-          json serialize(service, ::Bridger::DefaultSerializers::Endpoints), 200
+          ::Bridger::Rack::SchemaEndpoint.new(settings.service, settings.service, ::Bridger::DefaultSerializers::Endpoints, 200).call(request.env)
         end
 
-        service.each do |en|
-          get "#{schemas}/#{en.name}/?" do
-            json serialize(en, ::Bridger::DefaultSerializers::Endpoint), 200
+        service.each do |endpoint|
+          get "#{schemas}/#{endpoint.name}/?" do
+            ::Bridger::Rack::SchemaEndpoint.new(settings.service, endpoint, ::Bridger::DefaultSerializers::Endpoint, 200).call(request.env)
           end
         end
       end
