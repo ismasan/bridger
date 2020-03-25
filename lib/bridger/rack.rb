@@ -120,6 +120,8 @@ module Bridger
     end
 
     class RequestHelper
+      HTTP_X_FORWARDED_FOR = 'HTTP_X_FORWARDED_HOST'.freeze
+
       attr_reader :rel_name, :params, :service
 
       def initialize(auth, service, request, rel_name: nil)
@@ -161,7 +163,7 @@ module Bridger
       end
 
       def forwarded?(req)
-        req.env.include? "HTTP_X_FORWARDED_HOST"
+        req.env.include? HTTP_X_FORWARDED_FOR
       end
     end
   end
