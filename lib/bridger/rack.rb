@@ -6,7 +6,7 @@ require 'bridger/default_serializers'
 
 module Bridger
   module Rack
-    class AbstractEndpoint
+    class AbstractHandler
       private
 
       def json(data, st = 200)
@@ -28,7 +28,7 @@ module Bridger
       end
     end
 
-    class ErrorEndpoint < AbstractEndpoint
+    class ErrorHandler < AbstractHandler
       def initialize(service, error, serializer, status)
         @service = service
         @error, @serializer, @status = error, serializer, status
@@ -45,7 +45,7 @@ module Bridger
       attr_reader :service, :error, :serializer, :status
     end
 
-    class SchemaEndpoint < AbstractEndpoint
+    class SchemaHandler < AbstractHandler
       def initialize(service, item, serializer, status)
         @service, @item, @serializer, @status = service, item, serializer, status
       end
@@ -61,7 +61,7 @@ module Bridger
       attr_reader :service, :item, :serializer, :status
     end
 
-    class Endpoint < AbstractEndpoint
+    class EndpointHandler < AbstractHandler
       def initialize(service, endpoint)
         @service = service
         @endpoint = endpoint
