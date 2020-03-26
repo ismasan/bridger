@@ -1,4 +1,6 @@
 require "bridger/authorizers"
+require 'bridger/default_serializers'
+require 'bridger/default_actions'
 
 module Bridger
   class Service
@@ -18,6 +20,8 @@ module Bridger
     end
 
     def each(&block)
+      return enum_for(:each) unless block_given?
+
       endpoints.each &block
     end
 
@@ -27,6 +31,22 @@ module Bridger
 
     def [](name)
       lookup[name]
+    end
+
+    def schema_endpoints(path: '/schemas', scope: nil)
+      endpoint(:schemas, :get, "#{path}/?",
+               title: 'API schemas',
+               scope: scope,
+               action: DefaultActions::PassThrough.new(self),
+               serializer: DefaultSerializers::Endpoints
+              )
+
+      endpoint(:schema, :get, "#{path}/:rel/?",
+               title: 'API schema',
+               scope: scope,
+               action: DefaultActions::Schema.new(self),
+               serializer: DefaultSerializers::Endpoint
+              )
     end
 
     def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer:)

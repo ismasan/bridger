@@ -160,7 +160,7 @@ RSpec.describe 'Test Sinatra API' do
       scopes: ["api.me"]
     )
     schemas = root.schemas
-    expect(schemas.map(&:rel).sort).to eq ['create_user', 'delete_user', 'root', 'status', 'user', 'user_things', 'users']
+    expect(schemas.map(&:rel).sort).to eq %w(create_user delete_user root schema schemas status user user_things users)
     schemas.first.tap do |sc|
       expect(sc.rel).to eq 'root'
       expect(sc.title).to eq 'API root'

@@ -6,7 +6,7 @@ require 'bridger/default_serializers'
 
 module Bridger
   module Rack
-    class AbstractHandler
+    module HandlerUtils
       private
 
       def json(data, st = 200)
@@ -28,15 +28,17 @@ module Bridger
       end
     end
 
-    class ErrorHandler < AbstractHandler
-      def initialize(service, error, serializer, status)
+    class ErrorHandler
+      include HandlerUtils
+
+      def initialize(service, error, serializer, status: 200)
         @service = service
         @error, @serializer, @status = error, serializer, status
       end
 
       def call(env)
         request = build_request(env)
-        helper = RequestHelper.new(::Bridger::NoopAuth, service, request)
+        helper = RequestHelper.new(service, request)
         json serializer.new(error, h: helper), status
       end
 
@@ -45,23 +47,9 @@ module Bridger
       attr_reader :service, :error, :serializer, :status
     end
 
-    class SchemaHandler < AbstractHandler
-      def initialize(service, item, serializer, status)
-        @service, @item, @serializer, @status = service, item, serializer, status
-      end
+    class EndpointHandler
+      include HandlerUtils
 
-      def call(env)
-        request = build_request(env)
-        helper = RequestHelper.new(::Bridger::NoopAuth, service, request)
-        json serializer.new(item, h: helper), status
-      end
-
-      private
-
-      attr_reader :service, :item, :serializer, :status
-    end
-
-    class EndpointHandler < AbstractHandler
       def initialize(service, endpoint)
         @service = service
         @endpoint = endpoint
@@ -70,7 +58,7 @@ module Bridger
 
       def call(env)
         @request = build_request(env)
-        helper = RequestHelper.new(auth, service, @request, rel_name: endpoint.name)
+        helper = RequestHelper.new(service, @request, rel_name: endpoint.name)
         begin
           auth! if endpoint.authenticates?
           json endpoint.run!(query: helper.params, payload: build_payload, auth: auth, helper: helper)
@@ -88,19 +76,6 @@ module Bridger
       private
 
       attr_reader :service, :endpoint, :request
-
-      def json(data, st = 200)
-        heads = { 'Content-Type' => 'application/json' }
-        if data
-          [st, heads, [MultiJson.dump(data.to_hash)]]
-        else
-          [204, heads, ["{}"]]
-        end
-      end
-
-      def serialize(item, serializer, helper: request_helper)
-        serializer.new(item, h: helper)
-      end
 
       def auth!
         @auth = ::Bridger::Auth.parse(request)
@@ -120,12 +95,12 @@ module Bridger
     end
 
     class RequestHelper
-      HTTP_X_FORWARDED_FOR = 'HTTP_X_FORWARDED_HOST'.freeze
+      HTTP_X_FORWARDED_HOST = 'HTTP_X_FORWARDED_HOST'.freeze
 
       attr_reader :rel_name, :params, :service
 
-      def initialize(auth, service, request, rel_name: nil)
-        @auth, @rel_name, @service, @request = auth, rel_name, service, request
+      def initialize(service, request, rel_name: nil)
+        @rel_name, @service, @request = rel_name, service, request
       end
 
       def params
@@ -163,7 +138,7 @@ module Bridger
       end
 
       def forwarded?(req)
-        req.env.include? HTTP_X_FORWARDED_FOR
+        req.env.include? HTTP_X_FORWARDED_HOST
       end
     end
   end

@@ -1,5 +1,3 @@
-require 'bridger'
-require 'bridger/default_serializers'
 require 'bridger/rack'
 
 module Sinatra
@@ -27,7 +25,6 @@ module Sinatra
 
     def bridge(
       service,
-      schemas: nil,
       logger: nil,
       not_found_serializer: ::Bridger::DefaultSerializers::NotFound,
       server_error_serializer: ::Bridger::DefaultSerializers::ServerError
@@ -36,12 +33,12 @@ module Sinatra
       disable :raise_errors, :show_exceptions, :x_cascade
       if not_found_serializer
         not_found do
-          ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], not_found_serializer, 404).call(request.env)
+          ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], not_found_serializer, status: 404).call(request.env)
         end
       end
       if server_error_serializer
         error do
-          ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], server_error_serializer, 500).call(request.env)
+          ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], server_error_serializer, status: 500).call(request.env)
         end
       end
 
@@ -62,20 +59,6 @@ module Sinatra
       service.each do |endpoint|
         public_send(endpoint.verb, endpoint.path) do
           ::Bridger::Rack::EndpointHandler.new(settings.service, endpoint).call(SinatraRequestWithParams.new(request, params))
-        end
-      end
-
-      if schemas
-        schemas = '/schemas' if schemas.is_a?(TrueClass)
-
-        get "#{schemas}/?" do
-          ::Bridger::Rack::SchemaHandler.new(settings.service, settings.service, ::Bridger::DefaultSerializers::Endpoints, 200).call(request.env)
-        end
-
-        service.each do |endpoint|
-          get "#{schemas}/#{endpoint.name}/?" do
-            ::Bridger::Rack::SchemaHandler.new(settings.service, endpoint, ::Bridger::DefaultSerializers::Endpoint, 200).call(request.env)
-          end
         end
       end
     end

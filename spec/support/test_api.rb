@@ -209,6 +209,8 @@ Bridger::Service.instance.build do
     serializer: StatusSerializer,
     scope: nil,
   )
+
+  schema_endpoints(path: '/schemas')
 end
 
 require 'logger'
@@ -220,6 +222,6 @@ LOGGER = Logger.new(STDOUT)
 #
 class TestAPI < Sinatra::Base
   extend Sinatra::Bridger
-  bridge Bridger::Service.instance, schemas: '/schemas', logger: LOGGER
+  bridge Bridger::Service.instance, logger: LOGGER
 end
 

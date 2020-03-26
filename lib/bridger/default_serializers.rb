@@ -108,7 +108,7 @@ module Bridger
         type ["results", "endpoints"]
 
         items item.all do |endpoint, s|
-          s.link :self, href: url("/schemas/#{endpoint.name}")
+          s.rel :schema, rel: endpoint.name, as: :self
 
           s.property :rel, endpoint.name
           s.property :title, endpoint.title
@@ -125,7 +125,7 @@ module Bridger
       schema do
         type ["endpoint"]
 
-        link :self, href: url("/schemas/#{item.name}")
+        rel :schema, rel: item.name, as: :self
 
         property :rel, item.name
         property :title, item.title
