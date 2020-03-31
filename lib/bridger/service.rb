@@ -17,6 +17,7 @@ module Bridger
       @endpoints = []
       @lookup = {}
       @authorizer = Bridger::Authorizers::Tree.new
+      @instrumenter = NullInstrumenter
     end
 
     def each(&block)
@@ -49,6 +50,11 @@ module Bridger
               )
     end
 
+    def instrumenter(i = nil)
+      @instrumenter = i if i
+      @instrumenter
+    end
+
     def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer:)
       e = Bridger::Endpoint.new(
         name: name,
@@ -58,7 +64,8 @@ module Bridger
         title: title,
         scope: scope,
         action: action,
-        serializer: serializer
+        serializer: serializer,
+        instrumenter: instrumenter
       )
       endpoints << e
       lookup[e.name] = e

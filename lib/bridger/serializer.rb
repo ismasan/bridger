@@ -16,6 +16,10 @@ module Bridger
   class Serializer < Oat::Serializer
     adapter DefaultAdapter
 
+    def inspect
+      %(<#{self.class.name}>)
+    end
+
     def rel(name, opts = {})
       as = opts.delete(:as)
       always = opts.delete(:always)
