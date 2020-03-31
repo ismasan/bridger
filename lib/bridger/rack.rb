@@ -70,7 +70,13 @@ module Bridger
           json serialize(e, ::Bridger::DefaultSerializers::Unauthorized, helper: helper), 401
         rescue ::Bridger::ValidationErrors, Parametric::InvalidStructError => e
           json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload, helper: helper), 422
+        rescue ::Bridger::ResourceNotFoundError => e
+          json serialize(e, ::Bridger::DefaultSerializers::NotFound, helper: helper), 404
         end
+      end
+
+      def inspect
+        %(<#{self.class} [#{endpoint.name}] #{endpoint.verb} #{endpoint.path}>)
       end
 
       private
