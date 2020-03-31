@@ -6,6 +6,7 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
   include Rack::Test::Methods
 
   before :all do
+    USERS.clear
     Bridger::Auth.config do |c|
       c.parse_from :header, 'HTTP_AUTHORIZATION'
       c.token_store = {}
@@ -24,6 +25,7 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
 
       resp = get('/foo/bar')
       expect(resp.headers['X-Cascade']).not_to eq('pass')
+      expect(resp.status).to eq 404
     end
   end
 
@@ -161,7 +163,7 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
       expect(sc.verb).to eq 'get'
       expect(sc.scope).to eq 'api.me'
       expect(sc.templated).to be false
-      expect(sc.href).to eq 'http://example.org/?'
+      expect(sc.href).to eq 'http://example.org/'
     end
     item = schemas.items.find{|i| i.rel == 'users' }
     item.self.tap do |sc|

@@ -34,14 +34,14 @@ module Bridger
     end
 
     def schema_endpoints(path: '/schemas', scope: nil)
-      endpoint(:schemas, :get, "#{path}/?",
+      endpoint(:schemas, :get, path,
                title: 'API schemas',
                scope: scope,
                action: DefaultActions::PassThrough.new(self),
                serializer: DefaultSerializers::Endpoints
               )
 
-      endpoint(:schema, :get, "#{path}/:rel/?",
+      endpoint(:schema, :get, "#{path}/:rel",
                title: 'API schema',
                scope: scope,
                action: DefaultActions::Schema.new(self),
