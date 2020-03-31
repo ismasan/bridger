@@ -5,7 +5,7 @@ require_relative './support/api_examples'
 require 'action_dispatch'
 require 'bridger/rails'
 
-# Let's use Sinatra as the Rack vessel for our endpoints
+# Let's use Rails' router as the Rack vessel for our endpoints
 # it will also exposes endpoint metadata publicly at /schemas
 #
 RSpec.describe 'Rails integration' do
