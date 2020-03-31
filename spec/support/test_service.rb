@@ -1,6 +1,3 @@
-require 'sinatra/bridger'
-require 'sinatra/base'
-
 # A simple users repository. You would use some ORM or database layer (ActiveRecord, Sequel, etc)
 USERS = {}
 # The models
@@ -211,17 +208,5 @@ Bridger::Service.instance.build do
   )
 
   schema_endpoints(path: '/schemas')
-end
-
-require 'logger'
-
-LOGGER = Logger.new(STDOUT)
-
-# Let's use Sinatra as the Rack vessel for our endpoints
-# it will also exposes endpoint metadata publicly at /schemas
-#
-class TestAPI < Sinatra::Base
-  extend Sinatra::Bridger
-  bridge Bridger::Service.instance, logger: LOGGER
 end
 

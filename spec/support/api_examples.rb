@@ -1,15 +1,9 @@
-require 'spec_helper'
 require 'rack/test'
 require 'bridger/test_helpers'
-require_relative './support/test_api'
 
-RSpec.describe 'Test Sinatra API' do
+RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
   include Bridger::TestHelpers
   include Rack::Test::Methods
-
-  def app
-    TestAPI
-  end
 
   before :all do
     Bridger::Auth.config do |c|

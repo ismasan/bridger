@@ -213,7 +213,7 @@ end
 
 Now your Sinatra app exposes all registered endpoints, runs scope-based permissions, validates input parameters and includes links between resources.
 
-See a full example in the bundled [test API](https://github.com/ismasan/bridger/blob/master/spec/support/test_api.rb), and check out how [it's tested](https://github.com/ismasan/bridger/blob/master/spec/test_api_spec.rb).
+See a full example in the bundled [test API](https://github.com/ismasan/bridger/blob/master/spec/support/test_service.rb), and check out how [it's tested](https://github.com/ismasan/bridger/blob/master/spec/support/api_examples.rb).
 
 ## Scopes and authorization
 
