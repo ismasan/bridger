@@ -458,7 +458,7 @@ Bridger::Service.instance.build do
 end
 ```
 
-This instruments two components of every endpoint run. As per the example :root endpoint above:
+This instruments two components of every endpoint run. As per the example `:user` endpoint above:
 
 ```ruby
 # Instrument action call
@@ -491,7 +491,7 @@ end
 
 # Register it in your services
 Bridger::Service.instance.build do
-  instrumenter PutsInstrumenter
+  instrumenter PutsInstrumenter.new
 
   # .. etc
 end
