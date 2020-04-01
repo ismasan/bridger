@@ -55,4 +55,18 @@ RSpec.describe Bridger::Service do
     result = endpoint.run!(payload: {}, auth: auth, helper: helper)
     expect(result.to_hash).to eq(foo: 'bar')
   end
+
+  it 'passes instrumenter to endpoints' do
+    instrumenter = double('SomeInstrumenter', instrument: {})
+    expect(Bridger::Endpoint).to receive(:new).with(hash_including(instrumenter: instrumenter)).and_call_original
+
+    srv = described_class.new
+    srv.instrumenter instrumenter
+    srv.endpoint(:shop, :get, '/shops/:id',
+      title: "API root",
+      scope: "btc.me",
+      action: Action.new(foo: 'bar'),
+      serializer: Serializer
+    )
+  end
 end
