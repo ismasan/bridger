@@ -10,9 +10,21 @@ RSpec.describe Bridger::Endpoint do
         field(:product_id).type(:string).present
         field(:q).type(:string)
       end
+
+      # class name
+      def self.name
+        'SomeAction'
+      end
     end
   end
-  let(:serializer) { double('Serializer') }
+
+  let(:serializer) do
+    Class.new(Bridger::Serializer) do
+      def self.name
+        'SomeSerializer'
+      end
+    end
+  end
 
   it "has readers" do
     endpoint = described_class.new(
@@ -34,29 +46,69 @@ RSpec.describe Bridger::Endpoint do
     expect(endpoint.serializer).to eq serializer
   end
 
-  it "runs action" do
-    endpoint = described_class.new(
-      name: 'create_product',
-      verb: :post,
-      path: '/v1/shops/:shop_id/products',
-      title: 'Create products',
-      scope: 'a.b.c',
-      authorizer: authorizer,
-      action: action,
-      serializer: serializer
-    )
+  describe '#run' do
+    let(:auth) { double('Auth', authorize!: true) }
+    let(:presenter) { double('Presenter') }
 
-    auth = double('Auth')
-    params = {foo: 'bar'}
-    helper = double('Helper', params: params)
-    presenter = double('Presenter')
+    before do
+      allow(action).to receive(:call).and_return(presenter)
+    end
 
-    expect(auth).to receive(:authorize!).with(endpoint.scope, authorizer, params).and_return true
-    expect(action).to receive(:call).with(query: {}, payload: {p1: 1}, auth: auth).and_return presenter
-    expect(serializer).to receive(:new).with(presenter, h: helper, auth: auth).and_return({out: 1})
+    it "runs action" do
+      endpoint = described_class.new(
+        name: 'create_product',
+        verb: :post,
+        path: '/v1/shops/:shop_id/products',
+        title: 'Create products',
+        scope: 'a.b.c',
+        authorizer: authorizer,
+        action: action,
+        serializer: serializer
+      )
 
-    data = endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)
-    expect(data).to eq({out: 1})
+      params = {foo: 'bar'}
+      helper = double('Helper', params: params)
+
+      expect(auth).to receive(:authorize!).with(endpoint.scope, authorizer, params).and_return true
+      expect(action).to receive(:call).with(query: {}, payload: {p1: 1}, auth: auth).and_return presenter
+      expect(serializer).to receive(:new).with(presenter, h: helper, auth: auth).and_return({out: 1})
+
+      data = endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)
+      expect(data).to eq({out: 1})
+    end
+
+    it 'instruments run' do
+      helper = double('Helper', params: {})
+      allow(Bridger::NullInstrumenter).to receive(:instrument).and_call_original
+
+      endpoint = described_class.new(
+        name: 'products',
+        verb: :get,
+        path: '/v1/products/:product_id',
+        title: 'list products',
+        scope: 'a.b.c',
+        authorizer: authorizer,
+        action: action,
+        serializer: serializer,
+        instrumenter: Bridger::NullInstrumenter
+      )
+
+      expect(Bridger::NullInstrumenter).to receive(:instrument) do |name, payload, blk|
+        expect(name).to eq('bridger.action')
+        expect(payload[:class_name]).to eq('SomeAction')
+        expect(payload[:verb]).to eq(:get)
+        expect(payload[:path]).to eq(endpoint.path)
+        expect(payload[:name]).to eq('products')
+        expect(payload[:title]).to eq('list products')
+      end
+
+      expect(Bridger::NullInstrumenter).to receive(:instrument) do |name, payload, blk|
+        expect(name).to eq('bridger.serializer')
+        expect(payload[:class_name]).to eq('SomeSerializer')
+      end
+
+      endpoint.run!(payload: {p1: 1}, auth: auth, helper: helper)
+    end
   end
 
   it "builds relation" do

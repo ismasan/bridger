@@ -33,12 +33,13 @@ module Bridger
     def run!(query: {}, payload: {}, auth:, helper:)
       auth.authorize!(scope, authorizer, helper.params) if authenticates?
 
-      action_name = action.is_a?(Class) ? action.name : action.class.name
-      presenter = instrumenter.instrument('app.bridger.action', title: "#{action_name} #{verb.to_s.upcase} #{path}", endpoint: true, description: title) do
+      action_name = class_name_for_instrumenter(action)
+      serializer_name = class_name_for_instrumenter(serializer)
+      presenter = instrumenter.instrument('bridger.action', class_name: action_name, verb: verb, path: path, name: name, title: title) do
         action.call(query: query, payload: payload, auth: auth)
       end
       if serializer
-        instrumenter.instrument('view.render.bridger.serializer', title: serializer.inspect, description: title) do
+        instrumenter.instrument('bridger.serializer', class_name: serializer_name) do
           serializer.new(presenter, h: helper, auth: auth).to_hash
         end
       end
@@ -83,6 +84,10 @@ module Bridger
 
     def mutating?
       MUTATING_VERBS.include? verb
+    end
+
+    def class_name_for_instrumenter(obj)
+      obj.is_a?(Class) ? obj.name : obj.class.name
     end
   end
 end
