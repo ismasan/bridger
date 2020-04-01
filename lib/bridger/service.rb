@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "bridger/authorizers"
 require 'bridger/default_serializers'
 require 'bridger/default_actions'
