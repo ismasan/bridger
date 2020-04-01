@@ -215,6 +215,29 @@ Now your Sinatra app exposes all registered endpoints, runs scope-based permissi
 
 See a full example in the bundled [test API](https://github.com/ismasan/bridger/blob/master/spec/support/test_service.rb), and check out how [it's tested](https://github.com/ismasan/bridger/blob/master/spec/support/api_examples.rb).
 
+## Rails integration
+
+In your Rails router
+
+```ruby
+require 'bridger/rails'
+
+Rails.application.routes.draw do
+  mount Bridger::Rails.router_for(Bridger::Service.instance) => '/api'
+  # etc
+end
+```
+
+You can also mount multiple `Bridger::Service` instances separately.
+
+```ruby
+Rails.application.routes.draw do
+  mount Bridger::Rails.router_for(service_1) => '/api'
+  mount Bridger::Rails.router_for(service_2) => '/admin-api'
+  # ... etc
+end
+```
+
 ## Scopes and authorization
 
 Scopes are permission trees.

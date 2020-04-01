@@ -6,8 +6,8 @@ require 'sinatra/bridger'
 require 'sinatra/base'
 require 'logger'
 
-# Let's use Sinatra as the Rack vessel for our endpoints
-# it will also exposes endpoint metadata publicly at /schemas
+# Let's use Sinatra as the Rack vessel for our endpoints.
+# It will also expose endpoint metadata publicly at /schemas
 #
 RSpec.describe 'Sinatra integration' do
   def app
