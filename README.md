@@ -462,10 +462,16 @@ This instruments two components of every endpoint run. As per the example :root 
 
 ```ruby
 # Instrument action call
-'bridger.action', { class_name: 'ListUsers', verb: :get, path: '/users/:id', name: :user, title: 'List users' }
+instrumenter.instrument('bridger.action', {
+  class_name: 'ListUsers',
+  verb: :get,
+  path: '/users/:id',
+  name: :user,
+  title: 'List users'
+})
 
 # Instrument serializer call
-'bridger.serializer', { class_name: 'UsersSerializer' }
+instrumenter.instrument('bridger.serializer', { class_name: 'UsersSerializer' })
 ```
 
 ### Custom instrumenters
