@@ -443,8 +443,6 @@ token = store.set(
 ## To DO
 
 * API console (`bridger console`) so you can interact with your API in an IRB session.
-* Help setting up logging in Sinatra apps? (always annoying)
-* Generic Rack request helper, not Sinatra dependent?
 * New version of Oat with schema reflection, so we can auto-document output schemas too
 * Helpers to build API-powered frontends.
 
