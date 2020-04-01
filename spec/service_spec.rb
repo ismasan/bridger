@@ -69,4 +69,12 @@ RSpec.describe Bridger::Service do
       serializer: Serializer
     )
   end
+
+  it 'checks that instrumenter implements #instrument' do
+    srv = described_class.new
+
+    expect {
+      srv.instrumenter 'nope!'
+    }.to raise_error(ArgumentError)
+  end
 end

@@ -50,8 +50,12 @@ module Bridger
               )
     end
 
-    def instrumenter(i = nil)
-      @instrumenter = i if i
+    def instrumenter(ins = nil)
+      if ins
+        raise ArgumentError, 'instrumenters must implement #instrument(name String, payload Hash, &block)' unless ins.respond_to?(:instrument)
+        @instrumenter = ins
+      end
+
       @instrumenter
     end
 
