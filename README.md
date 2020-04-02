@@ -440,6 +440,63 @@ token = store.set(
 )
 ```
 
+## Instrumentation
+
+Bridger services accept an optional _instrumenter_ interface, compatible with [ActiveSupport::Notifications](https://api.rubyonrails.org/classes/ActiveSupport/Notifications.html).
+
+```ruby
+Bridger::Service.instance.build do
+  # Register a service-level instrumenter for all endpoints
+  instrumenter ActiveSupport::Notifications
+
+  endpoint(:user, :get, '/users/:id',
+    title: "List users",
+    scope: 'all.me',
+    action: ListUsers,
+    serializer: UsersSerializer
+  )
+end
+```
+
+This instruments two components of every endpoint run. As per the example `:user` endpoint above:
+
+```ruby
+# Instrument action call
+instrumenter.instrument('bridger.action', {
+  class_name: 'ListUsers',
+  verb: :get,
+  path: '/users/:id',
+  name: :user,
+  title: 'List users'
+})
+
+# Instrument serializer call
+instrumenter.instrument('bridger.serializer', { class_name: 'UsersSerializer' })
+```
+
+### Custom instrumenters
+
+You can provide your own instrumenter, for example:
+
+```ruby
+class PutsInstrumenter
+  def instrument(name, payload = {}, &block)
+    start = Time.now
+    results = block.call
+    puts "#{name} #{payload[:class_name]} took #{Time.now - now} seconds"
+    # don't forget to return the result back to the caller
+    results
+  end
+end
+
+# Register it in your services
+Bridger::Service.instance.build do
+  instrumenter PutsInstrumenter.new
+
+  # .. etc
+end
+```
+
 ## To DO
 
 * API console (`bridger console`) so you can interact with your API in an IRB session.

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "bridger/authorizers"
 require 'bridger/default_serializers'
 require 'bridger/default_actions'
@@ -17,6 +19,7 @@ module Bridger
       @endpoints = []
       @lookup = {}
       @authorizer = Bridger::Authorizers::Tree.new
+      @instrumenter = NullInstrumenter
     end
 
     def each(&block)
@@ -49,6 +52,15 @@ module Bridger
               )
     end
 
+    def instrumenter(ins = nil)
+      if ins
+        raise ArgumentError, 'instrumenters must implement #instrument(name String, payload Hash, &block)' unless ins.respond_to?(:instrument)
+        @instrumenter = ins
+      end
+
+      @instrumenter
+    end
+
     def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer:)
       e = Bridger::Endpoint.new(
         name: name,
@@ -58,7 +70,8 @@ module Bridger
         title: title,
         scope: scope,
         action: action,
-        serializer: serializer
+        serializer: serializer,
+        instrumenter: instrumenter
       )
       endpoints << e
       lookup[e.name] = e
