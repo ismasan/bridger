@@ -13,12 +13,8 @@ RSpec.describe Bridger::Service do
   end
 
   Serializer = Class.new do
-    def initialize(data, h:, auth:)
-      @data = data
-    end
-
-    def to_hash
-      @data
+    def self.call(data, h:, auth:)
+      data
     end
   end
 

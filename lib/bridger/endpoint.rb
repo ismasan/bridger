@@ -42,7 +42,7 @@ module Bridger
       end
       if serializer
         instrumenter.instrument('bridger.serializer', class_name: serializer_name) do
-          serializer.new(presenter, h: helper, auth: auth).to_hash
+          serializer.call(presenter, h: helper, auth: auth)
         end
       end
     end

@@ -16,6 +16,10 @@ module Bridger
   class Serializer < Oat::Serializer
     adapter DefaultAdapter
 
+    def self.call(item, context = {})
+      new(item, context).to_hash
+    end
+
     def inspect
       %(<#{self.class.name}>)
     end
