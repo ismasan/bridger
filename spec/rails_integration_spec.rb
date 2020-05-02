@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require_relative './support/test_service'
 require_relative './support/api_examples'

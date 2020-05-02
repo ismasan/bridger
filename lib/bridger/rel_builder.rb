@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'bridger/rel'
 module Bridger
   class RelBuilder

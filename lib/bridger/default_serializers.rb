@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'bridger/serializer'
 require 'bridger/json_schema_generator'
 

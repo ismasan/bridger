@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Bridger
   module Authorizers
     class Tree

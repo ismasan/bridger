@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Bridger
   class Rel
     TEMPLATED_QUERY_EXP = /{(\?|\&)([^}]+)}/.freeze

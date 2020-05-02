@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # A simple users repository. You would use some ORM or database layer (ActiveRecord, Sequel, etc)
 USERS = {}
 # The models

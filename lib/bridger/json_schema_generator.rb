@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Bridger
   class JsonSchemaGenerator
     KNOWN_ATTR_FIELDS = %i[type title description default example options required structure].freeze

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'oat'
 require 'oat/serializer'
 require 'oat/adapters/hal'

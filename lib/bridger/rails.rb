@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 raise 'This only works if Rails is installed' unless defined?(ActionDispatch)
 
 require 'rack/common_logger'

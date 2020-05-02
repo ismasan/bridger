@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Bridger
   ResourceNotFoundError = Class.new(StandardError)
   AuthError = Class.new(StandardError)
