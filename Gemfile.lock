@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     bridger (0.1.1)
-      bootic_client (~> 0.0.27)
+      bootic_client (>= 0.0.29)
       jwt (~> 2)
       multi_json
       oat
@@ -32,7 +32,7 @@ GEM
       minitest (~> 5.1)
       tzinfo (~> 1.1)
       zeitwerk (~> 2.2)
-    bootic_client (0.0.28)
+    bootic_client (0.0.29)
       faraday (~> 0.15)
       faraday-http-cache (~> 2)
       net-http-persistent (~> 3.0)
@@ -47,8 +47,8 @@ GEM
     erubi (1.9.0)
     faraday (0.17.3)
       multipart-post (>= 1.2, < 3)
-    faraday-http-cache (2.1.0)
-      faraday (~> 0.8)
+    faraday-http-cache (2.2.0)
+      faraday (>= 0.8)
     i18n (1.8.2)
       concurrent-ruby (~> 1.0)
     jwt (2.2.1)
