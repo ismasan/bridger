@@ -67,6 +67,7 @@ end
 class ListUsers < Bridger::Action
   query_schema do
     field(:q).type(:string)
+    field(:email).type(:string).declared.policy(:format, /@/, 'must be an email')
   end
 
   private
@@ -89,10 +90,10 @@ class RootSerializer < Bridger::Serializer
     link("btc:schemas", href: url("/schemas"))
 
     link("btc:docs",
-     href: "https://developers.bootic.net",
-     type: "text/html",
-     title: "API documentation"
-    )
+         href: "https://developers.bootic.net",
+         type: "text/html",
+         title: "API documentation"
+        )
 
     property :welcome, "Welcome to this API"
   end

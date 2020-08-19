@@ -117,6 +117,19 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
     expect(link.href).to match /page=2/
   end
 
+  it 'renders query validation errors' do
+    authorize!(
+      uid: 123,
+      sids: [11],
+      aid: 11,
+      scopes: ["api.me", "api.users"]
+    )
+
+    results = root.users(email: 'nope')
+    expect(results.errors.first.field).to eq('$.email')
+    expect(results.errors.first.messages).to eq(['must be an email'])
+  end
+
   it "responds with 404 if endpoint not found" do
     authorize!(
       uid: 123,
