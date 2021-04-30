@@ -34,7 +34,7 @@ RSpec.describe Bridger::Rack::RequestHelper do
     it 'works with forwarded hosts' do
       req = Rack::Request.new(Rack::MockRequest.env_for(
         "http://example.com/a/b?foo=bar&one=1",
-        {'HTTP_X_FORWARDED_HOST' => '10.10.10.10:345, foo.bar.com:123'}
+        {'HTTP_X_FORWARDED_HOST' => 'foo.bar.com:123'}
       ))
       helper = described_class.new(service, req, rel_name: :users)
       expect(helper.url('/yes')).to eq 'http://foo.bar.com:123/yes'
