@@ -63,7 +63,7 @@ GEM
     mustermann (1.0.3)
     net-http-persistent (3.1.0)
       connection_pool (~> 2.2)
-    nokogiri (1.11.3)
+    nokogiri (1.11.5)
       mini_portile2 (~> 2.5.0)
       racc (~> 1.4)
     oat (0.6.0)
