@@ -15,8 +15,8 @@ module Bridger
   class Action
     include Parametric::DSL
 
-    def self.call(*args)
-      new(*args).run!
+    def self.call(**args)
+      new(**args).run!
     end
 
     def self.payload_schema(*args, &block)
