@@ -24,7 +24,7 @@ module Bridger
     end
 
     class Config
-      attr_reader :aliases, :public_key, :algo, :token_store, :parse_values, :logger
+      attr_reader :aliases, :token_store, :parse_values, :logger
 
       def initialize
         @parse_values = [:header, 'HTTP_AUTHORIZATION']
