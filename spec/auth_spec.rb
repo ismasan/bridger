@@ -31,12 +31,7 @@ RSpec.describe Bridger::Auth do
     end
 
     it "parses token from querystring if configured" do
-      token = @token_store.set(
-        uid: 123,
-        sids: [11],
-        aid: 12,
-        scopes: ["admin"]
-      )
+      token = @token_store.set(uid: 123,)
       req = double('Request', params: {'token' => token})
       config = Bridger::Auth::Config.new
       config.parse_from :query, :token
@@ -44,6 +39,17 @@ RSpec.describe Bridger::Auth do
 
       auth = described_class.parse(req, config)
       expect(auth.claims['uid']).to eq 123
+    end
+
+    it 'takes custom authenticator to extract access token from request' do
+      token = @token_store.set(uid: 124,)
+      req = double('Request', params: {'token' => token[0..2]}, env: {'TOKEN' => token[3..-1]})
+      config = Bridger::Auth::Config.new
+      config.authenticator ->(req) { req.params['token'] + req.env['TOKEN'] }
+      config.token_store = @token_store
+
+      auth = described_class.parse(req, config)
+      expect(auth.claims['uid']).to eq 124
     end
 
     it "gets token claims from custom store, if configured" do
