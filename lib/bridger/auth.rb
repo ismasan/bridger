@@ -64,6 +64,10 @@ module Bridger
         @authenticator = callable
       end
 
+      def authenticator=(callable)
+        authenticator(callable)
+      end
+
       def parse_from(strategy, field_name)
         logger.warn '[DEPRECATED] #parse_from is deprecated. Use #authenticate instead'
         callable = case strategy
