@@ -24,12 +24,16 @@ module Bridger
     require "bootic_client/strategies/bearer"
 
     def client
+      client_for(app, access_token: @access_token)
+    end
+
+    def client_for(rack_app, access_token: nil)
       config = BooticClient::Configuration.new
       config.api_root = 'http://example.org'
       BooticClient::Strategies::Bearer.new(
         config,
-        access_token: @access_token.to_s,
-        faraday_adapter: [:rack, app]
+        access_token: access_token.to_s,
+        faraday_adapter: [:rack, rack_app]
       )
     end
 
