@@ -440,6 +440,40 @@ token = store.set(
 )
 ```
 
+## Per-service authentication
+
+Authentication and token stores can be configured globally via `Bridger::Auth.config`, but can also be configured on a per-service basis.
+
+```ruby
+SomeService = Bridger::Service.new.build do
+  authenticate do |c|
+    c.token_store = MyCustomTokenStore.new
+  end
+end
+```
+
+## Custom authenticators
+
+Authenticator objects are used internally to extract an access token from a request.
+You can pass your own, with the signature `#call(request Rack::Request) access_token String`.
+The access token is then passed to the configured token store to retrieve claims for that token, if any.
+
+```ruby
+SPECIAL_AUTHENTICATOR = ->(request) { request.env['API_TOKEN'] }
+
+# Per service config
+authenticate do |c|
+  c.authenticator SPECIAL_AUTHENTICATOR
+  c.token_store = {}
+end
+
+... or global
+Bridger::Auth.config do |c|
+  c.authenticator SPECIAL_AUTHENTICATOR
+  c.token_store = {}
+end
+```
+
 ## Instrumentation
 
 Bridger services accept an optional _instrumenter_ interface, compatible with [ActiveSupport::Notifications](https://api.rubyonrails.org/classes/ActiveSupport/Notifications.html).
