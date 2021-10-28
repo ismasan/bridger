@@ -12,6 +12,10 @@ module Bridger
       def call(request)
         request.env[@header_name].to_s.split(SPACE).last
       end
+
+      def to_s
+        %(['#{@header_name}' in request headers])
+      end
     end
 
     class RequestQuery
@@ -21,6 +25,10 @@ module Bridger
 
       def call(request)
         request.params[@param_name]
+      end
+
+      def to_s
+        %(['#{@param_name}' in request query string])
       end
     end
   end
