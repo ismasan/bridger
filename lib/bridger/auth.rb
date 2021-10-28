@@ -4,6 +4,7 @@ require 'logger'
 require 'securerandom'
 require "bridger/scopes"
 require "bridger/errors"
+require "bridger/authenticators"
 
 module Bridger
   class Auth
@@ -24,12 +25,12 @@ module Bridger
     end
 
     class Config
-      attr_reader :aliases, :token_store, :parse_values, :logger
+      attr_reader :aliases, :token_store, :logger
 
       def initialize
-        @parse_values = [:header, 'HTTP_AUTHORIZATION']
         @aliases = Scopes::Aliases.new({})
         @logger = Logger.new(IO::NULL)
+        @authenticator = Authenticators::RequestHeader.new('HTTP_AUTHORIZATION')
         self.token_store = {}
       end
 
@@ -56,24 +57,36 @@ module Bridger
         @token_store = st
       end
 
+      def authenticator(callable = nil, &block)
+        callable ||= block
+        return @authenticator unless callable
+
+        @authenticator = callable
+      end
+
+      def authenticator=(callable)
+        authenticator(callable)
+      end
+
       def parse_from(strategy, field_name)
-        @parse_values = [strategy, field_name]
+        logger.warn '[DEPRECATED] #parse_from is deprecated. Use #authenticate instead'
+        callable = case strategy
+        when :header
+          Authenticators::RequestHeader.new(field_name)
+        when :query
+          Authenticators::RequestQuery.new(field_name)
+        else
+          raise ArgumentError, "unknown authenticator: #{strategy}"
+        end
+
+        authenticator(callable)
       end
     end
 
-    SPACE = /\s+/.freeze
-
     def self.parse(request, config = self.config)
-      access_token = case config.parse_values.first
-      when :header
-        request.env[config.parse_values.last].to_s.split(SPACE).last
-      when :query
-        request.params[config.parse_values.last.to_s]
-      else
-        nil
-      end
+      access_token = config.authenticator.call(request)
 
-      raise MissingAccessTokenError, "missing access token with #{config.parse_values.last} in #{config.parse_values.first}" unless access_token
+      raise MissingAccessTokenError, "missing access token with #{config.authenticator}" unless access_token
       claims = config.token_store.get(access_token)
       raise InvalidAccessTokenError, "unknown access token" unless claims
 

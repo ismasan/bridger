@@ -75,4 +75,24 @@ RSpec.describe Bridger::Service do
       srv.instrumenter 'nope!'
     }.to raise_error(ArgumentError)
   end
+
+  it 'has #auth_config pointing to global Bridger::Auth.config by default' do
+    srv = described_class.new
+    expect(srv.auth_config).not_to be_nil
+    expect(srv.auth_config).to eq(Bridger::Auth.config)
+  end
+
+  describe '#authenticate' do
+    it 'sets #auth_config with new config object' do
+      authenticator = ->(_req) { 'abc' }
+
+      srv = described_class.new
+      srv.authenticate do |c|
+        c.authenticator authenticator
+      end
+
+      expect(srv.auth_config).not_to eq(Bridger::Auth.config)
+      expect(srv.auth_config.authenticator.call(nil)).to eq('abc')
+    end
+  end
 end
