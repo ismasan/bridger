@@ -452,6 +452,14 @@ SomeService = Bridger::Service.new.build do
 end
 ```
 
+When testing endpoints with custom authentication you might want to create test tokens on its own token stores:
+
+```ruby
+test_token = SomeService.auth_config.token_store.set(
+  user_id: 123
+)
+```
+
 ## Custom authenticators
 
 Authenticator objects are used internally to extract an access token from a request.
