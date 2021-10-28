@@ -25,7 +25,7 @@ module Bridger
     end
 
     class Config
-      attr_reader :aliases, :token_store, :authenticator, :logger
+      attr_reader :aliases, :token_store, :logger
 
       def initialize
         @aliases = Scopes::Aliases.new({})
@@ -57,9 +57,16 @@ module Bridger
         @token_store = st
       end
 
+      def authenticator(callable = nil, &block)
+        callable ||= block
+        return @authenticator unless callable
+
+        @authenticator = callable
+      end
+
       def parse_from(strategy, field_name)
         logger.warn '[DEPRECATED] #parse_from is deprecated. Use #authenticate instead'
-        @authenticator = case strategy
+        callable = case strategy
         when :header
           Authenticators::RequestHeader.new(field_name)
         when :query
@@ -67,6 +74,8 @@ module Bridger
         else
           raise ArgumentError, "unknown authenticator: #{strategy}"
         end
+
+        authenticator(callable)
       end
     end
 

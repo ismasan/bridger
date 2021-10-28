@@ -86,7 +86,7 @@ module Bridger
       attr_reader :service, :endpoint, :request
 
       def auth!
-        @auth = ::Bridger::Auth.parse(request)
+        @auth = ::Bridger::Auth.parse(request, service.auth_config)
       end
 
       def auth

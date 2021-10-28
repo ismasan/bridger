@@ -3,6 +3,7 @@
 require "bridger/authorizers"
 require 'bridger/default_serializers'
 require 'bridger/default_actions'
+require 'bridger/auth'
 
 module Bridger
   class Service
@@ -15,11 +16,14 @@ module Bridger
       self
     end
 
+    attr_reader :auth_config
+
     def initialize
       @endpoints = []
       @lookup = {}
       @authorizer = Bridger::Authorizers::Tree.new
       @instrumenter = NullInstrumenter
+      @auth_config = Auth.config
     end
 
     def each(&block)
@@ -80,6 +84,15 @@ module Bridger
 
     def authorize(scope, &block)
       authorizer.at(scope, &block)
+    end
+
+    def authenticate(config = nil, &block)
+      @auth_config = config and return if config
+      raise ArgumentError, 'Service#authenticate expects an Bridger::Auth::Config instance, or a block' unless block_given?
+
+      config = Auth::Config.new
+      yield config
+      @auth_config = config.freeze
     end
 
     private
