@@ -35,7 +35,8 @@ module Sinatra
       disable :raise_errors, :show_exceptions, :x_cascade
       if not_found_serializer
         not_found do
-          ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], not_found_serializer, status: 404).call(request.env)
+          err = env['sinatra.error'] || ::Bridger::ResourceNotFoundError.new("Resource not found at '#{env['PATH_INFO']}'")
+          ::Bridger::Rack::ErrorHandler.new(settings.service, err, not_found_serializer, status: 404).call(request.env)
         end
       end
       if server_error_serializer
