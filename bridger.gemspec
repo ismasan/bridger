@@ -35,8 +35,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency "multi_json"
   spec.add_dependency "oat"
   spec.add_dependency "parametric", "~> 0.2"
-  spec.add_dependency "bootic_client", "~> 0.0.30"
-  spec.add_dependency 'faraday-rack', '~> 1'
+  spec.add_dependency "bootic_client", "~> 0.0.31"
+  spec.add_dependency 'faraday-rack', '~> 2'
   spec.add_dependency "rack", '>= 2.0.6'
   spec.add_dependency "rack-test"
 
