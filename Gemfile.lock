@@ -86,7 +86,7 @@ GEM
       ruby2_keywords (~> 0.0.1)
     net-http-persistent (4.0.1)
       connection_pool (~> 2.2)
-    nokogiri (1.13.4)
+    nokogiri (1.13.6)
       mini_portile2 (~> 2.8.0)
       racc (~> 1.4)
     oat (0.6.0)
