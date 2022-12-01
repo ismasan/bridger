@@ -40,7 +40,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "rack", '>= 2.0.6'
   spec.add_dependency "rack-test"
 
-  spec.add_development_dependency "sinatra", '~> 2'
+  spec.add_development_dependency "sinatra", '~> 3'
   spec.add_development_dependency "actionpack", '~> 6'
   spec.add_development_dependency "bundler", "~> 2.1"
   spec.add_development_dependency "rake", "~> 13.0"
