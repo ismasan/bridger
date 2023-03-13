@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'openssl'
+require 'faraday/rack'
 
 module Bridger
   module TestHelpers
