@@ -45,6 +45,16 @@ RSpec.describe Bridger::Scopes do
       expect(scopes).to be_a(Bridger::Scopes)
       expect(scopes).to match_array %w[btc.me btc.account.shops.mine btc.foo.bar]
     end
+
+    it 'expands aliases preserving original scopes' do
+      aliases = described_class.new(
+        'admin' => %w[btc.me btc.account.shops.mine],
+        'public' => %w[btc.me btc.shops.list.public]
+      )
+
+      scopes = aliases.expand(%w[admin btc.foo.bar])
+      expect(scopes.to_a).to match_array %w[admin btc.me btc.account.shops.mine]
+      expect(aliases.expand(%w[nope]).any?).to be(false)
     end
   end
 
@@ -78,6 +88,7 @@ RSpec.describe Bridger::Scopes do
 
       expect(user_scopes.can?(required_scopes)).to be true
       expect(required_scopes.can?(user_scopes)).to be false
+      expect(user_scopes.can?('btc.account.assets.mine.create')).to be true
 
       user_scopes = described_class.new(["admin"])
       required_scopes = described_class.new(["btc.me", "admin"])

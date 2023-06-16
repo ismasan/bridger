@@ -56,6 +56,7 @@ module Bridger
     end
 
     protected
+
     attr_reader :scopes
 
     private
@@ -104,7 +105,13 @@ module Bridger
       end
     end
 
+    # Aliases for scopes
+    # Example:
+    #  aliases = Aliases.new('read' => ['read:users'])
+    #  aliases.map('read') # => ['read:users']
+    #  aliases.map('read:users') # => ['read:users']
     class Aliases
+      # @param [Hash<String, Array<String>>] scope mapping
       def initialize(mapping = {})
         @mapping = mapping
       end
@@ -115,6 +122,24 @@ module Bridger
         }.uniq
 
         Scopes.wrap(scpes)
+      end
+
+      # Expand scopes with aliases, including original scopes
+      # Example:
+      #
+      # aliases = Aliases.new('read' => 'read:users')
+      # aliases.expand('read') # => Scopes['read', 'read:users']
+      #
+      # @param [Array<String>] scopes
+      # @return [Scopes]
+      def expand(scopes)
+        scopes = Array(scopes.to_a)
+        registered_scopes = scopes.filter { |sc| @mapping.key?(sc) }
+        result = registered_scopes + registered_scopes.reduce([]) { |memo, sc|
+          memo + Array(@mapping.fetch(sc))
+        }.uniq
+
+        Scopes.wrap(result)
       end
     end
   end
