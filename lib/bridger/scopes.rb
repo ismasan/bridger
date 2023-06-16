@@ -49,6 +49,10 @@ module Bridger
       hit ? 1 : -1
     end
 
+    def inspect
+      %(<#{self.class.name}##{object_id} [#{to_s}]>)
+    end
+
     def to_s
       @to_s ||= scopes.join(', ')
     end
