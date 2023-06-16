@@ -87,17 +87,22 @@ module Bridger
       access_token = config.authenticator.call(request)
 
       raise MissingAccessTokenError, "missing access token with #{config.authenticator}" unless access_token
+
+      resolve_access_token(access_token, config)
+    rescue StandardError => e
+      config.logger.error "#{e.class.name}: #{e.message}"
+      raise
+    end
+
+    def self.resolve_access_token(access_token, config = self.config)
       claims = config.token_store.get(access_token)
-      raise InvalidAccessTokenError, "unknown access token" unless claims
+      raise InvalidAccessTokenError, 'unknown access token' unless claims
 
       new(
         access_token: access_token,
         claims: claims,
         aliases: config.aliases,
       )
-    rescue StandardError => e
-      config.logger.error "#{e.class.name}: #{e.message}"
-      raise
     end
 
     def self.config(&block)
