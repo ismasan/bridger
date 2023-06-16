@@ -60,6 +60,7 @@ RSpec.describe Bridger::Scopes do
 
   it "compares" do
     expect(described_class.wrap(['api']) > described_class.wrap(['api.me'])).to be true
+    expect(described_class.wrap(:api) > described_class.wrap(['api.me'])).to be true
     expect(described_class.wrap(['foo', 'api']) > described_class.wrap(['api.me'])).to be true
     expect(described_class.wrap(['foo', 'api']) > described_class.wrap(['api', 'api.me'])).to be true
     expect(described_class.wrap(['api.users']) > described_class.wrap(['api', 'api.me'])).to be false

@@ -8,6 +8,8 @@ module Bridger
       case sc
       when String, Scope
         new([sc])
+      when Symbol
+        new([sc.to_s])
       when Array
         new(sc)
       when Scopes
