@@ -112,10 +112,13 @@ module Bridger
 
     attr_reader :access_token, :claims, :scopes
 
+    # @option access_token [String] the access token. Default: nil
+    # @option claims [Hash] the claims of the access token.
+    # @option aliases [Scopes::Aliases]
     def initialize(access_token: nil, claims: {}, aliases: self.config.aliases)
       @access_token = access_token
       @claims = claims
-      @scopes = Scopes.new(aliases.map(@claims["scopes"]))
+      @scopes = aliases.map(@claims['scopes'])
     end
 
     def authorized?(scope)

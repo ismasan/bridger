@@ -35,14 +35,16 @@ RSpec.describe Bridger::Scopes do
   end
 
   describe Bridger::Scopes::Aliases do
-    it "maps aliases" do
+    it 'maps aliases' do
       aliases = described_class.new(
-        "admin" => ["btc.me", "btc.account.shops.mine"],
-        "public" => ["btc.me", "btc.shops.list.public"]
+        'admin' => %w[btc.me btc.account.shops.mine],
+        'public' => %w[btc.me btc.shops.list.public]
       )
 
-      scopes = aliases.map(["admin", "btc.foo.bar"])
-      expect(scopes).to match_array ["btc.me", "btc.account.shops.mine", "btc.foo.bar"]
+      scopes = aliases.map(%w[admin btc.foo.bar])
+      expect(scopes).to be_a(Bridger::Scopes)
+      expect(scopes).to match_array %w[btc.me btc.account.shops.mine btc.foo.bar]
+    end
     end
   end
 

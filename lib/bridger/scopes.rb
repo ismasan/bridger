@@ -110,9 +110,11 @@ module Bridger
       end
 
       def map(scopes)
-        Array(scopes.to_a).reduce([]){|memo, sc|
+        scpes = Array(scopes.to_a).reduce([]){|memo, sc|
           memo + Array(@mapping.fetch(sc, sc))
         }.uniq
+
+        Scopes.wrap(scpes)
       end
     end
   end
