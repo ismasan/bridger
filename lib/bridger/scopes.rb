@@ -116,6 +116,13 @@ module Bridger
         @mapping = mapping
       end
 
+      # Map scopes to aliases
+      # Example:
+      # aliases = Aliases.new('read' => ['read:users'])
+      # aliases.map('read') # => ['read:users']
+      #
+      # @param [Array<String>] scopes
+      # @return [Scopes]
       def map(scopes)
         scpes = Array(scopes.to_a).reduce([]){|memo, sc|
           memo + Array(@mapping.fetch(sc, sc))
