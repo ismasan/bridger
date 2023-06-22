@@ -8,9 +8,11 @@ module Bridger
     #  aliases.map('read') # => ['read.users']
     #  aliases.map('read:users') # => ['read.users']
     class Aliases
-      # @param [Hash<String, Array<String>>] scope mapping
+      # @param [Hash<#to_s, Array<#to_s>>] scope mapping
       def initialize(mapping = {})
-        @mapping = mapping
+        @mapping = mapping.each.with_object({}) { |(k, v), memo|
+          memo[k.to_s] = Array(v).map(&:to_s)
+        }
       end
 
       # Map scopes to aliases

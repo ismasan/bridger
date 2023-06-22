@@ -56,6 +56,26 @@ RSpec.describe Bridger::Scopes do
       expect(scopes.to_a).to match_array %w[admin btc.me btc.account.shops.mine]
       expect(aliases.expand(%w[nope]).any?).to be(false)
     end
+
+    it 'works with scope trees' do
+      scopes = Bridger::Scopes::Tree.new('api') do
+        admin
+        me
+        products do
+          read
+          write
+        end
+      end
+
+      aliases = described_class.new(
+        scopes.api.admin => [scopes.api.me, scopes.api.products],
+        'guest' => [scopes.api.me]
+      )
+
+      expect(aliases.map(%w[api.admin])).to match_array %w[api.me api.products]
+      expect(aliases.map(%w[guest])).to match_array %w[api.me]
+      expect(aliases.map(%w[api.me])).to match_array %w[api.me]
+    end
   end
 
   it "compares" do

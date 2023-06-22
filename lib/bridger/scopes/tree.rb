@@ -123,6 +123,11 @@ module Bridger
           self
         end
 
+        # Hash equality to make Nodes work with Aliases.
+        def hash
+          to_s.hash
+        end
+
         # Wildcard node.
         # @return [Node]
         def *
