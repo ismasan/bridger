@@ -117,12 +117,14 @@ module Bridger
 
         def *
           node = Node.new(::Bridger::Scopes::Scope::WILDCARD, self)
-          @__children.values.each do |child|
-            child.__children.values.each do |grandchild|
-              node.add_child(grandchild.with_parent(node))
-            end
+          shared_grandchildren.each do |child|
+            node.add_child(child.with_parent(node))
           end
           node.freeze
+        end
+
+        def __child_nodes
+          @__children.values
         end
 
         def with_parent(parent)
@@ -140,6 +142,20 @@ module Bridger
               @__children['#{node.__segment}']
             end
           RUBY
+        end
+
+        private
+
+        def shared_grandchildren
+          shared_segments = __child_nodes.map { |c|
+            c.__child_nodes.map(&:__segment)
+          }.reduce(:&)
+
+          __child_nodes.flat_map { |c|
+            c.__child_nodes.select { |cc|
+              shared_segments.include?(cc.__segment)
+            }
+          }
         end
       end
 

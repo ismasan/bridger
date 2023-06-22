@@ -28,6 +28,22 @@ RSpec.describe Bridger::Scopes::Tree do
     expect(scope.to_s).to eq('bootic.api.products.*.read')
   end
 
+  specify '* allows intersection of possible children' do
+    tree = described_class.new('bootic') do |bootic|
+      bootic.api.products.own.read
+      bootic.api.products.own.delete
+      bootic.api.products.all.read
+      bootic.api.orders.own.read
+    end
+
+    # Wildcard nodes support the intersection of child nodes
+    # In this case, bootic.api.products.own and bootic.api.products.all support read,
+    # but only bootic.api.products.own supports delete
+    expect {
+      tree.bootic.api.products.*.delete
+    }.to raise_error(NoMethodError)
+  end
+
   specify 'defining unique segments at the top' do
     tree = described_class.new('bootic') do |bootic|
       api = 'api'
