@@ -2,6 +2,7 @@
 
 require 'bridger/scopes/scope'
 require 'bridger/scopes/aliases'
+require 'bridger/scopes/tree'
 
 module Bridger
   class Scopes
