@@ -384,6 +384,15 @@ SCOPES = Bridger::Scopes::Tree.new('bootic') do
 end
 ```
 
+Scope trees also work with scope aliases.
+
+```ruby
+config.aliases = {
+  'admin' => [SCOPES.api.products.own, SCOPES.api.orders.own, SCOPES.api.all.read],
+  'god' => [SCOPES.api]
+}
+```
+
 ## Testing
 
 Bridger attempts to make testing hypermedia APIs easier.
