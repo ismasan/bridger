@@ -115,6 +115,10 @@ module Bridger
           self
         end
 
+        def respond_to?(method_name, include_private = false)
+          method_name == :to_scope ? true : super
+        end
+
         def *
           node = Node.new(::Bridger::Scopes::Scope::WILDCARD, self)
           shared_grandchildren.each do |child|

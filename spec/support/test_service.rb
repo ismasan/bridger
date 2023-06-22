@@ -160,45 +160,54 @@ Bridger::Auth.config do |c|
   c.token_store = TOKEN_STORE
 end
 
+SCOPES = Bridger::Scopes::Tree.new('api') do
+  me
+  users do
+    list
+    create
+    delete
+  end
+end
+
 # Your API's endpoints. Each combines an action, serializer, some metadata and a permissions scope.
 Bridger::Service.instance.build do
   endpoint(:root, :get, "/",
     title: "API root",
-    scope: "api.me",
+    scope: SCOPES.api.me,
     serializer: RootSerializer,
   )
 
   endpoint(:users, :get, "/users",
     title: "List users",
-    scope: "api.users.list",
+    scope: SCOPES.api.users.list,
     action: ListUsers,
     serializer: UsersSerializer,
   )
 
   endpoint(:user, :get, "/users/:user_id",
     title: "User details",
-    scope: "api.users.list",
+    scope: SCOPES.api.users.list,
     action: ShowUser,
     serializer: UserSerializer,
   )
 
   endpoint(:user_things, :get, "/users/:user_id/things",
     title: "User things",
-    scope: "api.users.list",
+    scope: SCOPES.api.users.list,
     action: ListUserThings,
     serializer: UserThingsSerializer,
   )
 
   endpoint(:create_user, :post, "/users",
     title: "Create a new user",
-    scope: "api.users.create",
+    scope: SCOPES.api.users.create,
     action: CreateUser,
     serializer: UserSerializer,
   )
 
   endpoint(:delete_user, :delete, "/users/:user_id",
     title: "Delete user",
-    scope: "api.users.delete",
+    scope: SCOPES.api.users.delete,
     action: DeleteUser,
     serializer: nil,
   )
