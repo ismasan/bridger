@@ -27,7 +27,7 @@ module Bridger
     #  ...
     #  scope: SCOPES.bootic.api.products.own,
     #  ...
-    #  )
+    # )
     #
     # Hierarchies can also be defined using the > operator:
     # This can help avoid typos.
@@ -82,6 +82,8 @@ module Bridger
         end
       end
 
+      # @param root_segment [String] the name of the root node
+      # @param config [Proc] a block to define the scope hierarchy
       def initialize(root_segment = ROOT_SEGMENT, &config)
         recorder = Recorder.new(root_segment)
         Tree.setup(recorder, config) if block_given?
@@ -100,9 +102,15 @@ module Bridger
         node.freeze
       end
 
+      # Node is a BasicObject because it can be navigated using dot notation.
+      # A node defines methods to access its children.
+      # Ex. node.api.products.own.read
+      #
       class Node < BasicObject
         attr_reader :__segment, :__children, :to_s
 
+        # @param segment [String] the name of the node
+        # @param parent [Node] the parent node
         def initialize(segment, parent = nil)
           @__segment = segment.to_s
           @__parent = parent
@@ -115,10 +123,8 @@ module Bridger
           self
         end
 
-        def respond_to?(method_name, include_private = false)
-          method_name == :to_scope ? true : super
-        end
-
+        # Wildcard node.
+        # @return [Node]
         def *
           node = Node.new(::Bridger::Scopes::Scope::WILDCARD, self)
           shared_grandchildren.each do |child|
@@ -127,18 +133,29 @@ module Bridger
           node.freeze
         end
 
+        # @return [Array<Node>]
         def __child_nodes
           @__children.values
         end
 
-        def with_parent(parent)
-          Node.new(@__segment, parent)
+        # BasicObject doesn't support #respond_to?.
+        # This is needed to support consumers of nodes to user #to_scope.
+        #
+        # @param method_name [Symbol] the name of the method
+        def respond_to?(method_name, include_private = false)
+          method_name == :to_scope ? true : super
         end
 
+        # Turn a node into a Scope, so that it can be used
+        # by endpoints.
+        # @return [Scope]
         def to_scope
           ::Bridger::Scopes::Scope.new(to_s)
         end
 
+        # Add a child node and define a method to access it.
+        #
+        # @param node [Node] the child node
         def add_child(node)
           @__children[node.__segment] = node
           instance_eval <<-RUBY, __FILE__, __LINE__ + 1
@@ -146,6 +163,14 @@ module Bridger
               @__children['#{node.__segment}']
             end
           RUBY
+        end
+
+        protected
+
+        # @param parent [Node] the parent node
+        # @return [Node] with new parent
+        def with_parent(parent)
+          Node.new(@__segment, parent)
         end
 
         private
@@ -163,21 +188,23 @@ module Bridger
         end
       end
 
+      # A Recorder is used within the block passed to Tree.new
+      # to record the hierarchy of scopes.
+      # It is a BasicObject so that it can be used with dot notation.
       class Recorder < BasicObject
         attr_reader :__segment, :__children
 
+        # @param segment [String] the name of the node
+        # @param block [Proc] a block to define the scope hierarchy. Optional.
         def initialize(segment, &block)
           @__segment = segment
           @__children = {}
           Tree.setup(self, block) if ::Kernel.block_given?
         end
 
+        # @param segment [String] the name of the child node
         def >(segment)
           __register(segment)
-        end
-
-        def __register(child_name, &block)
-          @__children[child_name] ||= Recorder.new(child_name, &block)
         end
 
         def method_missing(method_name, *_args, &block)
@@ -187,6 +214,11 @@ module Bridger
         def respond_to_missing?(method_name, include_private = false)
           true
         end
+
+        private def __register(child_name, &block)
+          @__children[child_name] ||= Recorder.new(child_name, &block)
+        end
+
       end
     end
   end

@@ -336,6 +336,54 @@ SCOPES.all.*.read # Ok
 SCOPES.all.*.update # raises NoMethodError because not all children of `all.*` support `update`
 ```
 
+Hierarchies can also be defined using the > operator:
+This can help avoid typos.
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+  api = 'api'
+  products = 'products'
+  orders = 'orders'
+  own = 'own'
+  all = 'all'
+  read = 'read'
+
+  bootic > api > products > own > read
+  bootic > api > products > all > read
+  bootic > api > orders > own > read
+end
+```
+
+Block notation can be used where it makes sense:
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+  bootic.api.products do |n|
+    n.own do |n|
+      n.read
+      n.write
+      n > 'list' # use `>` to append variables or constants
+    end
+  end
+end
+```
+
+Block notation also works without explicit node argument (but can't access outer variables):
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do
+  api.products do
+    own do
+      read
+      write
+    end
+    all do
+      read
+    end
+  end
+end
+```
+
 ## Testing
 
 Bridger attempts to make testing hypermedia APIs easier.
