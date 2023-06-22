@@ -24,7 +24,7 @@ module Bridger
 
     def initialize(scopes)
       @scopes = scopes.map{|sc|
-        sc.is_a?(Scope) ? sc : Scope.new(sc)
+        sc.respond_to?(:to_scope) ? sc.to_scope : Scope.new(sc)
       }.sort{|a,b| b <=> a}
     end
 

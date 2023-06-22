@@ -12,6 +12,10 @@ module Bridger
         @segments = sc.is_a?(Array) ? sc : sc.split(SEP)
       end
 
+      def to_scope
+        self
+      end
+
       def to_s
         segments.join(SEP)
       end
