@@ -29,7 +29,7 @@ module Bridger
     #  ...
     #  )
     #
-    # Hierarchies can also be defined using the [] operator:
+    # Hierarchies can also be defined using the > operator:
     # This can help avoid typos.
     #
     #  SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
@@ -40,9 +40,9 @@ module Bridger
     #    all = 'all'
     #    read = 'read'
     #
-    #    bootic[api, products, own, read]
-    #    bootic[api, products, all, read]
-    #    bootic[api, orders, own, read]
+    #    bootic > api > products > own > read
+    #    bootic > api > products > all > read
+    #    bootic > api > orders > own > read
     #  end
     class Tree
       ROOT_SEGMENT = 'root'
@@ -116,10 +116,8 @@ module Bridger
           @__children = {}
         end
 
-        def [](*segments)
-          segments.reduce(self) do |node, segment|
-            node.__register(segment.to_sym)
-          end
+        def >(segment)
+          __register(segment)
         end
 
         def __register(child_name)

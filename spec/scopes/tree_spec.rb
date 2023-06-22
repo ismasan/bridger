@@ -37,9 +37,9 @@ RSpec.describe Bridger::Scopes::Tree do
       all = 'all'
       read = 'read'
 
-      bootic[api, products, own, read]
-      bootic[api, products, all, read]
-      bootic[api, orders, own, read]
+      bootic > api > products > own > read
+      bootic > api > products > all > read
+      bootic > api > orders > own > read
     end
 
     expect(tree.bootic.api.products.own.read.to_s).to eq('bootic.api.products.own.read')
