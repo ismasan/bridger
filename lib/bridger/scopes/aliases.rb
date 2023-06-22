@@ -4,9 +4,9 @@ module Bridger
   class Scopes
     # Aliases for scopes
     # Example:
-    #  aliases = Aliases.new('read' => ['read:users'])
-    #  aliases.map('read') # => ['read:users']
-    #  aliases.map('read:users') # => ['read:users']
+    #  aliases = Aliases.new('read' => ['read.users'])
+    #  aliases.map('read') # => ['read.users']
+    #  aliases.map('read:users') # => ['read.users']
     class Aliases
       # @param [Hash<String, Array<String>>] scope mapping
       def initialize(mapping = {})
@@ -15,8 +15,8 @@ module Bridger
 
       # Map scopes to aliases
       # Example:
-      # aliases = Aliases.new('read' => ['read:users'])
-      # aliases.map('read') # => ['read:users']
+      # aliases = Aliases.new('read' => ['read.users'])
+      # aliases.map('read') # => ['read.users']
       #
       # @param [Array<String>] scopes
       # @return [Scopes]
@@ -31,8 +31,8 @@ module Bridger
       # Expand scopes with aliases, including original scopes
       # Example:
       #
-      # aliases = Aliases.new('read' => 'read:users')
-      # aliases.expand('read') # => Scopes['read', 'read:users']
+      # aliases = Aliases.new('read' => 'read.users')
+      # aliases.expand('read') # => Scopes['read', 'read.users']
       #
       # @param [Array<String>] scopes
       # @return [Scopes]
