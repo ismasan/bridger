@@ -27,4 +27,22 @@ RSpec.describe Bridger::Scopes::Tree do
     expect(scope).to be_a(Bridger::Scopes::Scope)
     expect(scope.to_s).to eq('bootic.api.products.*.read')
   end
+
+  specify 'defining unique segments at the top' do
+    tree = described_class.new('bootic') do |bootic|
+      api = 'api'
+      products = 'products'
+      orders = 'orders'
+      own = 'own'
+      all = 'all'
+      read = 'read'
+
+      bootic[api, products, own, read]
+      bootic[api, products, all, read]
+      bootic[api, orders, own, read]
+    end
+
+    expect(tree.bootic.api.products.own.read.to_s).to eq('bootic.api.products.own.read')
+    expect(tree.bootic.api.products.*.read.to_s).to eq('bootic.api.products.*.read')
+  end
 end

@@ -4,6 +4,46 @@ require 'bridger/scopes/scope'
 
 module Bridger
   class Scopes
+    # A utility to define and access allowed scope hierarchies.
+    # Example:
+    #
+    #  SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+    #    bootic.api.products.own.read
+    #    bootic.api.products.all.read
+    #    bootic.api.orders.own.read
+    #  end
+    #
+    #  SCOPES.bootic.api.products.own.read.to_s # => 'bootic.api.products.own.read'
+    #  SCOPES.bootic.api.products.own.to_s # => 'bootic.api.products.own'
+    #  SCOPES.bootic.api.*.read.to_s # => 'bootic.api.*.read'
+    #  SCOPES.bootic.foo.products # => NoMethodError
+    #
+    # It can be used to define allowed scopes for an endpoint:
+    #
+    # Bridger::Endpoint.new(
+    #  name: 'create_product',
+    #  verb: :post,
+    #  path: '/v1/products',
+    #  ...
+    #  scope: SCOPES.bootic.api.products.own,
+    #  ...
+    #  )
+    #
+    # Hierarchies can also be defined using the [] operator:
+    # This can help avoid typos.
+    #
+    #  SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+    #    api = 'api'
+    #    products = 'products'
+    #    orders = 'orders'
+    #    own = 'own'
+    #    all = 'all'
+    #    read = 'read'
+    #
+    #    bootic[api, products, own, read]
+    #    bootic[api, products, all, read]
+    #    bootic[api, orders, own, read]
+    #  end
     class Tree
       ROOT_SEGMENT = 'root'
 
@@ -76,8 +116,18 @@ module Bridger
           @__children = {}
         end
 
+        def [](*segments)
+          segments.reduce(self) do |node, segment|
+            node.__register(segment.to_sym)
+          end
+        end
+
+        def __register(child_name)
+          @__children[child_name] ||= Recorder.new(child_name)
+        end
+
         def method_missing(method_name, *args, &block)
-          @__children[method_name] ||= Recorder.new(method_name)
+          __register(method_name)
         end
 
         def respond_to_missing?(method_name, include_private = false)
