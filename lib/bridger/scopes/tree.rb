@@ -44,12 +44,47 @@ module Bridger
     #    bootic > api > products > all > read
     #    bootic > api > orders > own > read
     #  end
+    #
+    # Block notation can be used where it makes sense:
+    #
+    #  SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+    #    bootic.api.products do |n|
+    #      n.own do |n|
+    #        n.read
+    #        n.write
+    #        n > 'list' # use `>` to append variables or constants
+    #      end
+    #    end
+    #  end
+    #
+    # Block notation also works without explicit node argument (but can't access outer variables):
+    #
+    #   SCOPES = Bridger::Scopes::Tree.new('bootic') do
+    #     api.products do
+    #       own do
+    #         read
+    #         write
+    #       end
+    #       all do
+    #         read
+    #       end
+    #     end
+    #   end
+    #
     class Tree
       ROOT_SEGMENT = 'root'
 
+      def self.setup(object, block)
+        if block.arity == 0
+          object.instance_eval(&block)
+        else
+          block.call(object)
+        end
+      end
+
       def initialize(root_segment = ROOT_SEGMENT, &config)
         recorder = Recorder.new(root_segment)
-        config.call(recorder) if block_given?
+        Tree.setup(recorder, config) if block_given?
         @root = build_tree(recorder)
         define_singleton_method(root_segment) { @root }
         freeze
@@ -111,21 +146,22 @@ module Bridger
       class Recorder < BasicObject
         attr_reader :__segment, :__children
 
-        def initialize(segment)
+        def initialize(segment, &block)
           @__segment = segment
           @__children = {}
+          Tree.setup(self, block) if ::Kernel.block_given?
         end
 
         def >(segment)
           __register(segment)
         end
 
-        def __register(child_name)
-          @__children[child_name] ||= Recorder.new(child_name)
+        def __register(child_name, &block)
+          @__children[child_name] ||= Recorder.new(child_name, &block)
         end
 
-        def method_missing(method_name, *args, &block)
-          __register(method_name)
+        def method_missing(method_name, *_args, &block)
+          __register(method_name, &block)
         end
 
         def respond_to_missing?(method_name, include_private = false)
