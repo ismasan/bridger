@@ -74,6 +74,10 @@ module Bridger
       end
     end
 
+    def pipeline(&block)
+      step self.class.new(&block)
+    end
+
     def call(result)
       @pipe.call(result)
     end

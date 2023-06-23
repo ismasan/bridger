@@ -137,9 +137,14 @@ RSpec.describe Bridger::Pipeline do
     pipe = Bridger::Pipeline.new do |pl|
       pl.step john
       pl.step doe
+      pl.pipeline do |p2|
+        p2.continue do |r|
+          r.name = r.name + ' Jr.'
+        end
+      end
     end
 
     result = pipe.call(PipelineTest::Result.new(name: ''))
-    expect(result.name).to eq('John Doe')
+    expect(result.name).to eq('John Doe Jr.')
   end
 end
