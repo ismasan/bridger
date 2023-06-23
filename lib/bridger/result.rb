@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'rack'
+
 module Bridger
   class Result
     attr_reader :request, :response, :query, :payload, :context, :errors
@@ -67,8 +69,8 @@ module Bridger
 
     class Success < self
       def self.build(request: nil, response: nil)
-        request ||= Rack::Request.new(Rack::MockRequest.env_for('/'))
-        response ||= Rack::Response.new(nil, 200, {})
+        request ||= ::Rack::Request.new(::Rack::MockRequest.env_for('/'))
+        response ||= ::Rack::Response.new(nil, 200, {})
         new(request, response)
       end
     end
