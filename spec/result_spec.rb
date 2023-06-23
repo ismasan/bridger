@@ -16,6 +16,16 @@ RSpec.describe Bridger::Result do
   describe Bridger::Result::Success do
     subject(:result) { described_class.new(request, response) }
 
+    specify '.build' do
+      result = described_class.build
+      expect(result.request).to be_a Rack::Request
+      expect(result.response).to be_a Rack::Response
+
+      result = described_class.build(request: request, response: response)
+      expect(result.request).to eq request
+      expect(result.response).to eq response
+    end
+
     specify '#halted? is false' do
       expect(result.halted?).to be false
     end
