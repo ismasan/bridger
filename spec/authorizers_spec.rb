@@ -38,13 +38,14 @@ RSpec.describe Bridger::Authorizers do
     expect(TREE.authorized?("btc.account.shops.mine.show", auth, {shop_id: 10})).to be false
 
     tree = Bridger::Authorizers::Tree.new
-    tree.at("btc.account") do |auth, params|
+    tree.at(Bridger::Scopes::Scope.wrap('btc.account')) do |auth, params|
       false
     end
 
     expect(tree.authorized?("btc", auth, params)).to be true
-    expect(tree.authorized?("btc.foo", auth, params)).to be true
+    expect(tree.authorized?(Bridger::Scopes::Scope.wrap('btc.foo'), auth, params)).to be true
     expect(tree.authorized?("btc.account", auth, params)).to be false
     expect(tree.authorized?("btc.account.shops", auth, params)).to be false
+    expect(tree.authorized?("btc.account.foo", auth, params)).to be false
   end
 end

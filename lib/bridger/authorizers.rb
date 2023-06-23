@@ -19,9 +19,9 @@ module Bridger
       end
 
       def at(scope, &block)
-        segments = parse_segments(scope)
+        scope = Bridger::Scopes::Scope.wrap(scope)
 
-        branch = segments.reduce(self) do |b, segment|
+        branch = scope.to_a.reduce(self) do |b, segment|
           br = branches[segment]
           if br # exists
             br
@@ -34,9 +34,10 @@ module Bridger
       end
 
       def authorized?(scope, *args)
+        scope = Bridger::Scopes::Scope.wrap(scope)
         return false unless checks.all?{|ch| ch.call(scope, *args) }
 
-        segments = parse_segments(scope)
+        segments = scope.to_a
         segment = segments.shift
         branch = branches[segment]
 
@@ -46,11 +47,8 @@ module Bridger
       end
 
       private
-      attr_reader :branches, :checks
 
-      def parse_segments(segments)
-        segments.is_a?(String) ? segments.split('.') : segments.to_a
-      end
+      attr_reader :branches, :checks
     end
   end
 end
