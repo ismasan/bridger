@@ -2,19 +2,21 @@
 
 module Bridger
   class Result
-    attr_reader :request, :response, :query, :payload, :context
+    attr_reader :request, :response, :query, :payload, :context, :errors
 
     # @param request [Rack::Request]
     # @param response [Rack::Response]
     # @param query [Hash]
     # @param payload [Hash, nil]
     # @param context [Hash]
-    def initialize(request, response, query: {}, payload: nil, context: {})
+    # @param errors [Hash]
+    def initialize(request, response, query: {}, payload: nil, context: {}, errors: {})
       @request = request
       @response = response
       @query = query
       @payload = payload
       @context = context
+      @errors = errors
     end
 
     def halted?
@@ -28,7 +30,13 @@ module Bridger
         query: query.dup,
         payload: payload.dup,
         context: context.dup,
+        errors: errors.dup,
       )
+    end
+
+    # @return [Boolean]
+    def valid?
+      errors.empty?
     end
 
     class Success < self
@@ -53,6 +61,7 @@ module Bridger
           query: result.query,
           payload: result.payload,
           context: result.context,
+          errors: errors.dup,
         )
       end
     end

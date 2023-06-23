@@ -46,6 +46,12 @@ RSpec.describe Bridger::Result do
       expect(continued.response.status).to eq 202
       expect(continued).not_to eq result
     end
+
+    specify '#valid?' do
+      expect(result.valid?).to be true
+      result.errors[:foo] = 'bar'
+      expect(result.valid?).to be false
+    end
   end
 
   describe Bridger::Result::Halt do
