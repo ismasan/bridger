@@ -3,8 +3,8 @@
 module Bridger
   class Scopes
     class Scope
-      SEP = '.'.freeze
-      WILDCARD = '*'.freeze
+      SEP = '.'
+      WILDCARD = '*'
 
       include Comparable
 
