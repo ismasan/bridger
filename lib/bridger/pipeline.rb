@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+require 'bridger/result'
+require 'bridger/pipeline/query_schema_step'
+
 module Bridger
   class Pipeline
     NOOP = -> (result) { result }
@@ -39,27 +42,23 @@ module Bridger
       end
     end
 
+    NOOP_SCHEMA = Parametric::Schema.new
+
     def initialize(&config)
       @pipe = NOOP
+      @query_schema = NOOP_SCHEMA
+      @payload_schema = NOOP_SCHEMA
 
       configure(&config) if block_given?
       freeze
     end
 
     def step(callable = nil, &block)
-      callable ||= block
-      raise ArgumentError, "#step expects an interface #call(Result) Result, but got #{callable.inspect}" unless is_a_step?(callable)
-
-      @pipe = Bind.new(@pipe, callable)
-      self
+      register_step(Bind, callable:, &block)
     end
 
     def step!(callable = nil, &block)
-      callable ||= block
-      raise ArgumentError, "#step expects an interface #call(Result) Result, but got #{callable.inspect}" unless is_a_step?(callable)
-
-      @pipe = BindAny.new(@pipe, callable)
-      self
+      register_step(BindAny, callable:, &block)
     end
 
     def halt(&block)
@@ -78,11 +77,27 @@ module Bridger
       step self.class.new(&block)
     end
 
+    def query_schema(schema = nil, &block)
+      return @query_schema unless schema || block_given?
+
+      step QuerySchemaStep.new(schema, &block)
+    end
+
     def call(result)
       @pipe.call(result)
     end
 
     private
+
+    def register_step(bind_class, callable: nil, &block)
+      callable ||= block
+      raise ArgumentError, "#step expects an interface #call(Result) Result, but got #{callable.inspect}" unless is_a_step?(callable)
+
+      merge_query_schema(callable.query_schema) if callable.respond_to?(:query_schema)
+
+      @pipe = bind_class.new(@pipe, callable)
+      self
+    end
 
     def configure(&setup)
       case setup.arity
@@ -100,6 +115,10 @@ module Bridger
 
       arity = callable.respond_to?(:arity) ? callable.arity : callable.method(:call).arity
       arity == 1
+    end
+
+    def merge_query_schema(schema)
+      @query_schema = @query_schema.merge(schema)
     end
   end
 end
