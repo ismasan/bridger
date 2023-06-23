@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'bridger/result'
-require 'bridger/pipeline/query_schema_step'
+require 'bridger/pipeline/schema_steps'
 
 module Bridger
   class Pipeline
@@ -80,7 +80,13 @@ module Bridger
     def query_schema(schema = nil, &block)
       return @query_schema unless schema || block_given?
 
-      step QuerySchemaStep.new(schema, &block)
+      step SchemaSteps::Query.new(schema, &block)
+    end
+
+    def payload_schema(schema = nil, &block)
+      return @payload_schema unless schema || block_given?
+
+      step SchemaSteps::Payload.new(schema, &block)
     end
 
     def call(result)
@@ -94,6 +100,7 @@ module Bridger
       raise ArgumentError, "#step expects an interface #call(Result) Result, but got #{callable.inspect}" unless is_a_step?(callable)
 
       merge_query_schema(callable.query_schema) if callable.respond_to?(:query_schema)
+      merge_payload_schema(callable.payload_schema) if callable.respond_to?(:payload_schema)
 
       @pipe = bind_class.new(@pipe, callable)
       self
@@ -119,6 +126,10 @@ module Bridger
 
     def merge_query_schema(schema)
       @query_schema = @query_schema.merge(schema)
+    end
+
+    def merge_payload_schema(schema)
+      @payload_schema = @payload_schema.merge(schema)
     end
   end
 end

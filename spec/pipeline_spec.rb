@@ -137,4 +137,37 @@ RSpec.describe Bridger::Pipeline do
     expect(result.query).to eq(age: 42, name: 'John', title: 'Mr.')
     expect(result.context[:foo]).to eq('bar')
   end
+
+  specify '#payload_schema' do
+    pipe = Bridger::Pipeline.new do |pl|
+      pl.payload_schema do
+        field(:name).type(:string).required
+        field(:age).type(:integer).required
+      end
+      pl.step do |r|
+        r.continue(context: { foo: 'bar' })
+      end
+      pl.pipeline do |p2|
+        p2.payload_schema do
+          field(:title).type(:string).default('Mr.')
+        end
+      end
+    end
+
+    expect(pipe.payload_schema).to be_a(Parametric::Schema)
+    expect(pipe.payload_schema.fields.keys).to eq(%i[name age title])
+
+    result = pipe.call(initial_result.continue(payload: { name: 'John' }))
+    expect(result.halted?).to be(true)
+    expect(result.valid?).to be(false)
+    expect(result.errors['$.age']).to eq(['is required'])
+    expect(result.context.key?(:foo)).to be(false)
+
+    result = pipe.call(initial_result.continue(payload: { name: 'John', age: '42' }))
+    expect(result.halted?).to be(false)
+    expect(result.valid?).to be(true)
+    expect(result.errors).to be_empty
+    expect(result.payload).to eq(age: 42, name: 'John', title: 'Mr.')
+    expect(result.context[:foo]).to eq('bar')
+  end
 end
