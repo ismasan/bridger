@@ -35,19 +35,52 @@ RSpec.describe Bridger::Scopes do
   end
 
   describe Bridger::Scopes::Aliases do
-    it "maps aliases" do
+    it 'maps aliases' do
       aliases = described_class.new(
-        "admin" => ["btc.me", "btc.account.shops.mine"],
-        "public" => ["btc.me", "btc.shops.list.public"]
+        'admin' => %w[btc.me btc.account.shops.mine],
+        'public' => %w[btc.me btc.shops.list.public]
       )
 
-      scopes = aliases.map(["admin", "btc.foo.bar"])
-      expect(scopes).to match_array ["btc.me", "btc.account.shops.mine", "btc.foo.bar"]
+      scopes = aliases.map(%w[admin btc.foo.bar])
+      expect(scopes).to be_a(Bridger::Scopes)
+      expect(scopes).to match_array %w[btc.me btc.account.shops.mine btc.foo.bar]
+    end
+
+    it 'expands aliases preserving original scopes' do
+      aliases = described_class.new(
+        'admin' => %w[btc.me btc.account.shops.mine],
+        'public' => %w[btc.me btc.shops.list.public]
+      )
+
+      scopes = aliases.expand(%w[admin btc.foo.bar])
+      expect(scopes.to_a).to match_array %w[admin btc.me btc.account.shops.mine]
+      expect(aliases.expand(%w[nope]).any?).to be(false)
+    end
+
+    it 'works with scope trees' do
+      scopes = Bridger::Scopes::Tree.new('api') do
+        admin
+        me
+        products do
+          read
+          write
+        end
+      end
+
+      aliases = described_class.new(
+        scopes.api.admin => [scopes.api.me, scopes.api.products],
+        'guest' => [scopes.api.me]
+      )
+
+      expect(aliases.map(%w[api.admin])).to match_array %w[api.me api.products]
+      expect(aliases.map(%w[guest])).to match_array %w[api.me]
+      expect(aliases.map(%w[api.me])).to match_array %w[api.me]
     end
   end
 
   it "compares" do
     expect(described_class.wrap(['api']) > described_class.wrap(['api.me'])).to be true
+    expect(described_class.wrap(:api) > described_class.wrap(['api.me'])).to be true
     expect(described_class.wrap(['foo', 'api']) > described_class.wrap(['api.me'])).to be true
     expect(described_class.wrap(['foo', 'api']) > described_class.wrap(['api', 'api.me'])).to be true
     expect(described_class.wrap(['api.users']) > described_class.wrap(['api', 'api.me'])).to be false
@@ -76,6 +109,7 @@ RSpec.describe Bridger::Scopes do
 
       expect(user_scopes.can?(required_scopes)).to be true
       expect(required_scopes.can?(user_scopes)).to be false
+      expect(user_scopes.can?('btc.account.assets.mine.create')).to be true
 
       user_scopes = described_class.new(["admin"])
       required_scopes = described_class.new(["btc.me", "admin"])
@@ -94,7 +128,7 @@ RSpec.describe Bridger::Scopes do
   private
 
   def scope(exp)
-    described_class.new(exp)
+    described_class.wrap(exp)
   end
 
   def first_one_wins(exp1, exp2)

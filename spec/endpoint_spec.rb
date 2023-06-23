@@ -48,6 +48,26 @@ RSpec.describe Bridger::Endpoint do
     expect(endpoint.serializer).to eq serializer
   end
 
+  it 'it accepts #to_scope interface' do
+    scope_class = Data.define(:scope) do
+      def to_scope
+        Bridger::Scopes::Scope.wrap(scope)
+      end
+    end
+
+    endpoint = described_class.new(
+      name: 'create_product',
+      verb: :post,
+      path: '/v1/products',
+      title: 'Create products',
+      scope: scope_class.new(scope: 'a.b.c'),
+      authorizer: authorizer,
+      action: action,
+    )
+
+    expect(endpoint.scope.to_s).to eq 'a.b.c'
+  end
+
   describe '#run' do
     let(:auth) { double('Auth', authorize!: true) }
     let(:presenter) { double('Presenter') }

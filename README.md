@@ -277,11 +277,120 @@ Bridger::Service.instance do
 
   endpoint(:update_user, :put, '/users/:user_id',
     title: "Update a user",
-    scope: 'all.user.update',
+    scope: 'all.users.update',
     action: UpdateUser,
     serializer: UserSerializer
   )
 end
+```
+
+## Pre-defined scope trees
+
+Defining scopes as strings can be error prone (easy to make typos or get the hierarchy wrong!).
+
+The `Bridger::Scopes::Tree` utility can be helpful to define all possible scope hierarchies in a single place.
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('all') do |all|
+  all.users.update
+  all.users.read
+  all.users.create
+  all.orders.read
+end
+```
+
+This constant can now be used to resolve allowed scope hierarchies when configuring endpoints:
+
+```ruby
+endpoint(:update_user, :put, '/users/:user_id',
+  title: "Update a user",
+  scope: SCOPES.all.users.update, # <= this will raise if this scope is not defined.
+  action: UpdateUser,
+  serializer: UserSerializer
+)
+```
+
+The scope tree will expose all defined hierarchies
+
+```ruby
+SCOPES.all.users # 'all.users'
+SCOPES.all.users.create # 'all.users.create'
+```
+
+... But not invalid hierarchies.
+
+```ruby
+SCOPES.all.users.orders # raises NoMethodError
+```
+
+Wilcards work too
+
+```ruby
+SCOPES.all.*.read # 'all.*.read`
+```
+
+Note that wildcards only allow sub-scopes that are shared by all children.
+
+```ruby
+SCOPES.all.*.read # Ok
+SCOPES.all.*.update # raises NoMethodError because not all children of `all.*` support `update`
+```
+
+Hierarchies can also be defined using the > operator:
+This can help avoid typos.
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+  api = 'api'
+  products = 'products'
+  orders = 'orders'
+  own = 'own'
+  all = 'all'
+  read = 'read'
+
+  bootic > api > products > own > read
+  bootic > api > products > all > read
+  bootic > api > orders > own > read
+end
+```
+
+Block notation can be used where it makes sense:
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+  bootic.api.products do |n|
+    n.own do |n|
+      n.read
+      n.write
+      n > 'list' # use `>` to append variables or constants
+    end
+  end
+end
+```
+
+Block notation also works without explicit node argument (but can't access outer variables):
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do
+  api.products do
+    own do
+      read
+      write
+    end
+    all do
+      read
+    end
+  end
+end
+```
+
+Scope trees also work with scope aliases.
+
+```ruby
+config.aliases = {
+  'admin' => [SCOPES.api.products.own, SCOPES.api.orders.own, SCOPES.api.all.read],
+  'god' => [SCOPES.api]
+}
 ```
 
 ## Testing

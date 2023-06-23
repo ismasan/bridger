@@ -15,7 +15,7 @@ module Bridger
       @verb = verb.to_sym
       @path = path
       @title = title
-      @scope = scope ? Bridger::Scopes::Scope.new(scope) : nil
+      @scope = scope ? Bridger::Scopes::Scope.wrap(scope) : nil
       @authorizer = authorizer
       @action = action || Bridger::Action
       @serializer = serializer
