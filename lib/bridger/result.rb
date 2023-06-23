@@ -39,59 +39,37 @@ module Bridger
       errors.empty?
     end
 
-    class Success < self
-      def continue(&block)
-        return self unless block_given?
+    def continue(query: nil, payload: nil, context: nil, errors: nil, &block)
+      query ||= self.query.dup
+      payload ||= self.payload.dup
+      context ||= self.context.dup
+      errors ||= self.errors.dup
 
-        result = dup
+      result = Success.new(request.dup, response.dup, query:, payload:, context:, errors:)
+      if block_given?
         yield result
-        result
       end
+      result
+    end
 
-      def halt(&block)
-        result = self
-        if block_given?
-          result = dup
-          yield result
-        end
+    def halt(query: nil, payload: nil, context: nil, errors: nil, &block)
+      query ||= self.query.dup
+      payload ||= self.payload.dup
+      context ||= self.context.dup
+      errors ||= self.errors.dup
 
-        Halt.new(
-          result.request,
-          result.response,
-          query: result.query,
-          payload: result.payload,
-          context: result.context,
-          errors: errors.dup,
-        )
+      result = Halt.new(request.dup, response.dup, query:, payload:, context:, errors:)
+      if block_given?
+        yield result
       end
+      result
+    end
+
+    class Success < self
     end
 
     class Halt < self
       def halted?; true; end
-
-      def halt(&block)
-        return self unless block_given?
-
-        result = dup
-        yield result
-        result
-      end
-
-      def continue(&block)
-        result = self
-        if block_given?
-          result = dup
-          yield result
-        end
-
-        Success.new(
-          result.request,
-          result.response,
-          query: result.query,
-          payload: result.payload,
-          context: result.context,
-        )
-      end
     end
   end
 end

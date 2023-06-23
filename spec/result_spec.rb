@@ -32,12 +32,18 @@ RSpec.describe Bridger::Result do
       expect(result.response.status).to eq 201
       expect(halted.response.status).to eq 202
       expect(halted).to be_a Bridger::Result::Halt
+
+      halted = result.halt(errors: { foo: 'bar' })
+      expect(halted.response.status).to eq 201
+      expect(halted).to be_a Bridger::Result::Halt
+      expect(halted.valid?).to be false
+      expect(halted.errors[:foo]).to eq 'bar'
     end
 
     specify '#continue' do
       result.response.status = 201
       continued = result.continue
-      expect(continued).to eq result
+      expect(continued).not_to eq result
 
       continued = result.continue do |r|
         r.response.status = 202
@@ -45,6 +51,12 @@ RSpec.describe Bridger::Result do
       expect(result.response.status).to eq 201
       expect(continued.response.status).to eq 202
       expect(continued).not_to eq result
+
+      continued = result.continue(errors: { foo: 'bar' })
+      expect(continued.response.status).to eq 201
+      expect(continued).not_to eq result
+      expect(continued.valid?).to be false
+      expect(continued.errors[:foo]).to eq 'bar'
     end
 
     specify '#valid?' do
@@ -64,7 +76,7 @@ RSpec.describe Bridger::Result do
     specify '#halt' do
       result.response.status = 201
       halted = result.halt
-      expect(halted).to eq result
+      expect(halted).not_to eq result
 
       halted = result.halt do |r|
         r.response.status = 202
@@ -72,6 +84,12 @@ RSpec.describe Bridger::Result do
       expect(result.response.status).to eq 201
       expect(halted.response.status).to eq 202
       expect(halted).not_to eq result
+
+      halted = result.halt(errors: { foo: 'bar' })
+      expect(halted.response.status).to eq 201
+      expect(halted).not_to eq result
+      expect(halted.valid?).to be false
+      expect(halted.errors[:foo]).to eq 'bar'
     end
 
     specify '#continue' do
