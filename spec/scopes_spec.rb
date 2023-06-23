@@ -128,7 +128,7 @@ RSpec.describe Bridger::Scopes do
   private
 
   def scope(exp)
-    described_class.new(exp)
+    described_class.wrap(exp)
   end
 
   def first_one_wins(exp1, exp2)

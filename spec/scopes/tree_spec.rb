@@ -15,6 +15,7 @@ RSpec.describe Bridger::Scopes::Tree do
     expect(tree.bootic.api.products.own.to_s).to eq('bootic.api.products.own')
     expect(tree.bootic.api.products.to_s).to eq('bootic.api.products')
     expect(tree.bootic.api.products.*.read.to_s).to eq('bootic.api.products.*.read')
+    expect(tree.bootic.api.products.*.read.to_a).to eq(%w[bootic api products * read])
     expect {
       tree.bootic.foo.products
     }.to raise_error(NoMethodError)

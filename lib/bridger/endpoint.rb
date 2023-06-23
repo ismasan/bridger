@@ -15,13 +15,7 @@ module Bridger
       @verb = verb.to_sym
       @path = path
       @title = title
-      @scope = if scope.respond_to?(:to_scope)
-        scope.to_scope
-      elsif scope.is_a?(String) || scope.is_a?(Array)
-        Bridger::Scopes::Scope.new(scope)
-      else
-        nil
-      end
+      @scope = scope ? Bridger::Scopes::Scope.wrap(scope) : nil
       @authorizer = authorizer
       @action = action || Bridger::Action
       @serializer = serializer

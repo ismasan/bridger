@@ -8,8 +8,27 @@ module Bridger
 
       include Comparable
 
-      def initialize(sc)
-        @segments = sc.is_a?(Array) ? sc : sc.split(SEP)
+      def self.wrap(sc)
+        case sc
+          in Scope
+            sc
+          in Array => list if list.all?{|s| s.is_a?(String) }
+            new(sc)
+          in String
+            new(sc.split(SEP))
+          in Symbol
+            new([sc.to_s])
+          else
+            if sc.respond_to?(:to_scope)
+              sc.to_scope
+            else
+              raise ArgumentError, "Can't turn #{sc.inspect} into a Scope"
+            end
+        end
+      end
+
+      def initialize(segments)
+        @segments = segments
       end
 
       def to_scope

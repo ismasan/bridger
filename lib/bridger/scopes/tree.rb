@@ -107,7 +107,7 @@ module Bridger
       # Ex. node.api.products.own.read
       #
       class Node < BasicObject
-        attr_reader :__segment, :__children, :to_s
+        attr_reader :__segment, :__children, :to_s, :to_a
 
         # @param segment [String] the name of the node
         # @param parent [Node] the parent node
@@ -115,6 +115,7 @@ module Bridger
           @__segment = segment.to_s
           @__parent = parent
           @__children = {}
+          @to_a = @__parent ? @__parent.to_a + [@__segment] : [@__segment]
           @to_s = [@__parent, @__segment].compact.map(&:to_s).join('.')
         end
 
@@ -155,7 +156,7 @@ module Bridger
         # by endpoints.
         # @return [Scope]
         def to_scope
-          ::Bridger::Scopes::Scope.new(to_s)
+          ::Bridger::Scopes::Scope.new(to_a)
         end
 
         # Add a child node and define a method to access it.

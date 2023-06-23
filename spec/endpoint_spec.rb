@@ -51,7 +51,7 @@ RSpec.describe Bridger::Endpoint do
   it 'it accepts #to_scope interface' do
     scope_class = Data.define(:scope) do
       def to_scope
-        Bridger::Scopes::Scope.new(scope)
+        Bridger::Scopes::Scope.wrap(scope)
       end
     end
 

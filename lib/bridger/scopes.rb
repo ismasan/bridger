@@ -9,29 +9,21 @@ module Bridger
     include Comparable
 
     def self.wrap(sc)
-      case sc
-      when String, Scope
-        new([sc])
-      when Symbol
-        new([sc.to_s])
-      when Array
-        new(sc)
-      when Scopes
+      if sc.is_a?(Scopes)
         sc
       else
-        raise ArgumentError, "Can't compare #{sc.inspect} with #{self.name}"
+        new(sc)
       end
     end
 
+    # @param scopes [Array<Scope, String>]
     def initialize(scopes)
-      @scopes = scopes.map{|sc|
-        sc.respond_to?(:to_scope) ? sc.to_scope : Scope.new(sc)
-      }.sort{|a,b| b <=> a}
+      @scopes = [scopes].flatten.map { |s| Scope.wrap(s) }.sort{ |a, b| b <=> a}
     end
 
     def resolve(scope)
-      sc = scope.is_a?(String) ? Scope.new(scope) : scope
-      scopes.find{|s| s >= sc }
+      sc = Scope.wrap(scope)
+      scopes.find { |s| s >= sc }
     end
 
     def any?(&block)
