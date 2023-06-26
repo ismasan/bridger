@@ -41,26 +41,25 @@ module Bridger
       errors.empty?
     end
 
-    def continue(query: nil, payload: nil, context: nil, errors: nil, &block)
-      query ||= self.query.dup
-      payload ||= self.payload.dup
-      context ||= self.context.dup
-      errors ||= self.errors.dup
-
-      result = Success.new(request.dup, response.dup, query:, payload:, context:, errors:)
-      if block_given?
-        yield result
-      end
-      result
+    def copy(**kargs, &block)
+      copy_with(self.class, **kargs, &block)
     end
 
-    def halt(query: nil, payload: nil, context: nil, errors: nil, &block)
+    def continue(**kargs, &block)
+      copy_with(Success, **kargs, &block)
+    end
+
+    def halt(**kargs, &block)
+      copy_with(Halt, **kargs, &block)
+    end
+
+    private def copy_with(klass, query: nil, payload: nil, context: nil, errors: nil, &block)
       query ||= self.query.dup
       payload ||= self.payload.dup
       context ||= self.context.dup
       errors ||= self.errors.dup
 
-      result = Halt.new(request.dup, response.dup, query:, payload:, context:, errors:)
+      result = klass.new(request.dup, response.dup, query:, payload:, context:, errors:)
       if block_given?
         yield result
       end
@@ -68,10 +67,10 @@ module Bridger
     end
 
     class Success < self
-      def self.build(request: nil, response: nil)
+      def self.build(request: nil, response: nil, query: {}, payload: {})
         request ||= ::Rack::Request.new(::Rack::MockRequest.env_for('/'))
         response ||= ::Rack::Response.new(nil, 200, {})
-        new(request, response)
+        new(request, response, query:, payload:)
       end
     end
 

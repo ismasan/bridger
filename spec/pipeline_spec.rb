@@ -123,19 +123,6 @@ RSpec.describe Bridger::Pipeline do
 
     expect(pipe.query_schema).to be_a(Parametric::Schema)
     expect(pipe.query_schema.fields.keys).to eq(%i[name age title])
-
-    result = pipe.call(initial_result.continue(query: { name: 'John' }))
-    expect(result.halted?).to be(true)
-    expect(result.valid?).to be(false)
-    expect(result.errors['$.age']).to eq(['is required'])
-    expect(result.context.key?(:foo)).to be(false)
-
-    result = pipe.call(initial_result.continue(query: { name: 'John', age: '42' }))
-    expect(result.halted?).to be(false)
-    expect(result.valid?).to be(true)
-    expect(result.errors).to be_empty
-    expect(result.query).to eq(age: 42, name: 'John', title: 'Mr.')
-    expect(result.context[:foo]).to eq('bar')
   end
 
   specify '#payload_schema' do
@@ -156,18 +143,54 @@ RSpec.describe Bridger::Pipeline do
 
     expect(pipe.payload_schema).to be_a(Parametric::Schema)
     expect(pipe.payload_schema.fields.keys).to eq(%i[name age title])
+  end
 
-    result = pipe.call(initial_result.continue(payload: { name: 'John' }))
-    expect(result.halted?).to be(true)
-    expect(result.valid?).to be(false)
-    expect(result.errors['$.age']).to eq(['is required'])
-    expect(result.context.key?(:foo)).to be(false)
+  describe '#run' do
+    let(:initial_result) { Bridger::Result::Success.build(query:, payload:) }
 
-    result = pipe.call(initial_result.continue(payload: { name: 'John', age: '42' }))
-    expect(result.halted?).to be(false)
-    expect(result.valid?).to be(true)
-    expect(result.errors).to be_empty
-    expect(result.payload).to eq(age: 42, name: 'John', title: 'Mr.')
-    expect(result.context[:foo]).to eq('bar')
+    let(:query) { { name: 'John', age: '42' } }
+    let(:payload) { { title: 'Mr.', foo: 'bar' } }
+
+    let(:pipe) do
+      Bridger::Pipeline.new do |pl|
+        pl.query_schema do
+          field(:name).type(:string).required
+          field(:age).type(:integer).required
+        end
+        pl.payload_schema do
+          field(:title).type(:string).required
+        end
+
+        pl.step do |r|
+          r.continue(context: { name: "#{r.payload[:title]} #{r.query[:name]}" })
+        end
+
+        pl.step! do |r|
+          r.copy(context: r.context.merge(always_run: true))
+        end
+      end
+    end
+
+    it 'resolves query and payload' do
+      result = pipe.run(initial_result)
+      expect(result.valid?).to be(true)
+      expect(result.query).to eq(age: 42, name: 'John')
+      expect(result.payload).to eq(title: 'Mr.')
+      expect(result.context[:name]).to eq('Mr. John')
+      expect(result.context[:always_run]).to be(true)
+    end
+
+    context 'with invalid payload' do
+      let(:payload) { { foo: 'bar' } }
+
+      it 'collects errors' do
+        result = pipe.run(initial_result)
+        expect(result.valid?).to be(false)
+        expect(result.halted?).to be(true)
+        expect(result.errors['$.title']).to eq(['is required'])
+        expect(result.context[:name]).to be_nil
+        expect(result.context[:always_run]).to be(true)
+      end
+    end
   end
 end

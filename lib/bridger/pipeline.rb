@@ -89,11 +89,31 @@ module Bridger
       step SchemaSteps::Payload.new(schema, &block)
     end
 
+    # Validate query and payload at the top of the pipeline.
+    # query_schema and payload_schema are merged from all steps.
+    def run(result)
+      query, errors = resolve_schema(query_schema, result.query)
+      if errors.any?
+        return call(result.halt(errors:, query:))
+      end
+      payload, errors = resolve_schema(payload_schema, result.payload)
+      if errors.any?
+        return call(result.halt(errors:, payload:))
+      end
+
+      call(result.continue(query:, payload:))
+    end
+
     def call(result)
       @pipe.call(result)
     end
 
     private
+
+    def resolve_schema(schema, data)
+      resolved = schema.resolve(data)
+      [resolved.output, resolved.errors]
+    end
 
     def register_step(bind_class, callable: nil, &block)
       callable ||= block
