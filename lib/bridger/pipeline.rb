@@ -91,6 +91,9 @@ module Bridger
 
     # Validate query and payload at the top of the pipeline.
     # query_schema and payload_schema are merged from all steps.
+    #
+    # @param result [Bridger::Result]
+    # @return [Bridger::Result]
     def run(result)
       query, errors = resolve_schema(query_schema, result.query)
       if errors.any?
@@ -104,6 +107,10 @@ module Bridger
       call(result.continue(query:, payload:))
     end
 
+    # The Step interface
+    #
+    # @param result [Bridger::Result]
+    # @return [Bridger::Result]
     def call(result)
       @pipe.call(result)
     end
@@ -117,6 +124,7 @@ module Bridger
 
     def register_step(bind_class, callable: nil, &block)
       callable ||= block
+      callable = callable.to_pipeline_step if callable.respond_to?(:to_pipeline_step)
       raise ArgumentError, "#step expects an interface #call(Result) Result, but got #{callable.inspect}" unless is_a_step?(callable)
 
       merge_query_schema(callable.query_schema) if callable.respond_to?(:query_schema)
