@@ -38,9 +38,13 @@ RSpec.describe Bridger::Result do
 
       halted = result.halt do |r|
         r.response.status = 202
+        r[:foo] = 'bar'
       end
       expect(result.response.status).to eq 201
       expect(halted.response.status).to eq 202
+      expect(halted[:foo]).to eq 'bar'
+      expect(halted.data[:foo]).to eq 'bar'
+      expect(halted[:bar]).to be_nil
       expect(halted).to be_a Bridger::Result::Halt
 
       halted = result.halt(errors: { foo: 'bar' })
@@ -57,9 +61,11 @@ RSpec.describe Bridger::Result do
 
       continued = result.continue do |r|
         r.response.status = 202
+        r[:foo] = 'bar'
       end
       expect(result.response.status).to eq 201
       expect(continued.response.status).to eq 202
+      expect(continued[:foo]).to eq 'bar'
       expect(continued).not_to eq result
 
       continued = result.continue(errors: { foo: 'bar' })

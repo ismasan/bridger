@@ -4,20 +4,20 @@ require 'rack'
 
 module Bridger
   class Result
-    attr_reader :request, :response, :query, :payload, :context, :errors
+    attr_reader :request, :response, :query, :payload, :data, :errors
 
     # @param request [Rack::Request]
     # @param response [Rack::Response]
     # @param query [Hash]
     # @param payload [Hash, nil]
-    # @param context [Hash]
+    # @param data [Hash]
     # @param errors [Hash]
-    def initialize(request, response, query: {}, payload: nil, context: {}, errors: {})
+    def initialize(request, response, query: {}, payload: nil, data: {}, errors: {})
       @request = request
       @response = response
       @query = query
       @payload = payload
-      @context = context
+      @data = data
       @errors = errors
     end
 
@@ -31,7 +31,7 @@ module Bridger
         response.dup,
         query: query.dup,
         payload: payload.dup,
-        context: context.dup,
+        data: data.dup,
         errors: errors.dup,
       )
     end
@@ -39,6 +39,14 @@ module Bridger
     # @return [Boolean]
     def valid?
       errors.empty?
+    end
+
+    def [](key)
+      data[key]
+    end
+
+    def []=(key, value)
+      data[key] = value
     end
 
     def copy(**kargs, &block)
@@ -53,13 +61,13 @@ module Bridger
       copy_with(Halt, **kargs, &block)
     end
 
-    private def copy_with(klass, query: nil, payload: nil, context: nil, errors: nil, &block)
+    private def copy_with(klass, query: nil, payload: nil, data: nil, errors: nil, &block)
       query ||= self.query.dup
       payload ||= self.payload.dup
-      context ||= self.context.dup
+      data ||= self.data.dup
       errors ||= self.errors.dup
 
-      result = klass.new(request.dup, response.dup, query:, payload:, context:, errors:)
+      result = klass.new(request.dup, response.dup, query:, payload:, data:, errors:)
       if block_given?
         yield result
       end
