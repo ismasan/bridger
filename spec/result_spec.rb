@@ -68,9 +68,11 @@ RSpec.describe Bridger::Result do
       expect(continued[:foo]).to eq 'bar'
       expect(continued).not_to eq result
 
-      continued = result.continue(errors: { foo: 'bar' })
+      auth = instance_double('Bridger::Auth')
+      continued = result.continue(auth:, errors: { foo: 'bar' })
       expect(continued.response.status).to eq 201
       expect(continued).not_to eq result
+      expect(continued.auth).to eq auth
       expect(continued.valid?).to be false
       expect(continued.errors[:foo]).to eq 'bar'
     end
