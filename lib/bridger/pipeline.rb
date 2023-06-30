@@ -17,6 +17,10 @@ module Bridger
         @right = right
       end
 
+      def inspect
+        %(Bind(#{@left.inspect}, #{@right.inspect}))
+      end
+
       # @param result [Result]
       # @return [Result]
       def call(result)
@@ -97,11 +101,17 @@ module Bridger
     def run(result)
       query, errors = resolve_schema(query_schema, result.query)
       if errors.any?
-        return call(result.halt(errors:, query:))
+        result = result.halt(errors:, query: result.query).copy do |r|
+          r.response.status = 422
+        end
+        return call(result)
       end
       payload, errors = resolve_schema(payload_schema, result.payload)
       if errors.any?
-        return call(result.halt(errors:, payload:))
+        result = result.halt(errors:, payload:).copy do |r|
+          r.response.status = 422
+        end
+        return call(result)
       end
 
       call(result.continue(query:, payload:))

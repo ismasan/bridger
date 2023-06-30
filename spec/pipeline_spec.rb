@@ -187,6 +187,7 @@ RSpec.describe Bridger::Pipeline do
         result = pipe.run(initial_result)
         expect(result.valid?).to be(false)
         expect(result.halted?).to be(true)
+        expect(result.response.status).to eq(422)
         expect(result.errors['$.title']).to eq(['is required'])
         expect(result.data[:name]).to be_nil
         expect(result.data[:always_run]).to be(true)
