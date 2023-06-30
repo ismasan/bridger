@@ -19,7 +19,7 @@ module Bridger
         @title = nil
         @verb = :get
         @scope = nil
-        @auth = nil
+        @auth = Bridger::NoopAuth
         @action = Bridger::Pipeline::NOOP
         @serializer = Bridger::SerializerSet::DEFAULT
         @instrumenter = Bridger::NullInstrumenter
