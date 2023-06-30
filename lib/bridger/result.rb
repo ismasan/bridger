@@ -45,7 +45,7 @@ module Bridger
     end
 
     def [](key)
-      data[key]
+      data.fetch(key)
     end
 
     def []=(key, value)
@@ -79,10 +79,10 @@ module Bridger
     end
 
     class Success < self
-      def self.build(request: nil, response: nil, query: {}, payload: {})
+      def self.build(request: nil, response: nil, query: {}, payload: {}, data: {})
         request ||= ::Rack::Request.new(::Rack::MockRequest.env_for('/'))
         response ||= ::Rack::Response.new(nil, 200, {})
-        new(request, response, query:, payload:)
+        new(request, response, query:, payload:, data:)
       end
     end
 

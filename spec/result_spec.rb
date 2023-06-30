@@ -44,7 +44,9 @@ RSpec.describe Bridger::Result do
       expect(halted.response.status).to eq 202
       expect(halted[:foo]).to eq 'bar'
       expect(halted.data[:foo]).to eq 'bar'
-      expect(halted[:bar]).to be_nil
+      expect {
+        halted[:bar]
+      }.to raise_error(KeyError)
       expect(halted).to be_a Bridger::Result::Halt
 
       halted = result.halt(errors: { foo: 'bar' })
