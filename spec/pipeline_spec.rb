@@ -144,4 +144,31 @@ RSpec.describe Bridger::Pipeline do
     expect(pipe.payload_schema).to be_a(Parametric::Schema)
     expect(pipe.payload_schema.fields.keys).to eq(%i[name age title])
   end
+
+  specify '#instrument' do
+    halt_step = ->(result) { result.halt }
+
+    instrumenter = Bridger::TestInstrumenter.new
+
+    pipe = Bridger::Pipeline.new(instrumenter:) do |pl|
+      # As sub pipeline
+      pl.instrument('step1', foo: 1) do |pl|
+        pl.step do |result|
+          result.continue do |r|
+            r[:name] = 'John'
+          end
+        end
+      end
+      # As step object
+      pl.instrument(halt_step, 'step2', foo: 2)
+    end
+
+    result = pipe.call(initial_result)
+    expect(result.halted?).to be(true)
+    expect(result.data[:name]).to eq('John')
+    expect(instrumenter.calls).to eq([
+      ['step1', { foo: 1 }],
+      ['step2', { foo: 2 }]
+    ])
+  end
 end

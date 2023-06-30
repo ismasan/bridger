@@ -9,6 +9,19 @@ module Bridger
       yield
     end
   end
+
+  class TestInstrumenter
+    attr_reader :calls
+
+    def initialize
+      @calls = []
+    end
+
+    def instrument(name, payload = {}, &_block)
+      self.calls << [name, payload]
+      yield
+    end
+  end
 end
 
 require 'bridger/auth'

@@ -48,13 +48,43 @@ module Bridger
 
     NOOP_SCHEMA = Parametric::Schema.new
 
-    def initialize(&config)
+    def initialize(instrumenter: Bridger::NullInstrumenter, &config)
+      @instrumenter = instrumenter
       @pipe = NOOP
       @query_schema = NOOP_SCHEMA
       @payload_schema = NOOP_SCHEMA
 
       configure(&config) if block_given?
       freeze
+    end
+
+    def to_s
+      %(#<#{self.class.name}>)
+    end
+
+    def instrument(*args, &block)
+      case args
+      in [callable, String => label, Hash => opts] # instrument(step, 'foo', identifier: 'foo')
+        step do |result|
+          instrumenter.instrument(label, opts) { callable.call(result) }
+        end
+      in [callable, String => label] # instrument(step, 'foo')
+        step do |result|
+          instrumenter.instrument(label) { callable.call(result) }
+        end
+      in [String => label, Hash => opts] if block_given? # instrument('foo', identifier: 'foo', &block)
+        callable = Pipeline.new(instrumenter:, &block)
+        step do |result|
+          instrumenter.instrument(label, opts) { callable.call(result) }
+        end
+      in [String => label] if block_given? # instrument('foo', &block)
+        callable = Pipeline.new(instrumenter:, &block)
+        step do |result|
+          instrumenter.instrument(label) { callable.call(result) }
+        end
+      else
+        raise ArgumentError, "instrument expects a step or a block, but got #{args.inspect}"
+      end
     end
 
     def step(callable = nil, &block)
@@ -72,7 +102,7 @@ module Bridger
     end
 
     def continue(&block)
-      step do |result|
+      step! do |result|
         result.continue(&block)
       end
     end
@@ -103,10 +133,7 @@ module Bridger
 
     private
 
-    def resolve_schema(schema, data)
-      resolved = schema.resolve(data)
-      [resolved.output, resolved.errors]
-    end
+    attr_reader :instrumenter
 
     def register_step(bind_class, callable: nil, &block)
       callable ||= block
