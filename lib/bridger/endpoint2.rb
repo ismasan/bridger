@@ -45,7 +45,10 @@ module Bridger
       end
 
       def instrumenter(object = nil)
-        @instrumenter = object if object
+        if object
+          raise ArgumentError, 'instrumenter must implement #instrument' unless object.respond_to?(:instrument)
+          @instrumenter = object
+        end
         @instrumenter
       end
 
