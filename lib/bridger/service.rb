@@ -17,7 +17,7 @@ module Bridger
       self
     end
 
-    attr_reader :auth_config
+    attr_reader :auth_config, :exception_endpoint
 
     def initialize
       @endpoints = []
@@ -26,6 +26,17 @@ module Bridger
       @instrumenter = NullInstrumenter
       @auth_config = Auth.config
       @serializers = Bridger::SerializerSet::DEFAULT
+      @exception_endpoint = Bridger::Endpoint2.new(:__exceptions, service: self) do |e|
+        e.serializer @serializers
+      end
+    end
+
+    def render_exception(exception, request, status: 500)
+      result = ::Bridger::Result::Success.build(request:).continue do |r|
+        r[:exception] = exception
+        r.response.status = status
+      end
+      exception_endpoint.call(result).response.finish
     end
 
     def each(&block)

@@ -131,6 +131,8 @@ module Bridger
       scopes.can? scope
     end
 
+    # TODO: this is not needed now
+    # we'll get rid of authorizers
     def authorize!(required_scope, authorizer, *args)
       sp = scopes.resolve(required_scope)
       if !sp

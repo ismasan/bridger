@@ -40,15 +40,11 @@ module Bridger
     end
 
     def self.not_found(srv, status)
-      Proc.new do |env|
+      proc do |env|
         path = env['action_dispatch.request.path_parameters'][:path]
-        msg = "path #{path} not found"
-        ::Bridger::Rack::ErrorHandler.new(
-          srv,
-          ::Bridger::ResourceNotFoundError.new(msg),
-          ::Bridger::DefaultSerializers::NotFound,
-          status: 404
-        ).call(env)
+        exception = ::Bridger::ResourceNotFoundError.new("path #{path} not found")
+        request = ::Rack::Request.new(env)
+        srv.render_exception(exception, request, status:)
       end
     end
   end

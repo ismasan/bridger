@@ -130,7 +130,7 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
     expect(results.errors.first.messages).to eq(['must be an email'])
   end
 
-  it "responds with 404 if endpoint not found" do
+  it 'responds with 404 if endpoint not found' do
     authorize!(
       uid: 123,
       sids: [11],

@@ -49,59 +49,6 @@ module Bridger
       attr_reader :service, :error, :serializer, :status
     end
 
-    class EndpointHandler
-      include HandlerUtils
-
-      def initialize(service, endpoint)
-        @service = service
-        @endpoint = endpoint
-        @request = nil
-      end
-
-      def call(env)
-        @request = build_request(env)
-        helper = RequestHelper.new(service, @request, rel_name: endpoint.name)
-        begin
-          auth! if endpoint.authenticates?
-          json endpoint.run!(query: helper.params, payload: build_payload, auth: auth, helper: helper)
-        rescue ::Bridger::MissingAccessTokenError => e
-          json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
-        rescue ::Bridger::ForbiddenAccessError => e
-          json serialize(e, ::Bridger::DefaultSerializers::AccessDenied, helper: helper), 403
-        rescue ::Bridger::AuthError => e
-          json serialize(e, ::Bridger::DefaultSerializers::Unauthorized, helper: helper), 401
-        rescue ::Bridger::ValidationErrors, Parametric::InvalidStructError => e
-          json serialize(e, ::Bridger::DefaultSerializers::InvalidPayload, helper: helper), 422
-        rescue ::Bridger::ResourceNotFoundError => e
-          json serialize(e, ::Bridger::DefaultSerializers::NotFound, helper: helper), 404
-        end
-      end
-
-      def inspect
-        %(<#{self.class} [#{endpoint.name}] #{endpoint.verb} #{endpoint.path}>)
-      end
-
-      private
-
-      attr_reader :service, :endpoint, :request
-
-      def auth!
-        @auth = ::Bridger::Auth.parse(request, service.auth_config)
-      end
-
-      def auth
-        @auth ||= ::Bridger::NoopAuth
-      end
-
-      def build_payload
-        if request.post? || request.put?
-          MultiJson.load(request.body.read, symbolize_keys: true)
-        else
-          {}
-        end
-      end
-    end
-
     class RequestHelper
       HTTP_X_FORWARDED_HOST = 'HTTP_X_FORWARDED_HOST'.freeze
 
