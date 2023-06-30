@@ -7,6 +7,23 @@ module Bridger
   class SerializerSet
     Record = Data.define(:status, :serializer)
 
+    class Stack
+      attr_reader :to_a
+
+      def initialize
+        @to_a = []
+      end
+
+      def on(status, serializer)
+        @to_a << Record.new(status:, serializer:)
+        self
+      end
+    end
+
+    def self.build(&block)
+      new.build_for(&block)
+    end
+
     attr_reader :serializers
 
     def initialize(serializers = [])
@@ -14,14 +31,9 @@ module Bridger
     end
 
     def build_for(&block)
-      instance = self.class.new(serializers.dup)
-      yield instance if block_given?
-      instance.freeze
-    end
-
-    def on(status, serializer)
-      @serializers << Record.new(status:, serializer:)
-      self
+      stack = Stack.new
+      yield stack if block_given?
+      self.class.new(stack.to_a + serializers).freeze
     end
 
     def run(result, service:, rel_name:)
@@ -42,7 +54,7 @@ module Bridger
       end
     end
 
-    DEFAULT = new.tap do |set|
+    DEFAULT = build do |set|
       set.on(204, DefaultSerializers::NoContent)
       set.on(200..299, DefaultSerializers::Success)
       set.on(422, DefaultSerializers::InvalidPayload)
@@ -50,7 +62,6 @@ module Bridger
       set.on(403, DefaultSerializers::AccessDenied)
       set.on(404, DefaultSerializers::NotFound)
       set.on(500, DefaultSerializers::ServerError)
-      set.freeze
     end
   end
 end

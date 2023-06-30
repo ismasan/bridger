@@ -32,39 +32,43 @@ module Bridger
       end
     end
 
-    class AccessDenied < ::Bridger::Serializer
-      DEFAULT_MESSAGE = 'Access denied. Missing or invalid access token.'.freeze
-
+    class Success < ::Bridger::Serializer
       schema do
-        type ['errors', 'accessDenied']
+        type ['success'].freeze
 
         properties do |props|
-          props.message "Access denied"
+          props._from item.data
+          props.message 'Hello World!'
+        end
+      end
+    end
+
+    # TODO: rename this to Forbidden.
+    # Best to match status code names.
+    class AccessDenied < ::Bridger::Serializer
+      DEFAULT_MESSAGE = 'Access denied. Insufficient permissions to access this resource'.freeze
+
+      schema do
+        type ['errors', 'forbidden'].freeze
+
+        properties do |props|
+          props.message 'Forbidden'
         end
 
         entities(
           :errors,
-          errors(item),
+          [{field: 'access_token', messages:['Access denied. Access token is valid but has insufficient permissions.']}],
           ErrorSerializer
         )
-      end
-
-      def errors(exception)
-        [
-          {
-            field: 'access_token',
-            messages:[DEFAULT_MESSAGE, exception.message]
-          }
-        ]
       end
     end
 
     class Unauthorized < ::Bridger::Serializer
       schema do
-        type ['errors', 'accessDenied']
+        type ['errors', 'unauthorized']
 
         properties do |props|
-          props.message "Access denied"
+          props.message 'Unauthorized'
         end
 
         entities(
@@ -77,23 +81,33 @@ module Bridger
 
     class ServerError < ::Bridger::Serializer
       schema do
-        type ['errors', 'serverError', item.class.name]
+        type ['errors', 'serverError', item.data[:exception]&.class&.name].compact
 
         properties do |props|
-          props.message item.message
+          props.message item.data[:exception]&.message
         end
 
         entities(
           :errors,
-          [{field: '$', messages:[item.message]}],
+          [{field: '$', messages:[item.data[:exception]&.message]}],
           ErrorSerializer
         )
       end
     end
 
-    class NotFound < ServerError
+    NoContent = proc do |result, auth:, h:|
+      {}
+    end
+
+    class NotFound < ::Bridger::Serializer
       schema do
-        type ['errors', 'notFoundError', item.class.name]
+        type ['errors', 'notFound']
+
+        entities(
+          :errors,
+          [{field: '$', messages:['Not found']}],
+          ErrorSerializer
+        )
       end
     end
 
