@@ -93,30 +93,6 @@ module Bridger
       step SchemaSteps::Payload.new(schema, &block)
     end
 
-    # Validate query and payload at the top of the pipeline.
-    # query_schema and payload_schema are merged from all steps.
-    #
-    # @param result [Bridger::Result]
-    # @return [Bridger::Result]
-    def run(result)
-      query, errors = resolve_schema(query_schema, result.query)
-      if errors.any?
-        result = result.halt(errors:, query: result.query).copy do |r|
-          r.response.status = 422
-        end
-        return call(result)
-      end
-      payload, errors = resolve_schema(payload_schema, result.payload)
-      if errors.any?
-        result = result.halt(errors:, payload:).copy do |r|
-          r.response.status = 422
-        end
-        return call(result)
-      end
-
-      call(result.continue(query:, payload:))
-    end
-
     # The Step interface
     #
     # @param result [Bridger::Result]
