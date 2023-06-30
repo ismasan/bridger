@@ -3,7 +3,6 @@
 raise 'This only works if Rails is installed' unless defined?(ActionDispatch)
 
 require 'rack/common_logger'
-require 'bridger/rack'
 
 module Bridger
   module Rails

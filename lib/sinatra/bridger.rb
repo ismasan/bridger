@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'bridger/rack'
-
 module Sinatra
   module Bridger
     class FlushableLogger < SimpleDelegator
