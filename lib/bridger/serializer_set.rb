@@ -36,7 +36,7 @@ module Bridger
       self.class.new(stack.to_a + serializers).freeze
     end
 
-    def run(result, service:, rel_name:)
+    def run(result, service:, rel_name: nil)
       record = serializers.find { |record| record.status === result.response.status }
       serializer = record ? record.serializer : DefaultSerializers::Success
       helper = Bridger::RequestHelper.new(

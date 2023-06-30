@@ -16,14 +16,17 @@ class CreateUser < Bridger::Action
     field(:age).type(:integer).required
   end
 
-  private
-  def run
+  def self.call(result)
     id = SecureRandom.uuid
-    USERS[id] = User.new(
+    user = USERS[id] = User.new(
       id,
-      params[:name],
-      params[:age]
+      result.payload[:name],
+      result.payload[:age]
     )
+
+    result.continue do |r|
+      r[:user] = user
+    end
   end
 end
 
@@ -32,9 +35,11 @@ class ShowUser < Bridger::Action
     field(:user_id).type(:string).required
   end
 
-  private
-  def run
-    USERS.fetch(params[:user_id])
+  def self.call(result)
+    user = USERS.fetch(result.query[:user_id])
+    result.continue do |r|
+      r[:user] = user
+    end
   end
 end
 
@@ -44,12 +49,14 @@ class ListUserThings < Bridger::Action
     field(:page).type(:integer).default(1)
   end
 
-  private
-  def run
-    [
+  def self.call(result)
+    things = [
       Thing.new("a"),
       Thing.new("b"),
     ]
+    result.continue do |r|
+      r[:things] = things
+    end
   end
 end
 
@@ -58,9 +65,11 @@ class DeleteUser < Bridger::Action
     field(:user_id).type(:string).required
   end
 
-  private
-  def run
-    USERS.delete(params[:user_id])
+  def self.call(result)
+    USERS.delete(result.query[:user_id])
+    result.continue do |r|
+      r.response.status = 204
+    end
   end
 end
 
@@ -70,15 +79,17 @@ class ListUsers < Bridger::Action
     field(:email).type(:string).declared.policy(:format, /@/, 'must be an email')
   end
 
-  private
-  def run
-    USERS.values.sort_by(&:name)
+  def self.call(result)
+    users = USERS.values.sort_by(&:name)
+    result.continue do |r|
+      r[:users] = users
+    end
   end
 end
 
 class ShowStatus < Bridger::Action
-  def run
-    true
+  def self.call(result)
+    result.continue(data: { ok: true })
   end
 end
 
@@ -101,14 +112,14 @@ end
 
 class UserSerializer < Bridger::Serializer
   schema do
-    rel :user, as: 'self', user_id: item.id
-    rel :delete_user, user_id: item.id
-    rel :user_things, user_id: item.id
+    rel :user, as: 'self', user_id: item[:user].id
+    rel :delete_user, user_id: item[:user].id
+    rel :user_things, user_id: item[:user].id
     rel :root
 
-    property :id, item.id
-    property :name, item.name
-    property :age, item.age
+    property :id, item[:user].id
+    property :name, item[:user].name
+    property :age, item[:user].age
   end
 end
 
@@ -117,7 +128,7 @@ class UserThingsSerializer < Bridger::Serializer
     rel :root
     current_rel as: :next, page: 2
 
-    items item do |thing, s|
+    items item[:things] do |thing, s|
       s.property :name, thing.name
     end
   end
@@ -128,7 +139,10 @@ class UsersSerializer < Bridger::Serializer
     rel :user
     rel :root
 
-    items item, UserSerializer
+    # TODO: fix this
+    # top level serializers expect #item to be a Result
+    # but then we can't use the same serializer nested in another.
+    items item[:users].map { |u| { user: u} }, UserSerializer
   end
 end
 

@@ -20,29 +20,27 @@ module Sinatra
         @params = request.params.merge(params)
       end
 
-      def params
+      def GET
         @params
       end
     end
 
-    def bridge(
-      service,
-      logger: nil,
-      not_found_serializer: ::Bridger::DefaultSerializers::NotFound,
-      server_error_serializer: ::Bridger::DefaultSerializers::ServerError
-    )
+    def bridge(service, logger: nil)
       enable :dump_errors
       disable :raise_errors, :show_exceptions, :x_cascade
-      if not_found_serializer
-        not_found do
-          err = env['sinatra.error'] || ::Bridger::ResourceNotFoundError.new("Resource not found at '#{env['PATH_INFO']}'")
-          ::Bridger::Rack::ErrorHandler.new(settings.service, err, not_found_serializer, status: 404).call(request.env)
-        end
+      not_found do
+        exception = env['sinatra.error'] || ::Bridger::ResourceNotFoundError.new("Resource not found at '#{env['PATH_INFO']}'")
+        result = ::Bridger::Result::Success.build(request:, data: { exception: }).halt { |r| r.response.status = 404 }
+
+        settings.service.serializers.run(result, service: settings.service).response.finish
+        # ::Bridger::Rack::ErrorHandler.new(settings.service, err, not_found_serializer, status: 404).call(request.env)
       end
-      if server_error_serializer
-        error do
-          ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], server_error_serializer, status: 500).call(request.env)
-        end
+
+      error do
+        exception = env['sinatra.error']
+        result = ::Bridger::Result::Success.build(request:, data: { exception: }).halt { |r| r.response.status = 500 }
+        settings.service.serializers.run(result, service: settings.service).response.finish
+        # ::Bridger::Rack::ErrorHandler.new(settings.service, env['sinatra.error'], server_error_serializer, status: 500).call(request.env)
       end
 
       set :service, service
@@ -61,7 +59,8 @@ module Sinatra
 
       service.each do |endpoint|
         public_send(endpoint.verb, endpoint.path) do
-          ::Bridger::Rack::EndpointHandler.new(settings.service, endpoint).call(SinatraRequestWithParams.new(request, params))
+          endpoint.to_rack.call(SinatraRequestWithParams.new(request, params))
+          # ::Bridger::Rack::EndpointHandler.new(settings.service, endpoint).call(SinatraRequestWithParams.new(request, params))
         end
       end
     end

@@ -123,7 +123,7 @@ module Bridger
       schema do
         type ["results", "endpoints"]
 
-        items item.all do |endpoint, s|
+        items item[:service].all do |endpoint, s|
           s.rel :schema, rel: endpoint.name, as: :self
 
           s.property :rel, endpoint.name
@@ -141,18 +141,18 @@ module Bridger
       schema do
         type ["endpoint"]
 
-        rel :schema, rel: item.name, as: :self
+        rel :schema, rel: item[:endpoint].name, as: :self
 
-        property :rel, item.name
-        property :title, item.title
-        property :verb, item.verb
-        property :scope, item.scope.to_s
+        property :rel, item[:endpoint].name
+        property :title, item[:endpoint].title
+        property :verb, item[:endpoint].verb
+        property :scope, item[:endpoint].scope.to_s
 
-        property :templated, item.relation.templated?
-        property :href, url(item.relation.path)
+        property :templated, item[:endpoint].relation.templated?
+        property :href, url(item[:endpoint].relation.path)
 
-        property :query_schema, json_schema_for(item.query_schema)
-        property :payload_schema, json_schema_for(item.payload_schema)
+        property :query_schema, json_schema_for(item[:endpoint].query_schema)
+        property :payload_schema, json_schema_for(item[:endpoint].payload_schema)
       end
 
       private

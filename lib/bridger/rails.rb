@@ -34,7 +34,7 @@ module Bridger
     end
 
     def self.build_rack_app(srv, endpoint, logger: nil)
-      app = Bridger::Rack::EndpointHandler.new(srv, endpoint)
+      app = endpoint.to_rack
       app = ::Rack::CommonLogger.new(app, logger) if logger
       app
     end

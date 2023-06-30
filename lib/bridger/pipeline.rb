@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'parametric'
 require 'bridger/result'
 require 'bridger/pipeline/schema_steps'
 

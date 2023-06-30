@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'bridger/rack_handler'
+require "bridger/rel_builder"
 require 'bridger/pipeline'
 require 'bridger/pipeline/authorization_step'
 require 'bridger/pipeline/assign_query_step'
@@ -91,7 +92,7 @@ module Bridger
       end
     end
 
-    attr_reader :name, :path, :title, :verb, :scope, :serializer
+    attr_reader :name, :path, :title, :verb, :scope, :serializer, :to_rack, :instrumenter, :relation
 
     def initialize(name, service: nil, &block)
       raise ArgumentError, 'block is required' unless block_given?
@@ -108,8 +109,9 @@ module Bridger
       @auth = config.auth
       @action = config.action
       @serializer = config.serializer
+      @instrumenter = config.instrumenter
 
-      @pipeline = Bridger::Pipeline.new(instrumenter: config.instrumenter) do |pl|
+      @pipeline = Bridger::Pipeline.new(instrumenter:) do |pl|
         pl.instrument('bridger.endpoint', name:, path:, verb:, scope: @scope.to_s) do |pl|
           pl.step Bridger::Pipeline::AuthorizationStep.new(@auth, @scope) if @scope
           pl.step Bridger::Pipeline::AssignQueryStep
@@ -127,6 +129,26 @@ module Bridger
           end
         end
       end
+
+      @to_rack = RackHandler.new(self)
+
+      query_keys = @action.respond_to?(:query_schema) ? @action.query_schema.structure.keys : []
+      @builder = RelBuilder.new(
+        name,
+        verb,
+        path,
+        query_keys,
+        title
+      )
+      @relation = build_rel
+    end
+
+    def inspect
+      %(#<#{self.class.name}:#{object_id} name: #{name} path: #{verb} #{path} (#{scope})>)
+    end
+
+    def build_rel(opts = {})
+      builder.build opts
     end
 
     def query_schema
@@ -137,12 +159,23 @@ module Bridger
       @action.payload_schema
     end
 
-    def to_rack
-      RackHandler.new(nil, self)
-    end
-
     def call(result)
       @pipeline.call(result)
     end
+
+    def authenticates?
+      !!scope
+    end
+
+    # Todo is this self.auth?
+    def authorized?(auth, params)
+      return true unless authenticates?
+
+      auth.authorized?(scope)
+    end
+
+    private
+
+    attr_reader :builder
   end
 end

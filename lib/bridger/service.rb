@@ -4,6 +4,7 @@ require "bridger/authorizers"
 require 'bridger/default_serializers'
 require 'bridger/default_actions'
 require 'bridger/auth'
+require 'bridger/endpoint2'
 
 module Bridger
   class Service
@@ -24,6 +25,7 @@ module Bridger
       @authorizer = Bridger::Authorizers::Tree.new
       @instrumenter = NullInstrumenter
       @auth_config = Auth.config
+      @serializers = Bridger::SerializerSet::DEFAULT
     end
 
     def each(&block)
@@ -44,7 +46,7 @@ module Bridger
       endpoint(:schemas, :get, path,
                title: 'API schemas',
                scope: scope,
-               action: DefaultActions::PassThrough.new(self),
+               action: DefaultActions::PassThrough.new(service: self),
                serializer: DefaultSerializers::Endpoints
               )
 
@@ -65,21 +67,48 @@ module Bridger
       @instrumenter
     end
 
-    def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer:)
-      e = Bridger::Endpoint.new(
-        name: name,
-        verb: verb,
-        path: path,
-        authorizer: authorizer,
-        title: title,
-        scope: scope,
-        action: action,
-        serializer: serializer,
-        instrumenter: instrumenter
-      )
-      endpoints << e
-      lookup[e.name] = e
-      e
+    def serializers(set = nil, &block)
+      if set
+        @serializers = set
+      elsif block_given?
+        @serializers = @serializers.build_for(&block)
+      end
+
+      @serializers
+    end
+
+    def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer: nil)
+      # e = Bridger::Endpoint.new(
+      #   name: name,
+      #   verb: verb,
+      #   path: path,
+      #   authorizer: authorizer,
+      #   title: title,
+      #   scope: scope,
+      #   action: action,
+      #   serializer: serializer,
+      #   instrumenter: instrumenter
+      # )
+      # TODO: if passed a SerializerSet, merge it with the service's set.
+      if serializer
+        serializer = serializers.build_for do |r|
+          r.on((200..201), serializer)
+        end
+      end
+
+      ep = Bridger::Endpoint2.new(name, service: self) do |e|
+        e.verb verb
+        e.path path
+        e.title title
+        e.scope scope if scope
+        e.auth auth_config if auth_config
+        e.instrumenter instrumenter
+        e.action action if action
+        e.serializer serializer if serializer
+      end
+      endpoints << ep
+      lookup[ep.name] = ep
+      ep
     end
 
     def authorize(scope, &block)
@@ -96,6 +125,7 @@ module Bridger
     end
 
     private
+
     attr_reader :endpoints, :lookup, :authorizer
   end
 end

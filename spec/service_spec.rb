@@ -45,18 +45,12 @@ RSpec.describe Bridger::Service do
 
     # it looks up
     endpoint = points[:root]
-    expect(endpoint).to be_a Bridger::Endpoint
     expect(endpoint.path).to eq '/?'
     expect(endpoint.verb).to eq :get
-
-    helper = double('Helper', params: {shop_id: 2})
-    result = endpoint.run!(payload: {}, auth: auth, helper: helper)
-    expect(result.to_hash).to eq(foo: 'bar')
   end
 
   it 'passes instrumenter to endpoints' do
     instrumenter = double('SomeInstrumenter', instrument: {})
-    expect(Bridger::Endpoint).to receive(:new).with(hash_including(instrumenter: instrumenter)).and_call_original
 
     srv = described_class.new
     srv.instrumenter instrumenter
@@ -66,6 +60,8 @@ RSpec.describe Bridger::Service do
       action: Action.new(foo: 'bar'),
       serializer: Serializer
     )
+    ep = srv[:shop]
+    expect(ep.instrumenter).to eq instrumenter
   end
 
   it 'checks that instrumenter implements #instrument' do
