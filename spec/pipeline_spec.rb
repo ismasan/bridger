@@ -162,11 +162,11 @@ RSpec.describe Bridger::Pipeline do
         end
 
         pl.step do |r|
-          r.continue(context: { name: "#{r.payload[:title]} #{r.query[:name]}" })
+          r.continue(data: { name: "#{r.payload[:title]} #{r.query[:name]}" })
         end
 
         pl.step! do |r|
-          r.copy(context: r.context.merge(always_run: true))
+          r.copy(data: r.data.merge(always_run: true))
         end
       end
     end
@@ -176,8 +176,8 @@ RSpec.describe Bridger::Pipeline do
       expect(result.valid?).to be(true)
       expect(result.query).to eq(age: 42, name: 'John')
       expect(result.payload).to eq(title: 'Mr.')
-      expect(result.context[:name]).to eq('Mr. John')
-      expect(result.context[:always_run]).to be(true)
+      expect(result.data[:name]).to eq('Mr. John')
+      expect(result.data[:always_run]).to be(true)
     end
 
     context 'with invalid payload' do
@@ -188,8 +188,8 @@ RSpec.describe Bridger::Pipeline do
         expect(result.valid?).to be(false)
         expect(result.halted?).to be(true)
         expect(result.errors['$.title']).to eq(['is required'])
-        expect(result.context[:name]).to be_nil
-        expect(result.context[:always_run]).to be(true)
+        expect(result.data[:name]).to be_nil
+        expect(result.data[:always_run]).to be(true)
       end
     end
   end
