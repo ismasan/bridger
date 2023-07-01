@@ -5,14 +5,14 @@ module Bridger
     class PassThrough
       attr_reader :query_schema, :payload_schema
 
-      def initialize(data = {})
-        @data = data
+      def initialize(object = nil)
+        @object = object
         @query_schema = Parametric::Schema.new
         @payload_schema = Parametric::Schema.new
       end
 
       def call(result)
-        result.continue(data: @data)
+        result.continue(object: @object)
       end
     end
 
@@ -29,7 +29,7 @@ module Bridger
 
       def call(result)
         endpoint = @service[result.query[:rel].to_sym]
-        result.continue(data: { endpoint: })
+        result.continue(object: endpoint)
       end
     end
   end

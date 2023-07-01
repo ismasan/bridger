@@ -37,7 +37,7 @@ module Bridger
         type ['success'].freeze
 
         properties do |props|
-          props._from item.data
+          props._from item if item
           props.message 'Hello World!'
         end
       end
@@ -81,21 +81,21 @@ module Bridger
 
     class ServerError < ::Bridger::Serializer
       schema do
-        type ['errors', 'serverError', item.data[:exception]&.class&.name].compact
+        type ['errors', 'serverError', item&.class&.name].compact
 
         properties do |props|
-          props.message item.data[:exception]&.message
+          props.message item&.message
         end
 
         entities(
           :errors,
-          [{field: '$', messages:[item.data[:exception]&.message]}],
+          [{field: '$', messages:[item&.message]}],
           ErrorSerializer
         )
       end
     end
 
-    NoContent = proc do |result, auth:, h:|
+    NoContent = proc do |_, auth:, h:|
       {}
     end
 
@@ -112,6 +112,10 @@ module Bridger
     end
 
     class InvalidPayload < ::Bridger::Serializer
+      def self.call(result, context = {})
+        new(result, context).to_hash
+      end
+
       schema do
         type ['errors', 'invalid']
 
@@ -123,7 +127,7 @@ module Bridger
       schema do
         type ["results", "endpoints"]
 
-        items item[:service].all do |endpoint, s|
+        items item.all do |endpoint, s|
           s.rel :schema, rel: endpoint.name, as: :self
 
           s.property :rel, endpoint.name
@@ -141,18 +145,18 @@ module Bridger
       schema do
         type ["endpoint"]
 
-        rel :schema, rel: item[:endpoint].name, as: :self
+        rel :schema, rel: item.name, as: :self
 
-        property :rel, item[:endpoint].name
-        property :title, item[:endpoint].title
-        property :verb, item[:endpoint].verb
-        property :scope, item[:endpoint].scope.to_s
+        property :rel, item.name
+        property :title, item.title
+        property :verb, item.verb
+        property :scope, item.scope.to_s
 
-        property :templated, item[:endpoint].relation.templated?
-        property :href, url(item[:endpoint].relation.path)
+        property :templated, item.relation.templated?
+        property :href, url(item.relation.path)
 
-        property :query_schema, json_schema_for(item[:endpoint].query_schema)
-        property :payload_schema, json_schema_for(item[:endpoint].payload_schema)
+        property :query_schema, json_schema_for(item.query_schema)
+        property :payload_schema, json_schema_for(item.payload_schema)
       end
 
       private

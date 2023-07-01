@@ -57,7 +57,7 @@ module Bridger
       endpoint(:schemas, :get, path,
                title: 'API schemas',
                scope: scope,
-               action: DefaultActions::PassThrough.new(service: self),
+               action: DefaultActions::PassThrough.new(self),
                serializer: DefaultSerializers::Endpoints
               )
 

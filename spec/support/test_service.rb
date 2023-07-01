@@ -24,9 +24,7 @@ class CreateUser < Bridger::Action
       result.payload[:age]
     )
 
-    result.continue do |r|
-      r[:user] = user
-    end
+    result.continue(object: user)
   end
 end
 
@@ -37,9 +35,7 @@ class ShowUser < Bridger::Action
 
   def self.call(result)
     user = USERS.fetch(result.query[:user_id])
-    result.continue do |r|
-      r[:user] = user
-    end
+    result.continue(object: user)
   end
 end
 
@@ -54,9 +50,7 @@ class ListUserThings < Bridger::Action
       Thing.new("a"),
       Thing.new("b"),
     ]
-    result.continue do |r|
-      r[:things] = things
-    end
+    result.continue(object: things)
   end
 end
 
@@ -67,9 +61,7 @@ class DeleteUser < Bridger::Action
 
   def self.call(result)
     USERS.delete(result.query[:user_id])
-    result.continue do |r|
-      r.response.status = 204
-    end
+    result.continue(status: 204)
   end
 end
 
@@ -81,15 +73,13 @@ class ListUsers < Bridger::Action
 
   def self.call(result)
     users = USERS.values.sort_by(&:name)
-    result.continue do |r|
-      r[:users] = users
-    end
+    result.continue(object: users)
   end
 end
 
 class ShowStatus < Bridger::Action
   def self.call(result)
-    result.continue(data: { ok: true })
+    result.continue(object: true)
   end
 end
 
@@ -112,14 +102,14 @@ end
 
 class UserSerializer < Bridger::Serializer
   schema do
-    rel :user, as: 'self', user_id: item[:user].id
-    rel :delete_user, user_id: item[:user].id
-    rel :user_things, user_id: item[:user].id
+    rel :user, as: 'self', user_id: item.id
+    rel :delete_user, user_id: item.id
+    rel :user_things, user_id: item.id
     rel :root
 
-    property :id, item[:user].id
-    property :name, item[:user].name
-    property :age, item[:user].age
+    property :id, item.id
+    property :name, item.name
+    property :age, item.age
   end
 end
 
@@ -128,7 +118,7 @@ class UserThingsSerializer < Bridger::Serializer
     rel :root
     current_rel as: :next, page: 2
 
-    items item[:things] do |thing, s|
+    items item do |thing, s|
       s.property :name, thing.name
     end
   end
@@ -139,10 +129,7 @@ class UsersSerializer < Bridger::Serializer
     rel :user
     rel :root
 
-    # TODO: fix this
-    # top level serializers expect #item to be a Result
-    # but then we can't use the same serializer nested in another.
-    items item[:users].map { |u| { user: u} }, UserSerializer
+    items item, UserSerializer
   end
 end
 

@@ -4,21 +4,22 @@ require 'rack'
 
 module Bridger
   class Result
-    attr_reader :request, :response, :query, :payload, :data, :errors, :auth
+    attr_reader :request, :response, :object, :query, :payload, :context, :errors, :auth
 
     # @param request [Rack::Request]
     # @param response [Rack::Response]
     # @option query [Hash]
     # @option payload [Hash, nil]
-    # @option data [Hash]
+    # @option context [Hash]
     # @option auth [Bridger::Auth]
     # @option errors [Hash]
-    def initialize(request, response, query: {}, payload: nil, data: {}, auth: nil, errors: {})
+    def initialize(request, response, object: nil, query: {}, payload: nil, context: {}, auth: nil, errors: {})
       @request = request
       @response = response
+      @object = object
       @query = query
       @payload = payload
-      @data = data
+      @context = context
       @auth = auth
       @errors = errors
     end
@@ -29,11 +30,12 @@ module Bridger
 
     def dup
       self.class.new(
-        request.dup,
+        request,
         response.dup,
+        object:,
         query: query.dup,
         payload: payload.dup,
-        data: data.dup,
+        context: context.dup,
         auth: auth,
         errors: errors.dup,
       )
@@ -45,11 +47,11 @@ module Bridger
     end
 
     def [](key)
-      data.fetch(key)
+      context[key]
     end
 
     def []=(key, value)
-      data[key] = value
+      context[key] = value
     end
 
     def copy(**kargs, &block)
@@ -64,14 +66,19 @@ module Bridger
       copy_with(Halt, **kargs, &block)
     end
 
-    private def copy_with(klass, query: nil, payload: nil, data: nil, auth: nil, errors: nil, &block)
+    Undefined = Object.new.freeze
+
+    private def copy_with(klass, object: Undefined, query: nil, payload: nil, context: nil, auth: nil, errors: nil, status: nil, &block)
+      object = object == Undefined ? self.object : object
       query ||= self.query.dup
       payload ||= self.payload.dup
-      data ||= self.data.dup
+      context ||= self.context.dup
       auth ||= self.auth
       errors ||= self.errors.dup
 
-      result = klass.new(request.dup, response.dup, query:, payload:, data:, auth:, errors:)
+      result = klass.new(request.dup, response.dup, object:, query:, payload:, context:, auth:, errors:)
+      result.response.status = status if status
+
       if block_given?
         yield result
       end
@@ -79,10 +86,10 @@ module Bridger
     end
 
     class Success < self
-      def self.build(request: nil, response: nil, query: {}, payload: {}, data: {})
+      def self.build(request: nil, response: nil, object: nil, query: {}, payload: {}, context: {})
         request ||= ::Rack::Request.new(::Rack::MockRequest.env_for('/'))
         response ||= ::Rack::Response.new(nil, 200, {})
-        new(request, response, query:, payload:, data:)
+        new(request, response, object:, query:, payload:, context:)
       end
     end
 

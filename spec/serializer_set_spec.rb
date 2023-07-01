@@ -10,9 +10,7 @@ RSpec.describe Bridger::SerializerSet do
   describe 'defaults' do
     (200..203).each do |status|
       specify "#{status} is a success" do
-        result = Bridger::Result::Success.build.continue do |r|
-          r.response.status = status
-        end
+        result = Bridger::Result::Success.build.continue(status:)
 
         result = set.run(result, service: nil, rel_name: nil)
         data = JSON.parse(result.response.body.first, symbolize_names: true)
@@ -36,9 +34,7 @@ RSpec.describe Bridger::SerializerSet do
     end
 
     specify '422 is Unprocessable Content (invalid)' do
-      result = Bridger::Result::Success.build.halt(errors: { '$.title' => ['is required']}).copy do |r|
-        r.response.status = 422
-      end
+      result = Bridger::Result::Success.build.halt(status: 422, errors: { '$.title' => ['is required']})
 
       result = set.run(result, service: nil, rel_name: nil)
       data = JSON.parse(result.response.body.first, symbolize_names: true)
@@ -94,9 +90,7 @@ RSpec.describe Bridger::SerializerSet do
     end
 
     specify '500 is Server Error' do
-      result = Bridger::Result::Success.build.halt(data: { exception: ArgumentError.new('nope') }).copy do |r|
-        r.response.status = 500
-      end
+      result = Bridger::Result::Success.build.halt(status: 500, object: ArgumentError.new('nope'))
 
       result = set.run(result, service: nil, rel_name: nil)
       data = JSON.parse(result.response.body.first, symbolize_names: true)
@@ -117,14 +111,12 @@ RSpec.describe Bridger::SerializerSet do
       end
     end
     let(:created_serializer) do
-      ->(result, auth:, h:) { { message: 'Ok' } }
+      ->(object, auth:, h:) { { message: 'Ok' } }
     end
 
     [201, 204].each do |status|
       it "uses custom serializer for configured status #{status}" do
-        result = Bridger::Result::Success.build.halt do |r|
-          r.response.status = status
-        end
+        result = Bridger::Result::Success.build.halt(status:)
 
         result = set.run(result, service: nil, rel_name: nil)
         data = JSON.parse(result.response.body.first, symbolize_names: true)
@@ -134,9 +126,7 @@ RSpec.describe Bridger::SerializerSet do
 
     [200, 203, 205].each do |status|
       it "still fall backs to defaults for other statuses (#{status})" do
-        result = Bridger::Result::Success.build.continue do |r|
-          r.response.status = status
-        end
+        result = Bridger::Result::Success.build.continue(status:)
 
         result = set.run(result, service: nil, rel_name: nil)
         data = JSON.parse(result.response.body.first, symbolize_names: true)

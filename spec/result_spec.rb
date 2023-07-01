@@ -31,29 +31,27 @@ RSpec.describe Bridger::Result do
     end
 
     specify '#halt' do
-      result.response.status = 201
       halted = result.halt
       expect(halted).to be_a Bridger::Result::Halt
-      expect(halted.response.status).to eq 201
+      expect(halted.response.status).to eq 200
 
       halted = result.halt do |r|
         r.response.status = 202
         r[:foo] = 'bar'
       end
-      expect(result.response.status).to eq 201
+      expect(result.response.status).to eq 200
       expect(halted.response.status).to eq 202
       expect(halted[:foo]).to eq 'bar'
-      expect(halted.data[:foo]).to eq 'bar'
-      expect {
-        halted[:bar]
-      }.to raise_error(KeyError)
+      expect(halted.context[:foo]).to eq 'bar'
+      expect(halted[:bar]).to be_nil
       expect(halted).to be_a Bridger::Result::Halt
 
-      halted = result.halt(errors: { foo: 'bar' })
-      expect(halted.response.status).to eq 201
+      halted = result.halt(object: 'hello', errors: { foo: 'bar' }, status: 204)
+      expect(halted.response.status).to eq 204
       expect(halted).to be_a Bridger::Result::Halt
       expect(halted.valid?).to be false
       expect(halted.errors[:foo]).to eq 'bar'
+      expect(halted.object).to eq 'hello'
     end
 
     specify '#continue' do
@@ -61,14 +59,14 @@ RSpec.describe Bridger::Result do
       continued = result.continue
       expect(continued).not_to eq result
 
-      continued = result.continue do |r|
-        r.response.status = 202
+      continued = result.continue(object: 'hello', status: 202) do |r|
         r[:foo] = 'bar'
       end
       expect(result.response.status).to eq 201
       expect(continued.response.status).to eq 202
       expect(continued[:foo]).to eq 'bar'
       expect(continued).not_to eq result
+      expect(continued.object).to eq 'hello'
 
       auth = instance_double('Bridger::Auth')
       continued = result.continue(auth:, errors: { foo: 'bar' })

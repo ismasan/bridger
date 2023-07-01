@@ -165,7 +165,7 @@ RSpec.describe Bridger::Pipeline do
 
     result = pipe.call(initial_result)
     expect(result.halted?).to be(true)
-    expect(result.data[:name]).to eq('John')
+    expect(result[:name]).to eq('John')
     expect(instrumenter.calls).to eq([
       ['step1', { foo: 1 }],
       ['step2', { foo: 2 }]

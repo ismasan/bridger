@@ -31,9 +31,7 @@ RSpec.describe Bridger::Endpoint2 do
         end
         pl.instrument('test.action') do |pl|
           pl.step do |r|
-            r.continue do |result|
-              result[:task] = 'New task!'
-            end
+            r.continue(object: 'New task!')
           end
         end
       end
@@ -50,7 +48,7 @@ RSpec.describe Bridger::Endpoint2 do
 
   let(:success_serializer) do
     proc do |result, auth:, h:|
-      { message: "the result is #{result.data[:task]}" }
+      { message: "the result is #{result.object}" }
     end
   end
 
@@ -155,9 +153,7 @@ RSpec.describe Bridger::Endpoint2 do
         end
 
         def self.call(result)
-          result.continue do |result|
-            result[:task] = 'hello!'
-          end
+          result.continue(object: 'hello!')
         end
       end
     end
