@@ -47,6 +47,16 @@ RSpec.describe Bridger::SerializerSet do
       end
     end
 
+    specify '429 is Too Many Requests' do
+      result = Bridger::Result::Success.build.halt(status: 429)
+
+      result = set.run(result, service: nil, rel_name: nil)
+      data = JSON.parse(result.response.body.first, symbolize_names: true)
+
+      expect(result.response.headers['Content-Type']).to eq('application/json')
+      expect(data[:_class]).to eq(['errors', 'tooManyRequests'])
+    end
+
     specify '401 is Unauthorized' do
       result = Bridger::Result::Success.build.halt do |r|
         r.response.status = 401

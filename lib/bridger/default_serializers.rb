@@ -99,6 +99,12 @@ module Bridger
       {}
     end
 
+    class TooManyRequests < ::Bridger::Serializer
+      schema do
+        type ['errors', 'tooManyRequests']
+      end
+    end
+
     class NotFound < ::Bridger::Serializer
       schema do
         type ['errors', 'notFound']
