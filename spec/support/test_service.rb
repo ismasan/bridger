@@ -24,7 +24,7 @@ class CreateUser < Bridger::Action
       result.payload[:age]
     )
 
-    result.continue(object: user)
+    result.continue(user)
   end
 end
 
@@ -35,7 +35,7 @@ class ShowUser < Bridger::Action
 
   def self.call(result)
     user = USERS.fetch(result.query[:user_id])
-    result.continue(object: user)
+    result.continue(user)
   end
 end
 
@@ -50,7 +50,7 @@ class ListUserThings < Bridger::Action
       Thing.new("a"),
       Thing.new("b"),
     ]
-    result.continue(object: things)
+    result.continue(things)
   end
 end
 
@@ -73,13 +73,13 @@ class ListUsers < Bridger::Action
 
   def self.call(result)
     users = USERS.values.sort_by(&:name)
-    result.continue(object: users)
+    result.continue(users)
   end
 end
 
 class ShowStatus < Bridger::Action
   def self.call(result)
-    result.continue(object: true)
+    result.continue(true)
   end
 end
 

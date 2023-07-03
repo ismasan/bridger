@@ -54,16 +54,18 @@ module Bridger
       context[key] = value
     end
 
-    def copy(**kargs, &block)
-      copy_with(self.class, **kargs, &block)
+
+    # def copy(the_set = set, context: nil, input: nil, errors: nil)
+    def copy(the_object = object, **kargs, &block)
+      copy_with(self.class, **kargs.merge(object: the_object), &block)
     end
 
-    def continue(**kargs, &block)
-      copy_with(Success, **kargs, &block)
+    def continue(the_object = object, **kargs, &block)
+      copy_with(Success, **kargs.merge(object: the_object), &block)
     end
 
-    def halt(**kargs, &block)
-      copy_with(Halt, **kargs, &block)
+    def halt(the_object = object, **kargs, &block)
+      copy_with(Halt, **kargs.merge(object: the_object), &block)
     end
 
     Undefined = Object.new.freeze

@@ -12,7 +12,7 @@ module Bridger
       end
 
       def call(result)
-        result.continue(object: @object)
+        result.continue(@object)
       end
     end
 
@@ -29,7 +29,7 @@ module Bridger
 
       def call(result)
         endpoint = @service[result.query[:rel].to_sym]
-        result.continue(object: endpoint)
+        result.continue(endpoint)
       end
     end
   end

@@ -90,7 +90,7 @@ RSpec.describe Bridger::SerializerSet do
     end
 
     specify '500 is Server Error' do
-      result = Bridger::Result::Success.build.halt(status: 500, object: ArgumentError.new('nope'))
+      result = Bridger::Result::Success.build.halt(ArgumentError.new('nope'), status: 500)
 
       result = set.run(result, service: nil, rel_name: nil)
       data = JSON.parse(result.response.body.first, symbolize_names: true)

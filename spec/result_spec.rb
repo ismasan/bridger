@@ -46,7 +46,7 @@ RSpec.describe Bridger::Result do
       expect(halted[:bar]).to be_nil
       expect(halted).to be_a Bridger::Result::Halt
 
-      halted = result.halt(object: 'hello', errors: { foo: 'bar' }, status: 204)
+      halted = result.halt('hello', errors: { foo: 'bar' }, status: 204)
       expect(halted.response.status).to eq 204
       expect(halted).to be_a Bridger::Result::Halt
       expect(halted.valid?).to be false
@@ -59,7 +59,7 @@ RSpec.describe Bridger::Result do
       continued = result.continue
       expect(continued).not_to eq result
 
-      continued = result.continue(object: 'hello', status: 202) do |r|
+      continued = result.continue('hello', status: 202) do |r|
         r[:foo] = 'bar'
       end
       expect(result.response.status).to eq 201

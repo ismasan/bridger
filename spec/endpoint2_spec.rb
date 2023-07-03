@@ -31,7 +31,7 @@ RSpec.describe Bridger::Endpoint2 do
         end
         pl.instrument('test.action') do |pl|
           pl.step do |r|
-            r.continue(object: 'New task!')
+            r.continue('New task!')
           end
         end
       end
@@ -153,7 +153,7 @@ RSpec.describe Bridger::Endpoint2 do
         end
 
         def self.call(result)
-          result.continue(object: 'hello!')
+          result.continue('hello!')
         end
       end
     end
