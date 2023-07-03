@@ -65,13 +65,14 @@ class DeleteUser < Bridger::Action
   end
 end
 
-class ListUsers < Bridger::Action
-  query_schema do
+# This action is a Pipeline
+ListUsers = Bridger::Pipeline.new do |pl|
+  pl.query_schema do
     field(:q).type(:string)
     field(:email).type(:string).declared.policy(:format, /@/, 'must be an email')
   end
 
-  def self.call(result)
+  pl.step do |result|
     users = USERS.values.sort_by(&:name)
     result.continue(users)
   end
