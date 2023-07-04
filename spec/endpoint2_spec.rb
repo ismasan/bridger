@@ -120,6 +120,24 @@ RSpec.describe Bridger::Endpoint2 do
     end
   end
 
+  specify 'with #to_scope interface' do
+    scope_class = Data.define(:scope) do
+      def to_scope
+        Bridger::Scopes::Scope.wrap(scope)
+      end
+    end
+
+    endpoint = Bridger::Endpoint2.new(:update_task, service: service) do |e|
+      e.path '/tasks/:id'
+      e.verb :put
+      e.scope scope_class.new(scope: 'a.b.c')
+      e.title 'Update Task'
+    end
+
+    expect(endpoint.scope).to be_a(Bridger::Scopes::Scope)
+    expect(endpoint.scope.to_s).to eq 'a.b.c'
+  end
+
   context 'with custom action objects' do
     subject(:endpoint) do
       Bridger::Endpoint2.new(:update_task, service: service) do |e|
