@@ -167,7 +167,6 @@ module Bridger
       !!scope
     end
 
-    # Todo is this self.auth?
     def authorized?(auth, params)
       return true unless authenticates?
 
