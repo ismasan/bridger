@@ -36,9 +36,7 @@ RSpec.describe Bridger::Endpoint2 do
         end
       end
 
-      e.serializer do |r|
-        r.on(200, success_serializer)
-      end
+      e.serialize(200, success_serializer)
     end
   end
 
@@ -167,12 +165,7 @@ RSpec.describe Bridger::Endpoint2 do
 
         e.action custom_action
 
-        # .. or
-        # e.action Tasks::Actions::Update.new
-
-        e.serializer do |r|
-          r.on(200, success_serializer)
-        end
+        e.serialize(200, success_serializer)
       end
     end
 

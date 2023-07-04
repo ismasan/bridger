@@ -25,9 +25,9 @@ module Bridger
       @authorizer = Bridger::Authorizers::Tree.new
       @instrumenter = NullInstrumenter
       @auth_config = Auth.config
-      @serializers = Bridger::SerializerSet::DEFAULT
+      @serializers = Bridger::SerializerSet.new(Bridger::SerializerSet::DEFAULT)
       @exception_endpoint = Bridger::Endpoint2.new(:__exceptions, service: self) do |e|
-        e.serializer @serializers
+        e.serializer = @serializers
       end
     end
 
@@ -115,7 +115,7 @@ module Bridger
         e.auth auth_config if auth_config
         e.instrumenter instrumenter
         e.action action if action
-        e.serializer serializer if serializer
+        e.serializer = serializer if serializer
       end
       endpoints << ep
       lookup[ep.name] = ep

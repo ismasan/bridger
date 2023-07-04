@@ -7,37 +7,44 @@ module Bridger
   class SerializerSet
     Record = Data.define(:status, :serializer)
 
-    class Stack
-      attr_reader :to_a
-
-      def initialize
-        @to_a = []
-      end
-
-      def on(status, serializer)
-        @to_a << Record.new(status:, serializer:)
-        self
-      end
-    end
-
     def self.build(&block)
       new.build_for(&block)
     end
 
     attr_reader :serializers
 
-    def initialize(serializers = [])
-      @serializers = serializers
+    class Top
+      def self.resolve(result)
+        nil
+      end
     end
 
+    def initialize(parent = Top)
+      @parent = parent
+      @serializers = []
+    end
+
+    # extend
     def build_for(&block)
-      stack = Stack.new
-      yield stack if block_given?
-      self.class.new(stack.to_a + serializers).freeze
+      child = self.class.new(self)
+      yield child if block_given?
+      child
+    end
+
+    def on(status, serializer = nil, &block)
+      serializer ||= block
+      raise ArgumentError, 'serializer must be a callable' unless serializer.respond_to?(:call)
+
+      @serializers << Record.new(status:, serializer:)
+      self
+    end
+
+    def resolve(result)
+      serializers.find { |record| record.status === result.response.status } || @parent.resolve(result)
     end
 
     def run(result, service:, rel_name: nil)
-      record = serializers.find { |record| record.status === result.response.status }
+      record = resolve(result)
       serializer = record ? record.serializer : DefaultSerializers::Success
       helper = Bridger::RequestHelper.new(
         service,

@@ -12,7 +12,8 @@ require 'bridger/serializer_set'
 module Bridger
   class Endpoint2
     class EndpointConfig
-      attr_accessor :path, :title, :verb, :scope, :action, :serializer, :auth
+      attr_reader :path, :title, :verb, :scope, :action, :auth
+      attr_accessor :serializer
 
       def initialize
         @path = '/'
@@ -21,7 +22,7 @@ module Bridger
         @scope = nil
         @auth = Bridger::NoopAuth
         @action = Bridger::Pipeline::NOOP
-        @serializer = Bridger::SerializerSet::DEFAULT
+        @serializer = Bridger::SerializerSet.new(Bridger::SerializerSet::DEFAULT)
         @instrumenter = Bridger::NullInstrumenter
       end
 
@@ -81,14 +82,9 @@ module Bridger
         @action
       end
 
-      def serializer(value = nil, &block)
-        if value
-          @serializer = value
-        elsif block_given?
-          @serializer = @serializer.build_for(&block)
-        end
-
-        @serializer
+      def serialize(status, srz = nil, &block)
+        @serializer.on(status, srz, &block)
+        self
       end
     end
 

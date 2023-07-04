@@ -37,7 +37,6 @@ module Bridger
         type ['success'].freeze
 
         properties do |props|
-          props._from item if item
           props.message 'Hello World!'
         end
       end
