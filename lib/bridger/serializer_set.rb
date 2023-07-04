@@ -56,15 +56,17 @@ module Bridger
 
     DEFAULT = build do |set|
       set.on(204, DefaultSerializers::NoContent)
-      set.on(200..299, DefaultSerializers::Success)
+      set.on(200..299, DefaultSerializers::Success) # <- catch all
       set.on(304, DefaultSerializers::NoContent)
+      set.on((300..399), DefaultSerializers::NoContent) # <- catch all
       set.on(401, DefaultSerializers::Unauthorized)
       set.on(403, DefaultSerializers::AccessDenied)
       set.on(404, DefaultSerializers::NotFound)
       set.on(412, DefaultSerializers::NoContent)
       set.on(422, DefaultSerializers::InvalidPayload)
       set.on(429, DefaultSerializers::TooManyRequests)
-      set.on(500, DefaultSerializers::ServerError)
+      set.on((400..499), DefaultSerializers::NoContent) # <- catch all
+      set.on((500..511), DefaultSerializers::ServerError) # <- catch all
     end
   end
 end

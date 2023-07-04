@@ -111,6 +111,17 @@ RSpec.describe Bridger::SerializerSet do
         expect(err[:field]).to eq('$')
       end
     end
+
+    (501..511).each do |status|
+      specify "#{status} is generic server error" do
+        result = Bridger::Result::Success.build.halt(status:)
+
+        result = set.run(result, service: nil, rel_name: nil)
+        data = JSON.parse(result.response.body.first, symbolize_names: true)
+
+        expect(data[:_class]).to eq(['errors', 'serverError'])
+      end
+    end
   end
 
   describe 'extending defaults with #build_for' do
