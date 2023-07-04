@@ -58,11 +58,12 @@ module Bridger
       set.on(204, DefaultSerializers::NoContent)
       set.on(200..299, DefaultSerializers::Success)
       set.on(304, DefaultSerializers::NoContent)
-      set.on(422, DefaultSerializers::InvalidPayload)
-      set.on(429, DefaultSerializers::TooManyRequests)
       set.on(401, DefaultSerializers::Unauthorized)
       set.on(403, DefaultSerializers::AccessDenied)
       set.on(404, DefaultSerializers::NotFound)
+      set.on(412, DefaultSerializers::NoContent)
+      set.on(422, DefaultSerializers::InvalidPayload)
+      set.on(429, DefaultSerializers::TooManyRequests)
       set.on(500, DefaultSerializers::ServerError)
     end
   end

@@ -21,7 +21,7 @@ RSpec.describe Bridger::SerializerSet do
       end
     end
 
-    [204, 304].each do |status|
+    [204, 304, 412].each do |status|
       specify "status #{status}" do
         result = Bridger::Result::Success.build.continue(status:)
 
