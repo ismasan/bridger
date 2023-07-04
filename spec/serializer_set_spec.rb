@@ -21,16 +21,16 @@ RSpec.describe Bridger::SerializerSet do
       end
     end
 
-    specify '204 is No Content' do
-      result = Bridger::Result::Success.build.continue do |r|
-        r.response.status = 204
+    [204, 304].each do |status|
+      specify "status #{status}" do
+        result = Bridger::Result::Success.build.continue(status:)
+
+        result = set.run(result, service: nil, rel_name: nil)
+        data = JSON.parse(result.response.body.first, symbolize_names: true)
+
+        expect(result.response.headers['Content-Type']).to eq('application/json')
+        expect(data).to eq({})
       end
-
-      result = set.run(result, service: nil, rel_name: nil)
-      data = JSON.parse(result.response.body.first, symbolize_names: true)
-
-      expect(result.response.headers['Content-Type']).to eq('application/json')
-      expect(data).to eq({})
     end
 
     specify '422 is Unprocessable Content (invalid)' do
