@@ -131,11 +131,31 @@ RSpec.describe Bridger::Endpoint2 do
       e.path '/tasks/:id'
       e.verb :put
       e.scope scope_class.new(scope: 'a.b.c')
-      e.title 'Update Task'
     end
 
     expect(endpoint.scope).to be_a(Bridger::Scopes::Scope)
     expect(endpoint.scope.to_s).to eq 'a.b.c'
+  end
+
+  specify '#build_rel' do
+    endpoint = Bridger::Endpoint2.new(:product, service: service) do |e|
+      e.path '/v1/products/:product_id'
+      e.verb :get
+      e.title 'Show product'
+      e.scope 'a.b.c'
+      e.action do |pl|
+        pl.query_schema do
+          field(:product_id).type(:string).present
+          field(:q).type(:string)
+        end
+      end
+    end
+
+    rel = endpoint.build_rel(product_id: 123, foo: 'b')
+    expect(rel).to be_a Bridger::Rel
+    expect(rel.path).to eq '/v1/products/123{?q}'
+    expect(rel.title).to eq 'Show product'
+    expect(rel.verb).to eq :get
   end
 
   context 'with custom action objects' do
