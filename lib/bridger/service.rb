@@ -4,7 +4,7 @@ require "bridger/authorizers"
 require 'bridger/default_serializers'
 require 'bridger/default_actions'
 require 'bridger/auth'
-require 'bridger/endpoint2'
+require 'bridger/endpoint'
 
 module Bridger
   class Service
@@ -26,7 +26,7 @@ module Bridger
       @instrumenter = NullInstrumenter
       @auth_config = Auth.config
       @serializers = Bridger::SerializerSet.new(Bridger::SerializerSet::DEFAULT)
-      @exception_endpoint = Bridger::Endpoint2.new(:__exceptions, service: self) do |e|
+      @exception_endpoint = Bridger::Endpoint.new(:__exceptions, service: self) do |e|
         e.serializer = @serializers
       end
     end
@@ -107,7 +107,7 @@ module Bridger
         end
       end
 
-      ep = Bridger::Endpoint2.new(name, service: self) do |e|
+      ep = Bridger::Endpoint.new(name, service: self) do |e|
         e.verb verb
         e.path path
         e.title title
