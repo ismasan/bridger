@@ -140,6 +140,12 @@ class StatusSerializer < Bridger::Serializer
   end
 end
 
+class ServerErrorSerializer < Bridger::Serializer
+  schema do
+    property :ok, false
+  end
+end
+
 # Initialize an in-memory access token store with a few test tokens
 # so we can try it out in the browser, ex `/?access_token=me`
 TOKEN_STORE = {
@@ -173,6 +179,10 @@ end
 
 # Your API's endpoints. Each combines an action, serializer, some metadata and a permissions scope.
 Bridger::Service.instance.build do
+  serializers do |s|
+    s.on(500, ServerErrorSerializer)
+  end
+
   endpoint(:root, :get, "/",
     title: "API root",
     scope: SCOPES.api.me,
@@ -223,6 +233,12 @@ Bridger::Service.instance.build do
     serializer: StatusSerializer,
     scope: nil,
   )
+
+  endpoint(:server_error, :get, '/server/error') do |e|
+    e.step do |result|
+      result.halt(status: 500)
+    end
+  end
 
   schema_endpoints(path: '/schemas')
 end

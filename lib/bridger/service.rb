@@ -26,15 +26,13 @@ module Bridger
       @instrumenter = NullInstrumenter
       @auth_config = Auth.config
       @serializers = Bridger::SerializerSet.new(parent: Bridger::SerializerSet::DEFAULT)
-      @exception_endpoint = Bridger::Endpoint.new(:__exceptions, service: self) do |e|
-        e.serializer = @serializers
-      end
+      @exception_endpoint = Bridger::Endpoint.new(:__exceptions, service: self, serializer: @serializers)
     end
 
+    # TODO: test this
     def render_exception(exception, request, status: 500)
-      result = ::Bridger::Result::Success.build(request:).continue do |r|
+      result = ::Bridger::Result::Success.build(request:).continue(status:) do |r|
         r[:exception] = exception
-        r.response.status = status
       end
       exception_endpoint.call(result).response.finish
     end
@@ -88,7 +86,7 @@ module Bridger
       @serializers
     end
 
-    def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer: nil, &block)
+    def endpoint(name, verb, path, title: name, scope: nil, action: nil, serializer: nil, &block)
       # TODO: if passed a SerializerSet, merge it with the service's set.
       serializer = if serializer
         serializers.build_for do |r|

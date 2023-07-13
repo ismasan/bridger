@@ -31,6 +31,22 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
     end
   end
 
+  context '500s' do
+    it 'uses service-wide serializer' do
+      authorize!(
+        uid: 123,
+        sids: [11],
+        aid: 11,
+        scopes: ["api"]
+      )
+
+      resp = get('/server/error')
+      expect(resp.status).to eq 500
+      data = JSON.parse(resp.body)
+      expect(data['ok']).to eq false
+    end
+  end
+
   context 'with full scope' do
     it 'lists all links in root' do
       authorize!(
@@ -171,7 +187,7 @@ RSpec.shared_examples_for 'a REST API exposing a Bridger service' do
       scopes: ["api.me"]
     )
     schemas = root.schemas
-    expect(schemas.map(&:rel).sort).to eq %w(create_user delete_user root schema schemas status user user_things users)
+    expect(schemas.map(&:rel).sort).to eq %w(create_user delete_user root schema schemas server_error status user user_things users)
     schemas.first.tap do |sc|
       expect(sc.rel).to eq 'root'
       expect(sc.title).to eq 'API root'
