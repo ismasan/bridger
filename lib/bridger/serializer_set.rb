@@ -19,14 +19,18 @@ module Bridger
       end
     end
 
-    def initialize(parent = Top)
+    def initialize(parent: Top, serializers: [])
       @parent = parent
-      @serializers = []
+      @serializers = serializers
+    end
+
+    def >>(child)
+      self.class.new(parent: self, serializers: child.serializers)
     end
 
     # extend
     def build_for(&block)
-      child = self.class.new(self)
+      child = self.class.new(parent: self)
       yield child if block_given?
       child
     end

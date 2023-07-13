@@ -16,14 +16,14 @@ module Bridger
       attr_accessor :serializer
 
       def initialize
-        @path = '/'
+        @path = nil
         @title = nil
-        @verb = :get
+        @verb = nil
         @scope = nil
-        @auth = Bridger::NoopAuth
-        @action = Bridger::Pipeline::NOOP
-        @serializer = Bridger::SerializerSet.new(Bridger::SerializerSet::DEFAULT)
-        @instrumenter = Bridger::NullInstrumenter
+        @auth = nil
+        @action = nil
+        @serializer = Bridger::SerializerSet.new(parent: Bridger::SerializerSet::DEFAULT)
+        @instrumenter = nil
       end
 
       def path(value = nil)
@@ -90,37 +90,60 @@ module Bridger
 
     attr_reader :name, :path, :title, :verb, :scope, :serializer, :to_rack, :instrumenter, :relation
 
-    def initialize(name, service: nil, &block)
-      raise ArgumentError, 'block is required' unless block_given?
+    def initialize(
+      name,
+      path: '/',
+      title: nil,
+      verb: :get,
+      scope: nil,
+      auth: nil,
+      action: Bridger::Pipeline::NOOP,
+      serializer: nil,
+      instrumenter: Bridger::NullInstrumenter,
+      service: nil,
+      &block)
 
       config = EndpointConfig.new
-      yield config
 
       @name = name
+      @path = path
+      @title = title
+      @verb = verb
+      @scope = scope ? Bridger::Scopes::Scope.wrap(scope) : nil
+      @auth = auth
+      @action = action
+      @instrumenter = instrumenter
       @service = service
-      @path = config.path
-      @title = config.title
-      @verb = config.verb
-      @scope = config.scope
-      @auth = config.auth
-      @action = config.action
-      @serializer = config.serializer
-      @instrumenter = config.instrumenter
 
-      @pipeline = Bridger::Pipeline.new(instrumenter:) do |pl|
-        pl.instrument('bridger.endpoint', name:, path:, verb:, scope: @scope.to_s) do |pl|
-          pl.step Bridger::Pipeline::AuthorizationStep.new(@auth, @scope) if @scope
+      yield config if block_given?
+
+      @path = config.path if config.path
+      @title = config.title if config.title
+      @verb = config.verb if config.verb
+      @scope = config.scope if config.scope
+      @auth = config.auth if config.auth
+      @action = config.action if config.action
+      @serializer = if serializer # Service serializer given
+                      serializer >> config.serializer
+                    else
+                      config.serializer
+                    end
+      @instrumenter = config.instrumenter if config.instrumenter
+
+      @pipeline = Bridger::Pipeline.new(instrumenter: @instrumenter) do |pl|
+        pl.instrument('bridger.endpoint', name: @name, path: @path, verb: @verb, scope: @scope.to_s) do |pl|
+          pl.step Bridger::Pipeline::AuthorizationStep.new(@auth, @scope) if @auth && @scope
           pl.step Bridger::Pipeline::AssignQueryStep
-          pl.instrument(Bridger::Pipeline::ParsePayloadStep.new, 'bridger.endpoint.parse_payload') if (@verb == :post || @verb == :put)
+          pl.instrument(Bridger::Pipeline::ParsePayloadStep.new, 'bridger.endpoint.parse_payload') if (@verb == :post || @verb == :put || @verb == :patch)
           pl.instrument('bridger.endpoint.validate_inputs') do |pl|
             pl.step Bridger::Pipeline::Validations::Query.new(@action.query_schema) if @action.respond_to?(:query_schema)
             pl.step Bridger::Pipeline::Validations::Payload.new(@action.payload_schema) if @action.respond_to?(:payload_schema)
           end
-          pl.instrument(@action, 'bridger.endpoint.action', info: @action.to_s)
+          pl.instrument(@action, 'bridger.endpoint.action', info: @action.to_s) if @action
           pl.continue
           pl.instrument('bridger.endpoint.serializer') do |pl|
             pl.step do |result|
-              serializer.run(result, service: @service, rel_name: @name)
+              @serializer.run(result, service: @service, rel_name: @name)
             end
           end
         end
@@ -130,11 +153,11 @@ module Bridger
 
       query_keys = @action.respond_to?(:query_schema) ? @action.query_schema.structure.keys : []
       @builder = RelBuilder.new(
-        name,
-        verb,
-        path,
+        @name,
+        @verb,
+        @path,
         query_keys,
-        title
+        @title
       )
       @relation = build_rel
     end
