@@ -5,13 +5,13 @@ require "bridger/service"
 
 RSpec.describe Bridger::Service do
   Action = Class.new do
-    def initialize(result)
-      @result = result
+    def initialize(data = {})
+      @data = data
     end
 
-    # def call(query: {}, payload: {}, auth:)
-    #   @result
-    # end
+    def call(result)
+      result.continue(@data)
+    end
   end
 
   Serializer = Class.new do

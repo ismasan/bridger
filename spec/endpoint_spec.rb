@@ -5,14 +5,14 @@ require "bridger/endpoint"
 
 RSpec.describe Bridger::Endpoint do
   subject(:endpoint) do
-    Bridger::Endpoint.new(:update_task, service: service) do |e|
-      e.path '/tasks/:id'
-      e.verb :put
-      e.title 'Update Task'
-      e.scope 'a.b.c'
-
-      e.instrumenter instrumenter
-
+    Bridger::Endpoint.new(
+      :update_task,
+      service:,
+      path: '/tasks/:id',
+      verb: :put,
+      title: 'Update Task',
+      instrumenter:,
+      scope: 'a.b.c') do |e|
       e.auth do |c|
         c.authenticator do |request|
           request.env['API_TOKEN']
@@ -125,22 +125,14 @@ RSpec.describe Bridger::Endpoint do
       end
     end
 
-    endpoint = Bridger::Endpoint.new(:update_task, service: service) do |e|
-      e.path '/tasks/:id'
-      e.verb :put
-      e.scope scope_class.new(scope: 'a.b.c')
-    end
+    endpoint = Bridger::Endpoint.new(:update_task, service:, path: '/tasks/:id', verb: :put, scope: scope_class.new(scope: 'a.b.c'))
 
     expect(endpoint.scope).to be_a(Bridger::Scopes::Scope)
     expect(endpoint.scope.to_s).to eq 'a.b.c'
   end
 
   specify '#build_rel' do
-    endpoint = Bridger::Endpoint.new(:product, service: service) do |e|
-      e.path '/v1/products/:product_id'
-      e.verb :get
-      e.title 'Show product'
-      e.scope 'a.b.c'
+    endpoint = Bridger::Endpoint.new(:product, service:, path: '/v1/products/:product_id', verb: :get, title: 'Show product', scope: 'a.b.c') do |e|
       e.action do |pl|
         pl.query_schema do
           field(:product_id).type(:string).present
@@ -158,11 +150,7 @@ RSpec.describe Bridger::Endpoint do
 
   context 'with custom action objects' do
     subject(:endpoint) do
-      Bridger::Endpoint.new(:update_task, service: service) do |e|
-        e.path '/tasks/:id'
-        e.verb :put
-        e.title 'Update Task'
-
+      Bridger::Endpoint.new(:update_task, service:, path: '/tasks/:id', verb: :put, title: 'Update Task') do |e|
         e.action custom_action
 
         e.serialize(200, success_serializer)

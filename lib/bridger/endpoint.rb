@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'forwardable'
 require 'bridger/rack_handler'
 require "bridger/rel_builder"
 require 'bridger/pipeline'
@@ -12,46 +13,14 @@ require 'bridger/serializer_set'
 module Bridger
   class Endpoint
     class EndpointConfig
-      attr_reader :path, :title, :verb, :scope, :action, :auth
+      attr_reader :action, :auth
       attr_accessor :serializer
 
-      def initialize
-        @path = nil
-        @title = nil
-        @verb = nil
-        @scope = nil
+      def initialize(instrumenter:)
         @auth = nil
         @action = nil
+        @instrumenter = instrumenter
         @serializer = Bridger::SerializerSet.new(parent: Bridger::SerializerSet::DEFAULT)
-        @instrumenter = nil
-      end
-
-      def path(value = nil)
-        @path = value if value
-        @path
-      end
-
-      def title(value = nil)
-        @title = value if value
-        @title
-      end
-
-      def verb(value = nil)
-        @verb = value if value
-        @verb
-      end
-
-      def scope(value = nil)
-        @scope = Bridger::Scopes::Scope.wrap(value) if value
-        @scope
-      end
-
-      def instrumenter(object = nil)
-        if object
-          raise ArgumentError, 'instrumenter must implement #instrument' unless object.respond_to?(:instrument)
-          @instrumenter = object
-        end
-        @instrumenter
       end
 
       def auth(config = nil, &block)
@@ -73,7 +42,7 @@ module Bridger
 
         @action = value if value
         # TODO: dedicated Action pipeline that supports schemas?
-        @action = Pipeline.new(instrumenter:, &block) if block_given?
+        @action = Pipeline.new(instrumenter: @instrumenter, &block) if block_given?
 
         unless @action.respond_to?(:call)
           raise ArgumentError, 'action must implement #call(Bridger::Result) -> Bridger::Result'
@@ -88,7 +57,10 @@ module Bridger
       end
     end
 
-    attr_reader :name, :path, :title, :verb, :scope, :serializer, :to_rack, :instrumenter, :relation
+    extend Forwardable
+
+    def_delegators :@config, :action, :auth
+    attr_reader :path, :title, :verb, :scope, :instrumenter, :name, :serializer, :to_rack, :relation, :service
 
     def initialize(
       name,
@@ -103,43 +75,38 @@ module Bridger
       service: nil,
       &block)
 
-      config = EndpointConfig.new
+      raise ArgumentError, 'instrumenter must implement #instrument' unless instrumenter.respond_to?(:instrument)
+
+      @config = EndpointConfig.new(instrumenter:)
 
       @name = name
+      @service = service
       @path = path
       @title = title
       @verb = verb
       @scope = scope ? Bridger::Scopes::Scope.wrap(scope) : nil
-      @auth = auth
-      @action = action
       @instrumenter = instrumenter
-      @service = service
+      @config.auth auth
+      @config.action(action || Bridger::Pipeline::NOOP)
 
-      yield config if block_given?
+      yield @config if block_given?
 
-      @path = config.path if config.path
-      @title = config.title if config.title
-      @verb = config.verb if config.verb
-      @scope = config.scope if config.scope
-      @auth = config.auth if config.auth
-      @action = config.action if config.action
       @serializer = if serializer # Service serializer given
-                      serializer >> config.serializer
+                      serializer >> @config.serializer
                     else
-                      config.serializer
+                      @config.serializer
                     end
-      @instrumenter = config.instrumenter if config.instrumenter
 
       @pipeline = Bridger::Pipeline.new(instrumenter: @instrumenter) do |pl|
         pl.instrument('bridger.endpoint', name: @name, path: @path, verb: @verb, scope: @scope.to_s) do |pl|
-          pl.step Bridger::Pipeline::AuthorizationStep.new(@auth, @scope) if @auth && @scope
+          pl.step Bridger::Pipeline::AuthorizationStep.new(@config.auth, @scope) if @config.auth && @scope
           pl.step Bridger::Pipeline::AssignQueryStep
           pl.instrument(Bridger::Pipeline::ParsePayloadStep.new, 'bridger.endpoint.parse_payload') if (@verb == :post || @verb == :put || @verb == :patch)
           pl.instrument('bridger.endpoint.validate_inputs') do |pl|
-            pl.step Bridger::Pipeline::Validations::Query.new(@action.query_schema) if @action.respond_to?(:query_schema)
-            pl.step Bridger::Pipeline::Validations::Payload.new(@action.payload_schema) if @action.respond_to?(:payload_schema)
+            pl.step Bridger::Pipeline::Validations::Query.new(@config.action.query_schema) if @config.action.respond_to?(:query_schema)
+            pl.step Bridger::Pipeline::Validations::Payload.new(@config.action.payload_schema) if @config.action.respond_to?(:payload_schema)
           end
-          pl.instrument(@action, 'bridger.endpoint.action', info: @action.to_s) if @action
+          pl.instrument(@config.action, 'bridger.endpoint.action', info: @config.action.to_s) if @config.action
           pl.continue
           pl.instrument('bridger.endpoint.serializer') do |pl|
             pl.step do |result|
@@ -151,7 +118,7 @@ module Bridger
 
       @to_rack = RackHandler.new(self)
 
-      query_keys = @action.respond_to?(:query_schema) ? @action.query_schema.structure.keys : []
+      query_keys = @config.action.respond_to?(:query_schema) ? @config.action.query_schema.structure.keys : []
       @builder = RelBuilder.new(
         @name,
         @verb,
@@ -171,11 +138,11 @@ module Bridger
     end
 
     def query_schema
-      @action.query_schema
+      @config.action.query_schema
     end
 
     def payload_schema
-      @action.payload_schema
+      @config.action.payload_schema
     end
 
     def call(result)
