@@ -9,9 +9,9 @@ RSpec.describe Bridger::Service do
       @result = result
     end
 
-    def call(query: {}, payload: {}, auth:)
-      @result
-    end
+    # def call(query: {}, payload: {}, auth:)
+    #   @result
+    # end
   end
 
   Serializer = Class.new do
@@ -21,13 +21,7 @@ RSpec.describe Bridger::Service do
   end
 
   it "registers endpoints" do
-    auth = double('Auth', authorize!: true, shop_ids: [1,2,3])
-
     points = described_class.new.build do
-      authorize "btc.account.shops.mine" do |scope, auth, params|
-        auth.shop_ids.include? params[:shop_id].to_i
-      end
-
       endpoint(:root, :get, "/?",
         title: "API root",
         scope: "btc.me",
