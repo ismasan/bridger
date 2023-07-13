@@ -13,13 +13,16 @@ require 'bridger/serializer_set'
 module Bridger
   class Endpoint
     class EndpointConfig
+      extend Forwardable
+
+      def_delegators :@action, :step, :pipeline, :instrument, :continue, :halt, :query_schema, :payload_schema
       attr_reader :action, :auth
       attr_accessor :serializer
 
       def initialize(instrumenter:)
         @auth = nil
-        @action = nil
         @instrumenter = instrumenter
+        @action = Bridger::Pipeline.new(instrumenter:)
         @serializer = Bridger::SerializerSet.new(parent: Bridger::SerializerSet::DEFAULT)
       end
 
@@ -35,20 +38,6 @@ module Bridger
         end
 
         @auth
-      end
-
-      def action(value = nil, &block)
-        return @action unless value || block_given?
-
-        @action = value if value
-        # TODO: dedicated Action pipeline that supports schemas?
-        @action = Pipeline.new(instrumenter: @instrumenter, &block) if block_given?
-
-        unless @action.respond_to?(:call)
-          raise ArgumentError, 'action must implement #call(Bridger::Result) -> Bridger::Result'
-        end
-
-        @action
       end
 
       def serialize(status, srz = nil, &block)
@@ -69,7 +58,7 @@ module Bridger
       verb: :get,
       scope: nil,
       auth: nil,
-      action: Bridger::Pipeline::NOOP,
+      action: nil,
       serializer: nil,
       instrumenter: Bridger::NullInstrumenter,
       service: nil,
@@ -87,9 +76,10 @@ module Bridger
       @scope = scope ? Bridger::Scopes::Scope.wrap(scope) : nil
       @instrumenter = instrumenter
       @config.auth auth
-      @config.action(action || Bridger::Pipeline::NOOP)
+      @config.action.step action if action
 
       yield @config if block_given?
+      @config.action.freeze
 
       @serializer = if serializer # Service serializer given
                       serializer >> @config.serializer

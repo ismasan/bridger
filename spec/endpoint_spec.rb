@@ -22,17 +22,17 @@ RSpec.describe Bridger::Endpoint do
         }
       end
 
-      e.action do |pl|
-        pl.query_schema do
-          field(:id).type(:integer).present
-        end
-        pl.payload_schema do
-          field(:title).type(:string).present
-        end
-        pl.instrument('test.action') do |pl|
-          pl.step do |r|
-            r.continue('New task!')
-          end
+      e.query_schema do
+        field(:id).type(:integer).present
+      end
+
+      e.payload_schema do
+        field(:title).type(:string).present
+      end
+
+      e.instrument('test.action') do |pl|
+        pl.step do |r|
+          r.continue('New task!')
         end
       end
 
@@ -133,11 +133,9 @@ RSpec.describe Bridger::Endpoint do
 
   specify '#build_rel' do
     endpoint = Bridger::Endpoint.new(:product, service:, path: '/v1/products/:product_id', verb: :get, title: 'Show product', scope: 'a.b.c') do |e|
-      e.action do |pl|
-        pl.query_schema do
-          field(:product_id).type(:string).present
-          field(:q).type(:string)
-        end
+      e.query_schema do
+        field(:product_id).type(:string).present
+        field(:q).type(:string)
       end
     end
 
@@ -150,9 +148,7 @@ RSpec.describe Bridger::Endpoint do
 
   context 'with custom action objects' do
     subject(:endpoint) do
-      Bridger::Endpoint.new(:update_task, service:, path: '/tasks/:id', verb: :put, title: 'Update Task') do |e|
-        e.action custom_action
-
+      Bridger::Endpoint.new(:update_task, service:, path: '/tasks/:id', verb: :put, action: custom_action) do |e|
         e.serialize(200, success_serializer)
       end
     end
