@@ -55,8 +55,10 @@ module Bridger
       @query_schema = NOOP_SCHEMA
       @payload_schema = NOOP_SCHEMA
 
-      configure(&config) if block_given?
-      freeze
+      if block_given?
+        configure(&config)
+        freeze
+      end
     end
 
     def to_s
