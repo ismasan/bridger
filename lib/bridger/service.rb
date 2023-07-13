@@ -88,23 +88,14 @@ module Bridger
       @serializers
     end
 
-    def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer: nil)
-      # e = Bridger::Endpoint.new(
-      #   name: name,
-      #   verb: verb,
-      #   path: path,
-      #   authorizer: authorizer,
-      #   title: title,
-      #   scope: scope,
-      #   action: action,
-      #   serializer: serializer,
-      #   instrumenter: instrumenter
-      # )
+    def endpoint(name, verb, path, title:, scope: nil, action: nil, serializer: nil, &block)
       # TODO: if passed a SerializerSet, merge it with the service's set.
-      if serializer
-        serializer = serializers.build_for do |r|
+      serializer = if serializer
+        serializers.build_for do |r|
           r.on((200..201), serializer)
         end
+      else
+        serializers
       end
 
       ep = Bridger::Endpoint.new(
@@ -117,18 +108,10 @@ module Bridger
         action:,
         serializer:,
         service: self,
-        instrumenter:
+        instrumenter:,
+        &block
       )
-      # ep = Bridger::Endpoint.new(name, service: self) do |e|
-      #   e.verb verb
-      #   e.path path
-      #   e.title title
-      #   e.scope scope if scope
-      #   e.auth auth_config if auth_config
-      #   e.instrumenter instrumenter
-      #   e.action action if action
-      #   e.serializer = serializer if serializer
-      # end
+
       endpoints << ep
       lookup[ep.name] = ep
       ep

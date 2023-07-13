@@ -179,12 +179,15 @@ Bridger::Service.instance.build do
     serializer: RootSerializer,
   )
 
+  # This endpoint has block configuration
+  # to configure a Pipeline
   endpoint(:users, :get, "/users",
     title: "List users",
     scope: SCOPES.api.users.list,
-    action: ListUsers,
-    serializer: UsersSerializer,
-  )
+  ) do |e|
+    e.step ListUsers
+    e.serialize 200, UsersSerializer
+  end
 
   endpoint(:user, :get, "/users/:user_id",
     title: "User details",
