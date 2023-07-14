@@ -28,19 +28,6 @@ module Bridger
       false
     end
 
-    def dup
-      self.class.new(
-        request,
-        response.dup,
-        object:,
-        query: query.dup,
-        payload: payload.dup,
-        context: context.dup,
-        auth: auth,
-        errors: errors.dup,
-      )
-    end
-
     # @return [Boolean]
     def valid?
       errors.empty?
