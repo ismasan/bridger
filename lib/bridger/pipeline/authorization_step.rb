@@ -16,27 +16,22 @@ module Bridger
       # @return [Bridger::Result]
       def call(result)
         access_token = @auth_config.authenticator.call(result.request)
-        return halt(result, 401) unless access_token
+        return result.halt(status: 401) unless access_token
 
         claims = @auth_config.token_store.get(access_token)
-        return halt(result, 401) unless claims
+        return result.halt(status: 401) unless claims
 
         auth = Bridger::Auth.new(
           access_token:,
           claims:,
           aliases: @auth_config.aliases,
         )
-        return halt(result, 403) unless auth.authorized?(@scope)
+        return result.halt(status: 403) unless auth.authorized?(@scope)
 
         result.continue(auth:)
-      end
-
-      private
-
-      def halt(result, status)
-        result.halt do |halted|
-          halted.response.status = status
-        end
+      rescue Bridger::InvalidAccessTokenError, Bridger::ExpiredAccessTokenError
+        # TODO: log error
+        result.halt(status: 401)
       end
     end
   end

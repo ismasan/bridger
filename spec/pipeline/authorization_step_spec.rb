@@ -44,6 +44,24 @@ RSpec.describe Bridger::Pipeline::AuthorizationStep do
     expect(result.halted?).to be(true)
   end
 
+  specify 'malformed access token' do
+    allow(auth_config.token_store).to receive(:get).and_raise(Bridger::InvalidAccessTokenError)
+
+    initial = result_with_token('foo')
+    result = step.call(initial)
+    expect(result.response.status).to eq(401)
+    expect(result.halted?).to be(true)
+  end
+
+  specify 'expired access token' do
+    allow(auth_config.token_store).to receive(:get).and_raise(Bridger::ExpiredAccessTokenError)
+
+    initial = result_with_token('foo')
+    result = step.call(initial)
+    expect(result.response.status).to eq(401)
+    expect(result.halted?).to be(true)
+  end
+
   specify 'authenticated request' do
     initial = result_with_token('admin')
     result = step.call(initial)
