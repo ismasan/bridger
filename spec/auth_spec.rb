@@ -78,33 +78,4 @@ RSpec.describe Bridger::Auth do
       }.to raise_error Bridger::InvalidAccessTokenError
     end
   end
-
-  describe "#authorize!" do
-    it "authorizes when scopes match" do
-      token = @token_store.set(
-        uid: 123,
-        sids: [11],
-        aid: 12,
-        scopes: ["a.b.c"]
-      )
-      req = double('Request', env: {'HTTP_AUTHORIZATION' => "Bearer #{token}"})
-
-      authorizer = Bridger::Authorizers::Tree.new
-      authorizer.at('a.b') do |s, auth, params|
-        !params || params[:foo] != "bar"
-      end
-
-      auth = described_class.parse(req, @config)
-
-      expect(auth.authorize!('a.b.c', authorizer)).to be true
-      expect(auth.authorize!('a.b.c.d', authorizer)).to be true
-      expect {
-        auth.authorize!('a.b', authorizer)
-      }.to raise_error Bridger::InsufficientScopesError
-
-      expect {
-        auth.authorize!('a.b.c', authorizer, foo: "bar")
-      }.to raise_error Bridger::ForbiddenAccessError
-    end
-  end
 end

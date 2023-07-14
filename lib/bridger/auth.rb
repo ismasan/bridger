@@ -128,29 +128,13 @@ module Bridger
 
     def authorized?(scope)
       return true if scope.nil?
+
       scopes.can? scope
-    end
-
-    # TODO: this is not needed now
-    # we'll get rid of authorizers
-    def authorize!(required_scope, authorizer, *args)
-      sp = scopes.resolve(required_scope)
-      if !sp
-        raise InsufficientScopesError.new(required_scope, scopes)
-      elsif !authorizer.authorized?(sp, self, *args)
-        raise ForbiddenAccessError.new("no permissions to access this resource")
-      end
-
-      true
     end
   end
 
   class NoopAuth
     def self.authorized?(_scope)
-      true
-    end
-
-    def self.authorize!(*_args)
       true
     end
   end
