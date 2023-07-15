@@ -149,7 +149,7 @@ module Bridger
         #
         # @param method_name [Symbol] the name of the method
         def respond_to?(method_name, include_private = false)
-          method_name == :to_scope ? true : super
+          method_name == :to_scope
         end
 
         # Turn a node into a Scope, so that it can be used
@@ -157,6 +157,11 @@ module Bridger
         # @return [Scope]
         def to_scope
           ::Bridger::Scopes::Scope.new(to_a)
+        end
+
+        # Support Bridger::Scopes#wrap
+        def is_a?(klass)
+          klass == Node
         end
 
         # Add a child node and define a method to access it.
