@@ -35,6 +35,10 @@ module Bridger
         self
       end
 
+      def inspect
+        %(<#{self.class.name}##{object_id} [#{to_s}]>)
+      end
+
       def to_s
         segments.join(SEP)
       end
