@@ -120,7 +120,7 @@ module Bridger
     # @option access_token [String] the access token. Default: nil
     # @option claims [Hash] the claims of the access token.
     # @option aliases [Scopes::Aliases]
-    def initialize(access_token: nil, claims: {}, aliases: self.config.aliases)
+    def initialize(access_token: nil, claims: {}, aliases: self.class.config.aliases)
       @access_token = access_token
       @claims = claims
       @scopes = aliases.map(@claims['scopes'])
