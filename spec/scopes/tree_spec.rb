@@ -100,4 +100,21 @@ RSpec.describe Bridger::Scopes::Tree do
     expect(tree.bootic.api.products.own.to_s).to eq('bootic.api.products.own')
     expect(tree.bootic.api.products.all.read.to_s).to eq('bootic.api.products.all.read')
   end
+
+  specify 'wildcards' do
+    tree = described_class.new('bootic') do
+      api do
+        products do
+          _any do
+            read
+            write
+          end
+        end
+      end
+    end
+
+    expect(tree.bootic.api.products.*.read.to_s).to eq('bootic.api.products.*.read')
+    expect(tree.bootic.api.products._value('111').read.to_s).to eq('bootic.api.products.111.read')
+    expect(tree.bootic.api.products._value([1, 2, 3]).read.to_s).to eq('bootic.api.products.(1,2,3).read')
+  end
 end

@@ -139,6 +139,15 @@ module Bridger
           node.freeze
         end
 
+        def _value(values)
+          values = "(#{values.join(',')})" if values.is_a?(::Array)
+          node = Node.new(values.to_s, self)
+          shared_grandchildren.each do |child|
+            node.add_child(child.with_parent(node))
+          end
+          node.freeze
+        end
+
         # @return [Array<Node>]
         def __child_nodes
           @__children.values
@@ -208,28 +217,27 @@ module Bridger
         # @param segment [String] the name of the node
         # @param block [Proc] a block to define the scope hierarchy. Optional.
         def initialize(segment, &block)
-          @__segment = segment
+          @__segment = segment.to_s
           @__children = {}
           Tree.setup(self, block) if ::Kernel.block_given?
         end
 
         # @param segment [String] the name of the child node
         def >(segment)
-          __register(segment)
+          __register(Recorder.new(segment))
         end
 
         def method_missing(method_name, *_args, &block)
-          __register(method_name, &block)
+          __register(Recorder.new(method_name, &block))
         end
 
         def respond_to_missing?(method_name, include_private = false)
           true
         end
 
-        private def __register(child_name, &block)
-          @__children[child_name] ||= Recorder.new(child_name, &block)
+        private def __register(child_recorder)
+          @__children[child_recorder.__segment] ||= child_recorder
         end
-
       end
     end
   end
