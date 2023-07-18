@@ -5,8 +5,39 @@ module Bridger
     class Scope
       SEP = '.'
       WILDCARD = '*'
+      TEMPLATE_EXPR = /<(.+)>$/
+      COMMA = ','
+      COLON = ':'
 
       include Comparable
+
+      Segment = Data.define(:name, :key, :values) do
+        def self.wrap(name)
+          return name if name.is_a?(self)
+
+          key, value = name.split(COLON, 2)
+          if value == WILDCARD
+            new(name, key, [])
+          elsif value
+            new(name, key, value.split(COMMA))
+          else
+            new(name, key, [])
+          end
+        end
+
+        def ==(other)
+          return true if key == WILDCARD || other.key == WILDCARD
+
+          # 'shops:1,2,3' >= 'shops:1'
+          # 'shops' >= 'shops:1'
+          # 'shops:1,2,3' >= 'shops'
+          (key == other.key) && (values.empty? && other.values.empty?) || (values & other.values).any?
+        end
+
+        def to_s
+          name
+        end
+      end
 
       def self.wrap(sc)
         case sc
@@ -28,11 +59,30 @@ module Bridger
       end
 
       def initialize(segments)
-        @segments = segments
+        @segments = segments.map { |v| Segment.wrap(v) }
       end
 
       def to_scope
         self
+      end
+
+      # Replace segments in the format `foo:<key>` with the value of the key in the given hash
+      def expand(attrs = {})
+        segments = self.segments.map do |segment|
+          segment = segment.to_s
+          if segment =~ TEMPLATE_EXPR
+            key = $1.to_sym
+            raise ArgumentError, "Missing value for #{key}" unless attrs.key?(key)
+
+            value = attrs[key]
+            value = value.join(',') if value.is_a?(Array)
+            segment.gsub(TEMPLATE_EXPR, value.to_s)
+          else
+            segment
+          end
+        end
+
+        self.class.new(segments)
       end
 
       def inspect
@@ -40,11 +90,11 @@ module Bridger
       end
 
       def to_s
-        segments.join(SEP)
+        to_a.join(SEP)
       end
 
       def to_a
-        segments.dup
+        segments.map(&:to_s)
       end
 
       def can?(another_scope)
@@ -55,22 +105,15 @@ module Bridger
         a, b = segments, another_scope.segments
         return -1 if a.size > b.size
 
-        a = equalize(a, b)
-        b = equalize(b, a)
-        diff = a - b
-        diff.size == 0 ? 1 : -1
+        all_match = a.each_with_index.all? { |segment, i| segment == b[i] }
+        return -1 unless all_match
+
+        a.size < b.size ? 1 : 0
       end
 
       protected
 
       attr_reader :segments
-
-      private
-
-      def equalize(a, b)
-        shortest = [a.size, b.size].min
-        0.upto(shortest - 1).map { |i| a[i] == WILDCARD ? b[i] : a[i] }
-      end
     end
   end
 end
