@@ -89,16 +89,16 @@ RSpec.describe Bridger::Scopes do
 
   describe "#resolve" do
     it "finds the shallowest matching scope, or nil" do
-      scopes = described_class.new(["btc.me", "btc.account.shops.mine", "btc.account", "btc.shops.list"])
-      expect(scopes.resolve("btc")).to be nil
-      expect(scopes.resolve("btc.me").to_s).to eql "btc.me"
-      expect(scopes.resolve("btc.account").to_s).to eq "btc.account"
-      expect(scopes.resolve("btc.account.update").to_s).to eq "btc.account"
-      expect(scopes.resolve("btc.account.shops.mine").to_s).to eq "btc.account"
-      expect(scopes.resolve("btc.account.shops.mine.list.foo").to_s).to eq "btc.account"
-      expect(scopes.resolve("btc.shops.update")).to be nil
-      expect(scopes.resolve("btc.shops.list").to_s).to eq "btc.shops.list"
-      expect(scopes.resolve("btc.shops.list.show.foo").to_s).to eq "btc.shops.list"
+      scopes = described_class.new(%w[btc.me btc.account.shops.mine btc.account btc.shops.list])
+      expect(scopes.resolve('btc')).to be nil
+      expect(scopes.resolve('btc.me').to_s).to eql 'btc.me'
+      expect(scopes.resolve('btc.account').to_s).to eq 'btc.account'
+      expect(scopes.resolve('btc.account.update').to_s).to eq 'btc.account'
+      expect(scopes.resolve('btc.account.shops.mine').to_s).to eq 'btc.account'
+      expect(scopes.resolve('btc.account.shops.mine.list.foo').to_s).to eq 'btc.account'
+      expect(scopes.resolve('btc.shops.update')).to be nil
+      expect(scopes.resolve('btc.shops.list').to_s).to eq 'btc.shops.list'
+      expect(scopes.resolve('btc.shops.list.show.foo').to_s).to eq 'btc.shops.list'
     end
   end
 
