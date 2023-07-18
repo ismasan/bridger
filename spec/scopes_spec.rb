@@ -33,32 +33,37 @@ RSpec.describe Bridger::Scopes do
       expect(first_one_wins('a.*.c.*', 'a.*.c.*')).to be true
     end
 
+    it 'can initialize with array segments' do
+      scope = described_class.new(['a', [1, 2, 3], 'c'])
+      expect(scope.to_s).to eq('a.(1,2,3).c')
+    end
+
     it 'allows array values' do
-      expect(first_one_wins('accounts:1,2,3', 'accounts:2')).to be true
-      expect(first_one_wins('accounts:2', 'accounts:1,2,3')).to be true
-      expect(first_one_wins('accounts:1,2,3', 'accounts:4')).to be false
-      expect(first_one_wins('accounts:1,2,3', 'accounts')).to be false
+      expect(first_one_wins('accounts.(1,2,3)', 'accounts.(2)')).to be true
+      expect(first_one_wins('accounts.(2)', 'accounts.(1,2,3)')).to be true
+      expect(first_one_wins('accounts.(1,2,3)', 'accounts.(4)')).to be false
+      expect(first_one_wins('accounts.(1,2,3)', 'accounts')).to be false
     end
 
     specify '#expand' do
-      expect(scope('a.b:<foo_id>.c').expand(foo_id: 1).to_s).to eq('a.b:1.c')
-      expect(scope('a.b:<foo_id>.c').expand(foo_id: [1, 2]).to_s).to eq('a.b:1,2.c')
+      expect(scope('a.b.foo_id.c').expand('foo_id' => 1).to_s).to eq('a.b.1.c')
+      expect(scope('a.b.foo_id.c').expand('foo_id' => [1, 2]).to_s).to eq('a.b.(1,2).c')
     end
 
     specify 'expanding with array values and comparing' do
-      endpoint_scope = scope('api.accounts:<account_id>.shops:<shop_id>.contacts:*.read')
-      token_scope = scope('api.accounts:<own_account>.shops:<own_shops>.contacts')
+      endpoint_scope = scope('api.accounts.account_id.shops.shop_id.contacts.*.read')
+      token_scope = scope('api.accounts.own_account.shops.own_shops.contacts')
 
-      endpoint_scope = endpoint_scope.expand(account_id: 111, shop_id: 222)
-      token_scope = token_scope.expand(own_account: 111, own_shops: [222, 333])
+      endpoint_scope = endpoint_scope.expand('account_id' => 111, 'shop_id' => 222)
+      token_scope = token_scope.expand('own_account' => 111, 'own_shops' => [222, 333])
       expect(token_scope >= endpoint_scope).to be true
       expect(token_scope == endpoint_scope).to be false
       expect(token_scope > endpoint_scope).to be true
     end
 
     specify do
-      product_scope = scope('api.accounts:111.shops:222.products:333')
-      token_scope =   scope('api.accounts:111.shops:222')
+      product_scope = scope('api.accounts.111.shops.222.products.333')
+      token_scope =   scope('api.accounts.111.shops.222')
       expect(token_scope > product_scope).to be true
     end
   end

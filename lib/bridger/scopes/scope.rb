@@ -6,32 +6,35 @@ module Bridger
       SEP = '.'
       WILDCARD = '*'
       TEMPLATE_EXPR = /<(.+)>$/
+      ARRAY_EXPR = /\((.+)\)$/ # '(1,2,3)'
       COMMA = ','
       COLON = ':'
 
       include Comparable
 
-      Segment = Data.define(:name, :key, :values) do
+      Segment = Data.define(:name, :values) do
+        # 'foo'
+        # '(1,2,3)'
+        # '*'
         def self.wrap(name)
           return name if name.is_a?(self)
 
-          key, value = name.split(COLON, 2)
-          if value == WILDCARD
-            new(name, key, [])
-          elsif value
-            new(name, key, value.split(COMMA))
+          if name.is_a?(Array)
+            new("(#{name.join(COMMA)})", name)
+          elsif name.to_s =~ ARRAY_EXPR
+            new(name, $1.split(COMMA))
+          elsif name == WILDCARD
+            new(name, [])
           else
-            new(name, key, [])
+            new(name, [name])
           end
         end
 
         def ==(other)
-          return true if key == WILDCARD || other.key == WILDCARD
+          return true if name == WILDCARD || other.name == WILDCARD
 
-          # 'shops:1,2,3' >= 'shops:1'
-          # 'shops' >= 'shops:1'
-          # 'shops:1,2,3' >= 'shops'
-          (key == other.key) && (values.empty? && other.values.empty?) || (values & other.values).any?
+          # [1,2,3] >= [1]
+          (values & other.values).any?
         end
 
         def to_s
@@ -43,7 +46,7 @@ module Bridger
         case sc
           in Scope
             sc
-          in Array => list if list.all?{|s| s.is_a?(String) }
+          in Array => list
             new(sc)
           in String
             new(sc.split(SEP))
@@ -69,14 +72,8 @@ module Bridger
       # Replace segments in the format `foo:<key>` with the value of the key in the given hash
       def expand(attrs = {})
         segments = self.segments.map do |segment|
-          segment = segment.to_s
-          if segment =~ TEMPLATE_EXPR
-            key = $1.to_sym
-            raise ArgumentError, "Missing value for #{key}" unless attrs.key?(key)
-
-            value = attrs[key]
-            value = value.join(',') if value.is_a?(Array)
-            segment.gsub(TEMPLATE_EXPR, value.to_s)
+          if value = attrs[segment.to_s]
+            Segment.wrap(value)
           else
             segment
           end
