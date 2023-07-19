@@ -108,6 +108,14 @@ module Bridger
 
         def _value(values)
           values = "(#{values.join(',')})" if values.is_a?(::Array)
+          any_recorder = @__recorder.__children['_any']
+          if !any_recorder
+            raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.keys.map { |e| "'#{e}'" }.join(', ')}" unless respond_to_missing?(method_name)
+          end
+          if !any_recorder.match?(values)
+            raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Value does not match value constraint"
+          end
+
           Node.new(TransientRecorder.new(values, __shared_grandchildren), self)
         end
 
@@ -166,6 +174,10 @@ module Bridger
           __register(Recorder.new(segment))
         end
 
+        def _any(constraint = nil, &block)
+          __register(AnyRecorder.new(constraint, &block))
+        end
+
         def method_missing(method_name, *_args, &block)
           __register(Recorder.new(method_name, &block))
         end
@@ -184,6 +196,17 @@ module Bridger
 
         private def __register(child_recorder)
           @__children[child_recorder.__segment] ||= child_recorder
+        end
+      end
+
+      class AnyRecorder < Recorder
+        def initialize(constraint = nil, &block)
+          @__constraint = constraint
+          super('_any', &block)
+        end
+
+        def match?(value)
+          @__constraint.nil? || @__constraint === value
         end
       end
     end

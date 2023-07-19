@@ -138,7 +138,7 @@ RSpec.describe Bridger::Scopes::Tree do
                 end
 
                 orders do
-                  _any do
+                  _any(/\d+/) do
                     read
                   end
                 end
@@ -156,9 +156,22 @@ RSpec.describe Bridger::Scopes::Tree do
     end
 
     expect(tree.bootic.api.accounts.resource_account.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.products.*.read')
+    expect(tree.bootic.api.accounts.resource_account.shops.*.orders._value('123').read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.123.read')
     expect(tree.bootic.api.accounts.*.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.*.shops.*.products.*.read')
+
+    # Invalid scope hierarchy (settings.*.read is not available in tree)
     expect {
       tree.bootic.api.accounts.*.shops.*.settings.*.read
+    }.to raise_error(Bridger::Scopes::Tree::InvalidScopeHierarchyError)
+
+    # Free value with invalid format
+    expect {
+      tree.bootic.api.accounts.resource_account.shops.*.orders._value('nope').read.to_s
+    }.to raise_error(Bridger::Scopes::Tree::InvalidScopeHierarchyError)
+
+    # Free value where none is declared
+    expect {
+      tree.bootic.api.accounts.resource_account.shops._value('11').orders.*.read.to_s
     }.to raise_error(Bridger::Scopes::Tree::InvalidScopeHierarchyError)
   end
 end
