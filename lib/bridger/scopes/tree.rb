@@ -116,7 +116,12 @@ module Bridger
             raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Value does not match value constraint"
           end
 
-          Node.new(TransientRecorder.new(values, __shared_grandchildren), self)
+          values = "(#{values.join(',')})" if values.is_a?(::Array)
+          Node.new(TransientRecorder.new(values.to_s, __shared_grandchildren), self)
+        end
+
+        def inspect
+          %(<Bridger::Scopes::Tree::Node [#{to_s}]>)
         end
 
         def to_scope
@@ -146,10 +151,10 @@ module Bridger
       # @param root_segment [String] the name of the root node
       # @param config [Proc] a block to define the scope hierarchy
       def initialize(root_segment = ROOT_SEGMENT, &config)
-        recorder = Recorder.new(root_segment)
-        Tree.setup(recorder, config) if block_given?
-        @__root = Node.new(recorder)
-        define_singleton_method(root_segment) { @__root }
+        @recorder = Recorder.new(root_segment)
+        Tree.setup(@recorder, config) if block_given?
+        @root = Node.new(@recorder)
+        define_singleton_method(root_segment) { @root }
         freeze
       end
 
@@ -206,7 +211,7 @@ module Bridger
         end
 
         def match?(value)
-          @__constraint.nil? || @__constraint === value
+          @__constraint.nil? || [value].flatten.all? { |e| @__constraint === e.to_s }
         end
       end
     end

@@ -138,7 +138,7 @@ RSpec.describe Bridger::Scopes::Tree do
                 end
 
                 orders do
-                  _any(/\d+/) do
+                  _any(/^\d+$/) do
                     read
                   end
                 end
@@ -157,6 +157,7 @@ RSpec.describe Bridger::Scopes::Tree do
 
     expect(tree.bootic.api.accounts.resource_account.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.products.*.read')
     expect(tree.bootic.api.accounts.resource_account.shops.*.orders._value('123').read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.123.read')
+    expect(tree.bootic.api.accounts.resource_account.shops.*.orders._value([1,'2']).read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.(1,2).read')
     expect(tree.bootic.api.accounts.*.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.*.shops.*.products.*.read')
 
     # Invalid scope hierarchy (settings.*.read is not available in tree)
