@@ -92,7 +92,23 @@ module Bridger
 
       InvalidScopeHierarchyError = Class.new(::StandardError)
 
+      module RailsConsoleInspect
+        # Rails console's inspector calls this with #is_a?(String)
+        def is_a?(klass)
+          klass == Node
+        end
+
+        # Needed by Rails console
+        def pretty_print(q)
+          q.text inspect
+        end
+      end
+
       class Node < BasicObject
+        include RailsConsoleInspect if defined?(::Rails::Console)
+
+        RESPONDABLE_METHODS = %i[to_s to_str to_a * _value call to_scope inspect hash respond_to].freeze
+
         attr_reader :__parent, :to_s, :to_a
 
         def initialize(recorder, parent = nil)
@@ -106,13 +122,14 @@ module Bridger
           Node.new(TransientRecorder.new('*', __shared_grandchildren), self)
         end
 
-        def _value(values)
+        def _value(*values)
+          values = values.flatten
           child = @__recorder.__children.find { |r| r.match?(values) }
           if !child
             ::Kernel.raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}"
           end
 
-          values = "(#{values.join(',')})" if values.is_a?(::Array)
+          values = values.size > 1 ? "(#{values.join(',')})" : values.first
           Node.new(TransientRecorder.new(values.to_s, child.__children), self)
         end
 
@@ -125,7 +142,7 @@ module Bridger
         end
 
         def respond_to?(method_name, include_private = true)
-          method_name == :to_scope
+          RESPONDABLE_METHODS.include?(method_name.to_sym)
         end
 
         def to_scope

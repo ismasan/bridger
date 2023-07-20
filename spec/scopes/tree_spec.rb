@@ -11,6 +11,8 @@ RSpec.describe Bridger::Scopes::Tree do
       bootic.api.orders.own.read
     end
 
+    expect(tree.bootic.respond_to?(:inspect)).to be(true)
+    expect(tree.bootic.respond_to?(:to_scope)).to be(true)
     expect(tree.bootic.api.products.own.read.to_s).to eq('bootic.api.products.own.read')
     expect(tree.bootic.api.products.own.to_s).to eq('bootic.api.products.own')
     expect(tree.bootic.api.products.to_s).to eq('bootic.api.products')
@@ -161,6 +163,7 @@ RSpec.describe Bridger::Scopes::Tree do
     expect(tree.bootic.api.accounts.('123').shops.*.products.*.read.to_s).to eq('bootic.api.accounts.123.shops.*.products.*.read')
     expect(tree.bootic.api.accounts.own_account.shops.to_s).to eq('bootic.api.accounts.own_account.shops')
     expect(tree.bootic.api.accounts.resource_account.shops.*.orders.('123').read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.123.read')
+    expect(tree.bootic.api.accounts.resource_account.shops.*.orders.(1,'2').read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.(1,2).read')
     expect(tree.bootic.api.accounts.resource_account.shops.*.orders.([1,'2']).read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.(1,2).read')
     expect(tree.bootic.api.accounts.*.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.*.shops.*.products.*.read')
 
