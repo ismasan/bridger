@@ -223,6 +223,10 @@ module Bridger
           to_s
         end
 
+        def to_ary
+          ::Kernel.raise ::NoMethodError, "undefined method `to_ary' for #{self}"
+        end
+
         def inspect
           %(<Bridger::Scopes::Tree::Recorder #{to_s} [#{__children.join(', ')}]>)
         end
