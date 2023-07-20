@@ -124,7 +124,7 @@ RSpec.describe Bridger::Scopes::Tree do
 
       bootic.api do
         accounts do
-          _any(['resource_account', 'own_account', integer]) do
+          _any('resource_account', 'own_account', integer) do
             shops do
               resource_shops do
                 contacts do

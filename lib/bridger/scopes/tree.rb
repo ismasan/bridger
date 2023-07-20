@@ -197,8 +197,7 @@ module Bridger
           __register(Recorder.new(segment))
         end
 
-        def _any(constraints = [], &block)
-          constraints = [constraints] unless constraints.is_a?(::Array)
+        def _any(*constraints, &block)
           __register(Recorder.new(constraints, &block))
         end
 
