@@ -92,7 +92,7 @@ module Bridger
 
       InvalidScopeHierarchyError = Class.new(::StandardError)
 
-      class Node# < BasicObject
+      class Node < BasicObject
         attr_reader :__parent, :to_s, :to_a
 
         def initialize(recorder, parent = nil)
@@ -109,7 +109,7 @@ module Bridger
         def _value(values)
           child = @__recorder.__children.find { |r| r.match?(values) }
           if !child
-            raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}"
+            ::Kernel.raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}"
           end
 
           values = "(#{values.join(',')})" if values.is_a?(::Array)
@@ -124,8 +124,16 @@ module Bridger
           %(<Bridger::Scopes::Tree::Node [#{to_s}]>)
         end
 
+        def respond_to?(method_name, include_private = true)
+          method_name == :to_scope
+        end
+
         def to_scope
           ::Bridger::Scopes::Scope.new(to_a)
+        end
+
+        def hash
+          to_s.hash
         end
 
         def respond_to_missing?(method_name, include_private = true)
@@ -133,6 +141,8 @@ module Bridger
         end
 
         def method_missing(method_name, *args)
+          ::Kernel.raise ::NoMethodError, "undefined method `#{method_name}' for #{self} with args #{args.inspect}" if args.any?
+
           _value(method_name, *args)
         end
 
