@@ -120,9 +120,11 @@ RSpec.describe Bridger::Scopes::Tree do
 
   specify do
     tree = Bridger::Scopes::Tree.new('bootic') do |bootic|
+      integer = /^\d+$/
+
       bootic.api do
         accounts do
-          resource_account do
+          _any(['resource_account', 'own_account', integer]) do
             shops do
               resource_shops do
                 contacts do
@@ -138,7 +140,7 @@ RSpec.describe Bridger::Scopes::Tree do
                 end
 
                 orders do
-                  _any(/^\d+$/) do
+                  _any(integer) do
                     read
                   end
                 end
@@ -156,8 +158,10 @@ RSpec.describe Bridger::Scopes::Tree do
     end
 
     expect(tree.bootic.api.accounts.resource_account.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.products.*.read')
-    expect(tree.bootic.api.accounts.resource_account.shops.*.orders._value('123').read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.123.read')
-    expect(tree.bootic.api.accounts.resource_account.shops.*.orders._value([1,'2']).read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.(1,2).read')
+    expect(tree.bootic.api.accounts.('123').shops.*.products.*.read.to_s).to eq('bootic.api.accounts.123.shops.*.products.*.read')
+    expect(tree.bootic.api.accounts.own_account.shops.to_s).to eq('bootic.api.accounts.own_account.shops')
+    expect(tree.bootic.api.accounts.resource_account.shops.*.orders.('123').read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.123.read')
+    expect(tree.bootic.api.accounts.resource_account.shops.*.orders.([1,'2']).read.to_s).to eq('bootic.api.accounts.resource_account.shops.*.orders.(1,2).read')
     expect(tree.bootic.api.accounts.*.shops.*.products.*.read.to_s).to eq('bootic.api.accounts.*.shops.*.products.*.read')
 
     # Invalid scope hierarchy (settings.*.read is not available in tree)
@@ -174,5 +178,11 @@ RSpec.describe Bridger::Scopes::Tree do
     expect {
       tree.bootic.api.accounts.resource_account.shops._value('11').orders.*.read.to_s
     }.to raise_error(Bridger::Scopes::Tree::InvalidScopeHierarchyError)
+
+    # Invalid value for _any constraints
+    expect {
+      tree.bootic.api.accounts.('nope').shops
+    }.to raise_error(Bridger::Scopes::Tree::InvalidScopeHierarchyError)
+    # expect(tree.to_h).to eq({})
   end
 end

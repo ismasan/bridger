@@ -107,17 +107,17 @@ module Bridger
         end
 
         def _value(values)
-          values = "(#{values.join(',')})" if values.is_a?(::Array)
-          any_recorder = @__recorder.__children['_any']
-          if !any_recorder
-            raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.keys.map { |e| "'#{e}'" }.join(', ')}" unless respond_to_missing?(method_name)
-          end
-          if !any_recorder.match?(values)
-            raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Value does not match value constraint"
+          child = @__recorder.__children.find { |r| r.match?(values) }
+          if !child
+            raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}"
           end
 
           values = "(#{values.join(',')})" if values.is_a?(::Array)
-          Node.new(TransientRecorder.new(values.to_s, __shared_grandchildren), self)
+          Node.new(TransientRecorder.new(values.to_s, child.__children), self)
+        end
+
+        def call(...)
+          _value(...)
         end
 
         def inspect
@@ -129,21 +129,19 @@ module Bridger
         end
 
         def respond_to_missing?(method_name, include_private = true)
-          @__recorder.__children.key?(method_name.to_s)
+          true
         end
 
         def method_missing(method_name, *args)
-          raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid scope segment '#{method_name}' after #{self}. Supported segments here are #{@__recorder.__children.keys.map { |e| "'#{e}'" }.join(', ')}" unless respond_to_missing?(method_name)
-
-          Node.new(@__recorder.__children[method_name.to_s], self)
+          _value(method_name, *args)
         end
 
         private
 
         def __shared_grandchildren
-          shared_segments = @__recorder.__children.values.map{ |e| e.__children.values.map(&:__segment) }.reduce(:&)
-          @__recorder.__children.values.flat_map{ |e| e.__children.values }.each.with_object({}) do |child, hash|
-            hash[child.__segment] = child if shared_segments.include?(child.__segment)
+          shared_segments = @__recorder.__children.map{ |e| e.__children.map(&:__segment) }.reduce(:&)
+          @__recorder.__children.flat_map(&:__children).each.filter do |child|
+            shared_segments.include?(child.__segment)
           end
         end
       end
@@ -155,6 +153,7 @@ module Bridger
         Tree.setup(@recorder, config) if block_given?
         @root = Node.new(@recorder)
         define_singleton_method(root_segment) { @root }
+        @recorder.freeze
         freeze
       end
 
@@ -164,14 +163,23 @@ module Bridger
       # to record the hierarchy of scopes.
       # It is a BasicObject so that it can be used with dot notation.
       class Recorder < BasicObject
-        attr_reader :__segment, :__children
+        attr_reader :__segment, :__children, :__info
 
         # @param segment [String] the name of the node
         # @param block [Proc] a block to define the scope hierarchy. Optional.
-        def initialize(segment, &block)
-          @__segment = segment.to_s
-          @__children = {}
+        def initialize(matchers, &block)
+          @__matchers = [matchers].flatten
+          @__segment = @__matchers.first.to_s
+          @__info = @__matchers.size > 1 ? %((#{@__matchers.map(&:to_s).join(',')})) : @__segment
+          @__children = []
+          @__frozen = false
           Tree.setup(self, block) if ::Kernel.block_given?
+        end
+
+        def freeze
+          @__children.each(&:freeze)
+          @__children.freeze
+          self
         end
 
         # @param segment [String] the name of the child node
@@ -179,39 +187,40 @@ module Bridger
           __register(Recorder.new(segment))
         end
 
-        def _any(constraint = nil, &block)
-          __register(AnyRecorder.new(constraint, &block))
+        def _any(constraints = [], &block)
+          constraints = [constraints] unless constraints.is_a?(::Array)
+          __register(Recorder.new(constraints, &block))
         end
 
         def method_missing(method_name, *_args, &block)
-          __register(Recorder.new(method_name, &block))
+          __register(Recorder.new(method_name.to_s, &block))
         end
 
         def respond_to_missing?(method_name, include_private = false)
           true
         end
 
+        def match?(values)
+          values = [values] unless values.is_a?(::Array)
+          values = values.map(&:to_s)
+          @__matchers.empty? || @__matchers.any? { |matcher| values.all? { |v| matcher === v } }
+        end
+
         def to_s
-          __segment
+          __info
+        end
+
+        def to_str
+          to_s
         end
 
         def inspect
-          %(<Bridger::Scopes::Tree::Recorder #{__segment} [#{__children.values.map(&:__segment).join(', ')}]>)
+          %(<Bridger::Scopes::Tree::Recorder #{to_s} [#{__children.join(', ')}]>)
         end
 
         private def __register(child_recorder)
-          @__children[child_recorder.__segment] ||= child_recorder
-        end
-      end
-
-      class AnyRecorder < Recorder
-        def initialize(constraint = nil, &block)
-          @__constraint = constraint
-          super('_any', &block)
-        end
-
-        def match?(value)
-          @__constraint.nil? || [value].flatten.all? { |e| @__constraint === e.to_s }
+          @__children << child_recorder
+          child_recorder
         end
       end
     end
