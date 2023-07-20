@@ -126,7 +126,7 @@ module Bridger
           values = values.flatten
           child = @__recorder.__children.find { |r| r.match?(values) }
           if !child
-            ::Kernel.raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid free value segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}"
+            ::Kernel.raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid scope segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}, or '*'"
           end
 
           values = values.size > 1 ? "(#{values.join(',')})" : values.first
