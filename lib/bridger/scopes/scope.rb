@@ -2,16 +2,39 @@
 
 module Bridger
   class Scopes
+    # Scopes define hierarchical permissions
+    # They are used to define access to resources
+    # A scope is a list of segments, e.g. 'foo.bar.baz'
+    # It can be initialized with a string, an array of strings, or a symbol
+    # It can also be initialized with another scope
+    # It can be expanded with a hash of values
+    # It can be compared with another scope
+    # It can be converted to a string
+    # It can be converted to an array of strings
+    # Example:
+    #
+    #  access_scope = Scope.wrap('root.accounts.*')
+    #  endpoint_scope = Scope.wrap('root.accounts.my_account.users.*')
+    #  access_scope >= endpoint_scope) # => true
+    #  access_scope < endpoint_scope) # => false
+    #
+    # Scopes can be "expanded" on request-time to have one or more segments replaced with values.
+    # This is useful for defining access to resources that are not known at the time of defining the scope.
+    #
+    # Example:
+    #  access_scope = Scope.wrap('root.accounts.my_account.users.*')
+    #  scope = access_scope.expand('my_account' => current_user.account_id) # => Scope('root.accounts.123.users.*')
+    #
     class Scope
       SEP = '.'
       WILDCARD = '*'
-      TEMPLATE_EXPR = /<(.+)>$/
       ARRAY_EXPR = /\((.+)\)$/ # '(1,2,3)'
       COMMA = ','
       COLON = ':'
 
       include Comparable
 
+      # A scope segment is a single part of a scope, e.g. 'foo' or '(1,2,3)'
       Segment = Data.define(:name, :values) do
         # 'foo'
         # '(1,2,3)'
@@ -42,6 +65,8 @@ module Bridger
         end
       end
 
+      # @param [String, Array<String>, Symbol, Scope] sc
+      # @return [Scope]
       def self.wrap(sc)
         case sc
           in Scope
@@ -61,14 +86,25 @@ module Bridger
         end
       end
 
+      # @param [Array<Segment, String>] segments
       def initialize(segments)
         @segments = segments.map { |v| Segment.wrap(v) }
       end
 
+      # @return [Scope]
       def to_scope
         self
       end
 
+      # Expand a scope with a hash of values and return a new scope
+      # If a segment is not present in the hash, it will be left as-is
+      #
+      # @example
+      #   scope = Scope.new('root.foo.bar.baz')
+      #   scope.expand('foo' => 1, 'bar' => [2, 3]) # => Scope.new('root.1.bar.(2,3)')
+      #
+      # @param [Hash] attrs
+      # @return [Scope]
       def expand(attrs = {})
         segments = self.segments.map do |segment|
           if value = attrs[segment.to_s]
@@ -93,10 +129,16 @@ module Bridger
         segments.map(&:to_s)
       end
 
+      # @param [Scope] another_scope
+      # @return [Boolean]
       def can?(another_scope)
         self >= another_scope
       end
 
+      # Make [Scope] comparable
+      #
+      # @param [Scope] another_scope
+      # @return [Integer]
       def <=>(another_scope)
         a, b = segments, another_scope.segments
         return -1 if a.size > b.size

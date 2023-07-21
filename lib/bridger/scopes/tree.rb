@@ -16,7 +16,7 @@ module Bridger
     #  SCOPES.bootic.api.products.own.read.to_s # => 'bootic.api.products.own.read'
     #  SCOPES.bootic.api.products.own.to_s # => 'bootic.api.products.own'
     #  SCOPES.bootic.api.*.read.to_s # => 'bootic.api.*.read'
-    #  SCOPES.bootic.foo.products # => NoMethodError
+    #  SCOPES.bootic.foo.products # => raises Bridger::Scopes::Scope::InvalidScopHierarchyError
     #
     # It can be used to define allowed scopes for an endpoint:
     #
@@ -70,6 +70,33 @@ module Bridger
     #       end
     #     end
     #   end
+    #
+    # Use `_any` to define segments that can be anything:
+    #
+    #   SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+    #     bootic.api.products._any.read
+    #   end
+    #
+    # `_any` takes an optional list of allowed values, in which case it has "any of" semantics.
+    # Values are matched with `#===` operator, so they can be regular expressions.
+    # If no values are given, `_any` has "anything" semantics.
+    # `_any` can be used to define a catch-all scope:
+    #
+    #    SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+    #      bootic.api do |s|
+    #        s.products do |s|
+    #          s._any('my_products', /^\d+$/) do |s| # matches 'my_products' or any number-like string
+    #            s.read
+    #          end
+    #       end
+    #     end
+    #
+    # With the above, the following scopes are allowed, using parenthesis notation to allow numbers and multiple values
+    #
+    #    bootic.api.products.(123).read # 'bootic.api.products.123.read'
+    #    bootic.api.products.(1, 2, 3).read # 'bootic.api.products.(1,2,3).read'
+    #    bootic.api.products.('my_products').read # 'bootic.api.products.my_products.read'
+    #    bootic.api.products.my_products.read # works too
     #
     class Tree
       ROOT_SEGMENT = 'root'

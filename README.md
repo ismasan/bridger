@@ -320,7 +320,7 @@ SCOPES.all.users.create # 'all.users.create'
 ... But not invalid hierarchies.
 
 ```ruby
-SCOPES.all.users.orders # raises NoMethodError
+SCOPES.all.users.orders # => raises Bridger::Scopes::Scope::InvalidScopHierarchyError
 ```
 
 Wilcards work too
@@ -333,7 +333,7 @@ Note that wildcards only allow sub-scopes that are shared by all children.
 
 ```ruby
 SCOPES.all.*.read # Ok
-SCOPES.all.*.update # raises NoMethodError because not all children of `all.*` support `update`
+SCOPES.all.*.update # raises InvalidScopHierarchyError because not all children of `all.*` support `update`
 ```
 
 Hierarchies can also be defined using the > operator:
@@ -382,6 +382,39 @@ SCOPES = Bridger::Scopes::Tree.new('bootic') do
     end
   end
 end
+```
+
+Use `_any` to define segments that can be anything:
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+  bootic.api.products._any.read
+end
+```
+
+`_any` takes an optional list of allowed values, in which case it has "any of" semantics.
+Values are matched with `#===` operator, so they can be regular expressions.
+If no values are given, `_any` has "anything" semantics.
+`_any` can be used to define a catch-all scope:
+
+```ruby
+SCOPES = Bridger::Scopes::Tree.new('bootic') do |bootic|
+ bootic.api do |s|
+   s.products do |s|
+     s._any('my_products', /^\d+$/) do |s| # matches 'my_products' or any number-like string
+       s.read
+     end
+  end
+end
+```
+
+With the above, the following scopes are allowed, using parenthesis notation to allow numbers and multiple values
+
+```ruby
+bootic.api.products.(123).read # 'bootic.api.products.123.read'
+bootic.api.products.(1, 2, 3).read # 'bootic.api.products.(1,2,3).read'
+bootic.api.products.('my_products').read # 'bootic.api.products.my_products.read'
+bootic.api.products.my_products.read # works too
 ```
 
 Scope trees also work with scope aliases.
