@@ -49,6 +49,11 @@ module Bridger
       %(<#{self.class.name}##{object_id} [#{to_s}]>)
     end
 
+    def expand(attrs = {})
+      scp = scopes.map { |s| s.expand(attrs) }
+      self.class.new(scp)
+    end
+
     def to_s
       @to_s ||= scopes.join(', ')
     end

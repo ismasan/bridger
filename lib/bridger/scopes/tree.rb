@@ -82,149 +82,175 @@ module Bridger
         end
       end
 
+      attr_reader :__root
+
+      TransientRecorder = Data.define(:__segment, :__children) do
+        def to_s
+          __segment
+        end
+      end
+
+      InvalidScopeHierarchyError = Class.new(::StandardError)
+
+      module RailsConsoleInspect
+        # Needed by Rails console
+        def pretty_print(q)
+          q.text inspect
+        end
+      end
+
+      class Node < BasicObject
+        include RailsConsoleInspect if defined?(::Rails::Console)
+
+        RESPONDABLE_METHODS = %i[to_s to_str to_a * _value call to_scope inspect hash respond_to].freeze
+
+        attr_reader :__parent, :to_s, :to_a
+
+        def initialize(recorder, parent = nil)
+          @__recorder = recorder
+          @__parent = parent
+          @to_s = [@__parent, @__recorder].compact.map(&:to_s).join('.')
+          @to_a = @__parent ? @__parent.to_a + [@__recorder.__segment] : [@__recorder.__segment]
+        end
+
+        def *
+          Node.new(TransientRecorder.new('*', __shared_grandchildren), self)
+        end
+
+        def _value(*values)
+          values = values.flatten
+          child = @__recorder.__children.find { |r| r.match?(values) }
+          if !child
+            ::Kernel.raise ::Bridger::Scopes::Tree::InvalidScopeHierarchyError, "invalid scope segment '#{values}' after #{self}. Supported segments here are #{@__recorder.__children.map { |e| "'#{e}'" }.join(', ')}, or '*'"
+          end
+
+          values = values.size > 1 ? "(#{values.join(',')})" : values.first
+          Node.new(TransientRecorder.new(values.to_s, child.__children), self)
+        end
+
+        def call(...)
+          _value(...)
+        end
+
+        def inspect
+          %(<Bridger::Scopes::Tree::Node [#{to_s}]>)
+        end
+
+        def respond_to?(method_name, include_private = true)
+          RESPONDABLE_METHODS.include?(method_name.to_sym)
+        end
+
+        def is_a?(klass)
+          klass == Node
+        end
+
+        def to_scope
+          ::Bridger::Scopes::Scope.new(to_a)
+        end
+
+        def hash
+          to_s.hash
+        end
+
+        def respond_to_missing?(method_name, include_private = true)
+          true
+        end
+
+        def method_missing(method_name, *args)
+          ::Kernel.raise ::NoMethodError, "undefined method `#{method_name}' for #{self} with args #{args.inspect}" if args.any?
+
+          _value(method_name, *args)
+        end
+
+        private
+
+        def __shared_grandchildren
+          shared_segments = @__recorder.__children.map{ |e| e.__children.map(&:__segment) }.reduce(:&)
+          @__recorder.__children.flat_map(&:__children).each.filter do |child|
+            shared_segments.include?(child.__segment)
+          end
+        end
+      end
+
       # @param root_segment [String] the name of the root node
       # @param config [Proc] a block to define the scope hierarchy
       def initialize(root_segment = ROOT_SEGMENT, &config)
-        recorder = Recorder.new(root_segment)
-        Tree.setup(recorder, config) if block_given?
-        @root = build_tree(recorder)
+        @recorder = Recorder.new(root_segment)
+        Tree.setup(@recorder, config) if block_given?
+        @root = Node.new(@recorder)
         define_singleton_method(root_segment) { @root }
+        @recorder.freeze
         freeze
       end
 
       private
 
-      def build_tree(recorder, parent = nil)
-        node = Node.new(recorder.__segment, parent)
-        recorder.__children.values.each do |child_recorder|
-          node.add_child(build_tree(child_recorder, node))
-        end
-        node.freeze
-      end
-
-      # Node is a BasicObject because it can be navigated using dot notation.
-      # A node defines methods to access its children.
-      # Ex. node.api.products.own.read
-      #
-      class Node < BasicObject
-        attr_reader :__segment, :__children, :to_s, :to_a
-
-        # @param segment [String] the name of the node
-        # @param parent [Node] the parent node
-        def initialize(segment, parent = nil)
-          @__segment = segment.to_s
-          @__parent = parent
-          @__children = {}
-          @to_a = @__parent ? @__parent.to_a + [@__segment] : [@__segment]
-          @to_s = [@__parent, @__segment].compact.map(&:to_s).join('.')
-        end
-
-        def freeze
-          @__children.freeze
-          self
-        end
-
-        # Hash equality to make Nodes work with Aliases.
-        def hash
-          to_s.hash
-        end
-
-        # Wildcard node.
-        # @return [Node]
-        def *
-          node = Node.new(::Bridger::Scopes::Scope::WILDCARD, self)
-          shared_grandchildren.each do |child|
-            node.add_child(child.with_parent(node))
-          end
-          node.freeze
-        end
-
-        # @return [Array<Node>]
-        def __child_nodes
-          @__children.values
-        end
-
-        # BasicObject doesn't support #respond_to?.
-        # This is needed to support consumers of nodes to user #to_scope.
-        #
-        # @param method_name [Symbol] the name of the method
-        def respond_to?(method_name, include_private = false)
-          method_name == :to_scope ? true : super
-        end
-
-        # Turn a node into a Scope, so that it can be used
-        # by endpoints.
-        # @return [Scope]
-        def to_scope
-          ::Bridger::Scopes::Scope.new(to_a)
-        end
-
-        # Add a child node and define a method to access it.
-        #
-        # @param node [Node] the child node
-        def add_child(node)
-          @__children[node.__segment] = node
-          instance_eval <<-RUBY, __FILE__, __LINE__ + 1
-            def #{node.__segment}
-              @__children['#{node.__segment}']
-            end
-          RUBY
-        end
-
-        protected
-
-        # @param parent [Node] the parent node
-        # @return [Node] with new parent
-        def with_parent(parent)
-          Node.new(@__segment, parent)
-        end
-
-        private
-
-        def shared_grandchildren
-          shared_segments = __child_nodes.map { |c|
-            c.__child_nodes.map(&:__segment)
-          }.reduce(:&)
-
-          __child_nodes.flat_map { |c|
-            c.__child_nodes.select { |cc|
-              shared_segments.include?(cc.__segment)
-            }
-          }
-        end
-      end
-
       # A Recorder is used within the block passed to Tree.new
       # to record the hierarchy of scopes.
       # It is a BasicObject so that it can be used with dot notation.
       class Recorder < BasicObject
-        attr_reader :__segment, :__children
+        attr_reader :__segment, :__children, :__info
 
         # @param segment [String] the name of the node
         # @param block [Proc] a block to define the scope hierarchy. Optional.
-        def initialize(segment, &block)
-          @__segment = segment
-          @__children = {}
+        def initialize(matchers, &block)
+          @__matchers = [matchers].flatten
+          @__segment = @__matchers.first.to_s
+          @__info = @__matchers.size > 1 ? %((#{@__matchers.map(&:to_s).join(',')})) : @__segment
+          @__children = []
+          @__frozen = false
           Tree.setup(self, block) if ::Kernel.block_given?
+        end
+
+        def freeze
+          @__children.each(&:freeze)
+          @__children.freeze
+          self
         end
 
         # @param segment [String] the name of the child node
         def >(segment)
-          __register(segment)
+          __register(Recorder.new(segment))
+        end
+
+        def _any(*constraints, &block)
+          __register(Recorder.new(constraints, &block))
         end
 
         def method_missing(method_name, *_args, &block)
-          __register(method_name, &block)
+          __register(Recorder.new(method_name.to_s, &block))
         end
 
         def respond_to_missing?(method_name, include_private = false)
           true
         end
 
-        private def __register(child_name, &block)
-          @__children[child_name] ||= Recorder.new(child_name, &block)
+        def match?(values)
+          values = [values] unless values.is_a?(::Array)
+          values = values.map(&:to_s)
+          @__matchers.empty? || @__matchers.any? { |matcher| values.all? { |v| matcher === v } }
         end
 
+        def to_s
+          __info
+        end
+
+        def to_str
+          to_s
+        end
+
+        def to_ary
+          ::Kernel.raise ::NoMethodError, "undefined method `to_ary' for #{self}"
+        end
+
+        def inspect
+          %(<Bridger::Scopes::Tree::Recorder #{to_s} [#{__children.join(', ')}]>)
+        end
+
+        private def __register(child_recorder)
+          @__children << child_recorder
+          child_recorder
+        end
       end
     end
   end
