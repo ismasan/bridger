@@ -20,13 +20,13 @@ module Bridger
           return name if name.is_a?(self)
 
           if name.is_a?(Array)
-            new("(#{name.join(COMMA)})", name)
+            new("(#{name.join(COMMA)})", name.map(&:to_s))
           elsif name.to_s =~ ARRAY_EXPR
             new(name, $1.split(COMMA))
           elsif name == WILDCARD
             new(name, [])
           else
-            new(name, [name])
+            new(name, [name.to_s])
           end
         end
 
@@ -69,7 +69,6 @@ module Bridger
         self
       end
 
-      # Replace segments in the format `foo:<key>` with the value of the key in the given hash
       def expand(attrs = {})
         segments = self.segments.map do |segment|
           if value = attrs[segment.to_s]

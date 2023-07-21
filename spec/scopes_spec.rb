@@ -55,7 +55,7 @@ RSpec.describe Bridger::Scopes do
       token_scope = scope('api.accounts.own_account.shops.own_shops.contacts')
 
       endpoint_scope = endpoint_scope.expand('account_id' => 111, 'shop_id' => 222)
-      token_scope = token_scope.expand('own_account' => 111, 'own_shops' => [222, 333])
+      token_scope = token_scope.expand('own_account' => '111', 'own_shops' => [222, 333])
       expect(token_scope >= endpoint_scope).to be true
       expect(token_scope == endpoint_scope).to be false
       expect(token_scope > endpoint_scope).to be true
