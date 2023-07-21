@@ -16,7 +16,7 @@ module Bridger
     #  SCOPES.bootic.api.products.own.read.to_s # => 'bootic.api.products.own.read'
     #  SCOPES.bootic.api.products.own.to_s # => 'bootic.api.products.own'
     #  SCOPES.bootic.api.*.read.to_s # => 'bootic.api.*.read'
-    #  SCOPES.bootic.foo.products # => NoMethodError
+    #  SCOPES.bootic.foo.products # => raises Bridger::Scopes::Scope::InvalidScopHierarchyError
     #
     # It can be used to define allowed scopes for an endpoint:
     #
@@ -78,7 +78,7 @@ module Bridger
     #   end
     #
     # `_any` takes an optional list of allowed values, in which case it has "any of" semantics.
-    # Values are matched with `#====` operator, so they can be regular expressions.
+    # Values are matched with `#===` operator, so they can be regular expressions.
     # If no values are given, `_any` has "anything" semantics.
     # `_any` can be used to define a catch-all scope:
     #

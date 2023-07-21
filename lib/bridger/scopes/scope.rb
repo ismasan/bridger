@@ -2,6 +2,29 @@
 
 module Bridger
   class Scopes
+    # Scopes define hierarchical permissions
+    # They are used to define access to resources
+    # A scope is a list of segments, e.g. 'foo.bar.baz'
+    # It can be initialized with a string, an array of strings, or a symbol
+    # It can also be initialized with another scope
+    # It can be expanded with a hash of values
+    # It can be compared with another scope
+    # It can be converted to a string
+    # It can be converted to an array of strings
+    # Example:
+    #
+    #  access_scope = Scope.wrap('root.accounts.*')
+    #  endpoint_scope = Scope.wrap('root.accounts.my_account.users.*')
+    #  access_scope >= endpoint_scope) # => true
+    #  access_scope < endpoint_scope) # => false
+    #
+    # Scopes can be "expanded" on request-time to have one or more segments replaced with values.
+    # This is useful for defining access to resources that are not known at the time of defining the scope.
+    #
+    # Example:
+    #  access_scope = Scope.wrap('root.accounts.my_account.users.*')
+    #  scope = access_scope.expand('my_account' => current_user.account_id) # => Scope('root.accounts.123.users.*')
+    #
     class Scope
       SEP = '.'
       WILDCARD = '*'
@@ -42,14 +65,6 @@ module Bridger
         end
       end
 
-      # A scope is a list of segments, e.g. 'foo.bar.baz'
-      # It can be initialized with a string, an array of strings, or a symbol
-      # It can also be initialized with another scope
-      # It can be expanded with a hash of values
-      # It can be compared with another scope
-      # It can be converted to a string
-      # It can be converted to an array of strings
-      #
       # @param [String, Array<String>, Symbol, Scope] sc
       # @return [Scope]
       def self.wrap(sc)
