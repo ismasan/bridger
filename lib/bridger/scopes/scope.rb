@@ -5,7 +5,6 @@ module Bridger
     class Scope
       SEP = '.'
       WILDCARD = '*'
-      TEMPLATE_EXPR = /<(.+)>$/
       ARRAY_EXPR = /\((.+)\)$/ # '(1,2,3)'
       COMMA = ','
       COLON = ':'
