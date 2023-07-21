@@ -136,6 +136,12 @@ RSpec.describe Bridger::Scopes do
     end
   end
 
+  specify '#expand' do
+    scopes = described_class.new(%w[accounts.own_account.shops accounts.1.shops.own_shops])
+    expanded = scopes.expand('own_account' => 2, 'own_shops' => [1, 2])
+    expect(expanded.to_a).to eq %w[accounts.2.shops accounts.1.shops.(1,2)]
+  end
+
   describe "#can?" do
     it "is true if any scope is authorized" do
       user_scopes = described_class.new(["btc.account", "btc.account.assets.mine.update"])
