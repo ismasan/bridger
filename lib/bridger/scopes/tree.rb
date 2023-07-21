@@ -93,11 +93,6 @@ module Bridger
       InvalidScopeHierarchyError = Class.new(::StandardError)
 
       module RailsConsoleInspect
-        # Rails console's inspector calls this with #is_a?(String)
-        def is_a?(klass)
-          klass == Node
-        end
-
         # Needed by Rails console
         def pretty_print(q)
           q.text inspect
@@ -143,6 +138,10 @@ module Bridger
 
         def respond_to?(method_name, include_private = true)
           RESPONDABLE_METHODS.include?(method_name.to_sym)
+        end
+
+        def is_a?(klass)
+          klass == Node
         end
 
         def to_scope
