@@ -15,7 +15,7 @@ module Bridger
     class EndpointConfig
       extend Forwardable
 
-      def_delegators :@action, :step, :pipeline, :instrument, :continue, :halt, :query_schema, :payload_schema
+      def_delegators :@action, :step, :step!, :pipeline, :instrument, :continue, :halt, :query_schema, :payload_schema
       attr_reader :action, :auth
       attr_accessor :serializer
 
