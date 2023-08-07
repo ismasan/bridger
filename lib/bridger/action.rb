@@ -15,7 +15,28 @@ module Bridger
     end
 
     def self.call(result)
-      result
+      new(result).run!
+    end
+
+    attr_reader :query, :payload
+
+    def initialize(result)
+      @result = result
+      @auth = result.auth
+      @query = result.query
+      @payload = result.payload
+    end
+
+    def run!
+      result.continue run
+    end
+
+    private
+
+    attr_reader :result, :auth
+
+    def run
+      raise NotImplementedError
     end
   end
 end
