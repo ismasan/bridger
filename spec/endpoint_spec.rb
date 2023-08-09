@@ -153,21 +153,17 @@ RSpec.describe Bridger::Endpoint do
     end
 
     let(:custom_action) do
-      Class.new do
-        def self.query_schema
-          Parametric::Schema.new do
-            field(:id).type(:integer).present
-          end
+      Class.new(Bridger::Action) do
+        query_schema do
+          field(:id).type(:integer).present
         end
 
-        def self.payload_schema
-          Parametric::Schema.new do
-            field(:title).type(:string).present
-          end
+        payload_schema do
+          field(:title).type(:string).present
         end
 
-        def self.call(result)
-          result.continue('hello!')
+        private def run(result)
+          result.continue 'hello!'
         end
       end
     end
