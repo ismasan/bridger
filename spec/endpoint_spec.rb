@@ -214,6 +214,7 @@ RSpec.describe Bridger::Endpoint do
       expect(response[1]['Content-Type']).to eq('application/json')
 
       json_data(response).tap do |data|
+        expect(data[:title]).to eq('')
         data.dig(:_embedded, :errors)[0].tap do |err|
           expect(err[:field]).to eq('$.title')
           expect(err[:messages]).to eq(['is required'])

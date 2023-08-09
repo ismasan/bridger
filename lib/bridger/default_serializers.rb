@@ -124,6 +124,10 @@ module Bridger
       schema do
         type ['errors', 'invalid']
 
+        properties do |props|
+          props._from item.payload
+        end if item.payload
+
         entities :errors, ErrorSerializer.wrap(item.errors), ErrorSerializer
       end
     end
