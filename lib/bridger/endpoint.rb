@@ -7,7 +7,6 @@ require 'bridger/pipeline'
 require 'bridger/pipeline/authorization_step'
 require 'bridger/pipeline/assign_query_step'
 require 'bridger/pipeline/parse_payload_step'
-require 'bridger/pipeline/validations'
 require 'bridger/serializer_set'
 
 module Bridger
@@ -92,10 +91,6 @@ module Bridger
           pl.step Bridger::Pipeline::AuthorizationStep.new(@config.auth, @scope) if @config.auth && @scope
           pl.step Bridger::Pipeline::AssignQueryStep
           pl.instrument(Bridger::Pipeline::ParsePayloadStep.new, 'bridger.endpoint.parse_payload') if (@verb == :post || @verb == :put || @verb == :patch)
-          pl.instrument('bridger.endpoint.validate_inputs') do |pl|
-            pl.step Bridger::Pipeline::Validations::Query.new(@config.action.query_schema) if @config.action.respond_to?(:query_schema)
-            pl.step Bridger::Pipeline::Validations::Payload.new(@config.action.payload_schema) if @config.action.respond_to?(:payload_schema)
-          end
           pl.instrument(@config.action, 'bridger.endpoint.action', info: @config.action.to_s) if @config.action
           pl.continue
           pl.instrument('bridger.endpoint.serializer') do |pl|

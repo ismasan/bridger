@@ -91,7 +91,6 @@ RSpec.describe Bridger::Endpoint do
     expect(instrumenter.calls).to eq([
       ['bridger.endpoint', { name: :update_task, path: '/tasks/:id', scope: 'a.b.c', verb: :put }],
       ['bridger.endpoint.parse_payload', {}],
-      ['bridger.endpoint.validate_inputs', {}],
       ['bridger.endpoint.action', { info: '#<Bridger::Pipeline>' }],
       ['test.action', {}],
       ['bridger.endpoint.serializer', {}],

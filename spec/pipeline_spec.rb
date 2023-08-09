@@ -125,24 +125,48 @@ RSpec.describe Bridger::Pipeline do
     expect(pipe.query_schema.fields.keys).to eq(%i[name age title])
   end
 
-  specify '#payload_schema' do
-    pipe = Bridger::Pipeline.new do |pl|
-      pl.payload_schema do
-        field(:name).type(:string).required
-        field(:age).type(:integer).required
-      end
-      pl.step do |r|
-        r.continue(context: { foo: 'bar' })
-      end
-      pl.pipeline do |p2|
-        p2.payload_schema do
-          field(:title).type(:string).default('Mr.')
+  describe '#payload_schema' do
+    let(:pipe) do
+      Bridger::Pipeline.new do |pl|
+        pl.payload_schema do
+          field(:name).type(:string).present
+          field(:age).type(:integer).present
+        end
+        pl.step do |r|
+          r.continue(context: { foo: 'bar' })
+        end
+        pl.pipeline do |p2|
+          p2.payload_schema do
+            field(:title).type(:string).default('Mr.')
+            field(:currency).type(:string).present
+          end
         end
       end
     end
 
-    expect(pipe.payload_schema).to be_a(Parametric::Schema)
-    expect(pipe.payload_schema.fields.keys).to eq(%i[name age title])
+    it 'merges schemas at top-level #payload_schema' do
+      expect(pipe.payload_schema).to be_a(Parametric::Schema)
+      expect(pipe.payload_schema.fields.keys).to eq(%i[name age title currency])
+    end
+
+    it 'validates payload' do
+      initial_result = Bridger::Result::Success.build(payload: { name: nil, age: '30' })
+      result = pipe.call(initial_result)
+      expect(result.halted?).to be(true)
+      expect(result.payload).to eq(name: '', age: 30)
+      expect(result.errors['$.name']).not_to be_empty
+
+      initial_result = Bridger::Result::Success.build(payload: { name: 'Joe', age: '30' })
+      result = pipe.call(initial_result)
+      expect(result.halted?).to be(true)
+      expect(result.errors['$.currency']).not_to be_empty
+      expect(result.payload).to eq(name: 'Joe', age: 30, title: 'Mr.', currency: '')
+
+      initial_result = Bridger::Result::Success.build(payload: { name: 'Joe', age: '30', currency: 'USD' })
+      result = pipe.call(initial_result)
+      expect(result.halted?).to be(false)
+      expect(result.payload).to eq(name: 'Joe', age: 30, title: 'Mr.', currency: 'USD')
+    end
   end
 
   specify '#instrument' do

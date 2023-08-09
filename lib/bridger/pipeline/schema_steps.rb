@@ -19,19 +19,46 @@ module Bridger
       # @param result [Result]
       # @returns Result
       def call(result)
-        result
+        input, result = raw_input_for(result, key)
+        data, errors = resolve_schema(schema, input)
+        merged_input = (result.public_send(key) || {}).merge(data.to_h)
+        if errors.any?
+          return result.halt(status: 422, errors:, key => merged_input)
+        end
+
+        result.continue(key => merged_input)
       end
 
       private
 
       attr_reader :schema
 
+      def resolve_schema(schema, data)
+        resolved = schema.resolve(data)
+        [resolved.output, resolved.errors]
+      end
+
+      def raw_input_for(result, key)
+        if (input = result.context.dig(:__raw_inputs, key))
+          [input, result]
+        else
+          input = result.public_send(key)
+          result = result.copy do |r|
+            r.context[:__raw_inputs] ||= {}
+            r.context[:__raw_inputs][key] = input
+          end
+          [input, result]
+        end
+      end
+
       class Query < self
         def query_schema; schema; end
+        private def key; :query; end
       end
 
       class Payload < self
         def payload_schema; schema; end
+        private def key; :payload; end
       end
     end
   end
