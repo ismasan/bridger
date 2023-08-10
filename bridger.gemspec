@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "jwt", '~> 2'
   spec.add_dependency "multi_json"
   spec.add_dependency "oat"
-  spec.add_dependency "parametric", ">= 0.2.17"
+  spec.add_dependency "parametric", ">= 0.2.19"
   spec.add_dependency 'faraday', '~> 2.2'
   spec.add_dependency 'faraday-rack', '~> 2.0'
   spec.add_dependency "bootic_client", ">= 0.0.31"
