@@ -42,6 +42,9 @@ module Bridger
         base['example'] = attrs[:example] if attrs[:example]
         reqs << k.to_s if attrs[:required]
 
+        if attrs[:one_of]
+          base['oneOf'] = attrs[:one_of].map { |s| process(s) }
+        end
         if attrs[:structure]
           if base['type'] == 'array' # array of objects
             base['items'] = {'type' => 'object'}.merge(process(attrs[:structure]))
