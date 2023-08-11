@@ -28,7 +28,7 @@ module Bridger
 
     def run!
       @result = validations.call(result)
-      result.halted? ? on_invalid(result) : run(result)
+      result.halted? ? result : run(result)
     end
 
     private
@@ -48,10 +48,6 @@ module Bridger
     end
 
     def run(result)
-      result
-    end
-
-    def on_invalid(result)
       result
     end
   end
