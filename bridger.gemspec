@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
   spec.add_dependency "jwt", '~> 2'
   spec.add_dependency "multi_json"
-  spec.add_dependency "oat"
+  spec.add_dependency "oat", '>= 0.6.1'
   spec.add_dependency "parametric", ">= 0.2.19"
   spec.add_dependency 'faraday', '~> 2.2'
   spec.add_dependency 'faraday-rack', '~> 2.0'

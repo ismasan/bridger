@@ -7,7 +7,7 @@ PATH
       faraday-rack (~> 2.0)
       jwt (~> 2)
       multi_json
-      oat
+      oat (>= 0.6.1)
       parametric (>= 0.2.19)
       rack (>= 2.0.6)
       rack-test
@@ -75,7 +75,7 @@ GEM
     nokogiri (1.15.2)
       mini_portile2 (~> 2.8.2)
       racc (~> 1.4)
-    oat (0.6.0)
+    oat (0.6.1)
     oauth2 (1.4.11)
       faraday (>= 0.17.3, < 3.0)
       jwt (>= 1.0, < 3.0)
